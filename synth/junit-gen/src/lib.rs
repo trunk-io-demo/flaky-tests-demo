@@ -28,7 +28,7 @@ pub mod manifest;
 pub mod report;
 pub mod seed;
 
-pub use attribution::{Attribution, BranchClass, ProtectedBranches};
+pub use attribution::{Attribution, AttributionBase, BranchClass, ProtectedBranches};
 pub use config::CommonArgs;
 pub use identity::TestIdentity;
 pub use manifest::{Manifest, UploadEntry};

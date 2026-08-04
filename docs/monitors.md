@@ -30,12 +30,12 @@ _Populated as the stories land._
 `synth/` demonstrates the arcs that no live test can produce inside a demo — a 30-day test
 lifecycle, a per-branch failure rate, a macOS-only failure.
 
-| Capability               | Demonstrates                                                                                        | Story                                         |
-| ------------------------ | --------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Long-lived dated cohort  | A test's full lifecycle: new, then established, then gone. Crosses the new-test window.             | [`synth/cohorts`](../synth/cohorts/README.md) |
-| Short-lived dated cohort | A test that dies before the new-test window elapses, so it is never not-new. Resolution by absence. | [`synth/cohorts`](../synth/cohorts/README.md) |
-| Failure rate per branch  | Branch-filtered monitor configuration.                                                              | pending                                       |
-| Failure rate per variant | "Only flaky on macOS", emitted from a Linux runner.                                                 | pending                                       |
+| Capability               | Demonstrates                                                                                         | Story                                                   |
+| ------------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Long-lived dated cohort  | A test's full lifecycle: new, then established, then gone. Crosses the new-test window.              | [`synth/cohorts`](../synth/cohorts/README.md)           |
+| Short-lived dated cohort | A test that dies before the new-test window elapses, so it is never not-new. Resolution by absence.  | [`synth/cohorts`](../synth/cohorts/README.md)           |
+| Failure rate per branch  | Branch-filtered monitor configuration, including `release/*` vs `release/?.?.?` vs `release/*.beta`. | [`synth/branch-rates`](../synth/branch-rates/README.md) |
+| Failure rate per variant | "Only flaky on macOS", emitted from a Linux runner.                                                  | pending                                                 |
 
 ## Related
 

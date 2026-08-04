@@ -11,7 +11,7 @@ explicitly.
 | ---------------------------------- | ------------------------------------------------------------------------------ |
 | [`junit-gen/`](junit-gen/)         | The shared library. Seeded generation, stable test identity, upload manifests. |
 | [`cohorts/`](cohorts/)             | Dated test cohorts, long-lived and short-lived, that retire on schedule.       |
-| [`branch-rates/`](branch-rates/)   | One failure rate per branch pattern.                                           |
+| [`branch-rates/`](branch-rates/)   | One failure rate per branch shape, so branch filters are distinguishable.      |
 | [`variant-rates/`](variant-rates/) | One failure rate per variant, so "only flaky on macOS" costs no macOS minutes. |
 
 ## Why Rust, and why in process
