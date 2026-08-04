@@ -1,0 +1,15 @@
+{
+  "name": "@flaky-tests-demo/monitor-failure-rate",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A test that fails a configured percentage of the time, and nothing else.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
