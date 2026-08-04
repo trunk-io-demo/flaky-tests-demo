@@ -186,7 +186,13 @@ pub fn render(spec: &ReportSpec) -> Report {
             let mut case = TestCase::new(case_spec.identity.name.clone(), status);
             case.set_classname(case_spec.identity.classname.clone());
             case.set_timestamp(case_started_at.fixed_offset());
-            case.set_time(case_spec.duration);
+            // A skipped test did not run, so it took no time. Reporting a
+            // duration for one would feed the slow-test and timeout-inflation
+            // monitors data about a test that never executed.
+            case.set_time(match case_spec.outcome {
+                Outcome::Skip => Duration::ZERO,
+                _ => case_spec.duration,
+            });
             case.extra
                 .insert("file".into(), case_spec.identity.file.clone().into());
 
@@ -396,8 +402,18 @@ mod tests {
     #[test]
     fn a_skip_renders_as_skipped_with_no_duration() {
         let spec = spec_with(&[("Alpha", "one", Outcome::Skip)]);
-        let xml = render(&spec).to_string().expect("serializes");
+        let report = render(&spec);
+        let xml = report.to_string().expect("serializes");
+
         assert!(xml.contains("<skipped"), "{xml}");
+        // Even though the spec carries a duration, a test that did not run took
+        // no time — otherwise the duration-based monitors get data about a test
+        // that never executed.
+        assert_eq!(
+            report.test_suites[0].test_cases[0].time,
+            Some(Duration::ZERO)
+        );
+        assert_eq!(report.time, Some(Duration::ZERO));
     }
 
     #[test]
