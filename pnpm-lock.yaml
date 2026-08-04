@@ -33,7 +33,64 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.1)
 
+  monitors/failure-count:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)
+
   monitors/failure-rate:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)
+
+  monitors/new-test:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)
+
+  monitors/pass-on-retry:
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.57.0
+        version: 1.62.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)
+
+  monitors/skipped-test:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)
+
+  monitors/slow-test:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)
+
+  monitors/timeout-inflation:
     devDependencies:
       typescript:
         specifier: ^5.9.3

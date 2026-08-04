@@ -64,11 +64,26 @@ does and the range that stays safe._
 
 ### `monitors/`
 
-| Key                            | Kind | Default | Effect                             |
-| ------------------------------ | ---- | ------- | ---------------------------------- |
-| `MONITORS_FAILURE_RATE_LOW`    | var  | 8       | Rate for `fails_on_a_low_rate`.    |
-| `MONITORS_FAILURE_RATE_MEDIUM` | var  | 30      | Rate for `fails_on_a_medium_rate`. |
-| `MONITORS_FAILURE_RATE_HIGH`   | var  | 65      | Rate for `fails_on_a_high_rate`.   |
+| Key                               | Kind | Default | Effect                                                                                                                              |
+| --------------------------------- | ---- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `MONITORS_FAILURE_RATE_LOW`       | var  | 8       | Rate for `fails_on_a_low_rate`.                                                                                                     |
+| `MONITORS_FAILURE_RATE_MEDIUM`    | var  | 30      | Rate for `fails_on_a_medium_rate`.                                                                                                  |
+| `MONITORS_FAILURE_RATE_HIGH`      | var  | 65      | Rate for `fails_on_a_high_rate`. Keep the three far enough apart that a day of runs distinguishes them.                             |
+| `MONITORS_FAILURE_COUNT`          | var  | 4       | How many of the twelve burst members fail. The suite size is fixed in code.                                                         |
+| `MONITORS_SKIP_RATE`              | var  | 40      | Percentage of runs the sometimes-skipped test skips. Keep it away from 0 and 100 or it duplicates a neighbour.                      |
+| `MONITORS_NEW_TEST_WINDOW_DAYS`   | var  | 21      | Rolling window of dated tests. Must exceed the new-test window (14 days) or the graduated half of the story disappears.             |
+| `MONITORS_SLOW_BASE_MS`           | var  | 150     | Baseline duration for the slow-test stories.                                                                                        |
+| `MONITORS_SLOW_GROWTH_MS`         | var  | 120     | Milliseconds added per day of the ramp.                                                                                             |
+| `MONITORS_SLOW_CYCLE_DAYS`        | var  | 14      | Ramp length before it resets. `GROWTH × CYCLE` is real wall clock on the peak day.                                                  |
+| `MONITORS_SLOW_SPIKE_FACTOR`      | var  | 8       | How much slower a spiked run is, as a multiple of the baseline.                                                                     |
+| `MONITORS_TIMEOUT_PASS_MS`        | var  | 150     | What a healthy pass costs in the timeout story.                                                                                     |
+| `MONITORS_TIMEOUT_CEILING_MS`     | var  | 5000    | The ceiling a failing run blocks against. Real wall clock on every failing run. Must stay well under the test's own vitest timeout. |
+| `MONITORS_TIMEOUT_JITTER_PERCENT` | var  | 3       | Jitter on the ceiling. Zero makes every failure byte-identical, which reads as generated.                                           |
+| `MONITORS_TIMEOUT_FAILURE_RATE`   | var  | 20      | How often the awaited response fails to arrive.                                                                                     |
+
+`monitors/pass-on-retry` has nothing tunable. The attempt counts are the story, and `retries` in its
+playwright config must stay at or above the deepest rung of the ladder or the deepest test stops
+passing at all.
 
 A rate outside 0–100, or one that is not a number, logs a warning and falls back to its default
 rather than failing the suite. A typo should show up as the demo being quieter than expected, not as
@@ -82,9 +97,25 @@ a red run that looks like a real breakage.
 
 ## Safe ranges and what to watch
 
-_Populated per story. The rule of thumb: a rate change is safe, a scale change costs runner
-minutes, and a cadence change interacts with monitor evaluation windows described in
-[`operations.md`](operations.md)._
+The rule of thumb: **a rate change is safe, a duration change costs runner minutes, and a cadence
+change interacts with the evaluation windows in [`operations.md`](operations.md).**
+
+Four values are load-bearing rather than tunable, in the sense that a "reasonable" change to them
+silently removes a story:
+
+| Value                            | The constraint                                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `SYNTH_COHORT_LONG_WINDOW_DAYS`  | Must exceed the new-test window, or it stops being the contrast to the short-lived family.                               |
+| `SYNTH_COHORT_SHORT_WINDOW_DAYS` | Must be under it, or it stops being a test that is never not-new.                                                        |
+| `MONITORS_NEW_TEST_WINDOW_DAYS`  | Must exceed the new-test window, or every test there is always new.                                                      |
+| `SYNTH_BRANCH_RELEASE_*`         | Must keep matching the glob each was chosen to distinguish. See [`synth/branch-rates`](../synth/branch-rates/README.md). |
+
+Two cost real time on every run: `MONITORS_TIMEOUT_CEILING_MS` (paid on each failing run) and
+`MONITORS_SLOW_GROWTH_MS × MONITORS_SLOW_CYCLE_DAYS` (paid on the peak day of every cycle).
+
+Changing a **name** — a variant, a branch, a cohort window that appears in a test name — changes test
+identity, so the renamed thing starts with no history rather than inheriting the old one's. Changing a
+**rate** never does.
 
 ## Related
 

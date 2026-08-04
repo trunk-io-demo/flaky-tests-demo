@@ -13,15 +13,26 @@ The healthcheck is not decoration. Several monitors resolve when a test stops re
 monitor resolved" and "the suite stopped running" look identical from the outside. A green
 healthcheck is what separates them.
 
-| Monitor                          | Detects                                                | Status  |
-| -------------------------------- | ------------------------------------------------------ | ------- |
-| [`failure-rate/`](failure-rate/) | What fraction of recent runs failed.                   | landed  |
-| `failure-count/`                 | How many failures in a window.                         | pending |
-| `skipped-test/`                  | Tests that stopped running without being deleted.      | pending |
-| `new-test/`                      | Tests that have not been around long enough to trust.  | pending |
-| `slow-test/`                     | Duration regressions.                                  | pending |
-| `pass-on-retry/`                 | A test that failed and then passed on the same commit. | pending |
-| `timeout-inflation/`             | A test that only got slower when it fails.             | pending |
+| Monitor                                    | Detects                                                | The story here                                             |
+| ------------------------------------------ | ------------------------------------------------------ | ---------------------------------------------------------- |
+| [`failure-rate/`](failure-rate/)           | What fraction of recent runs failed.                   | Three tests differing only in their percentage.            |
+| [`failure-count/`](failure-count/)         | How many failures in a window, absolutely.             | A burst: four of twelve fail every run, deterministically. |
+| [`skipped-test/`](skipped-test/)           | Tests that stopped running without being deleted.      | Always skipped, sometimes skipped, never skipped.          |
+| [`new-test/`](new-test/)                   | Tests too young to judge on the same terms.            | One genuinely new test per day, on a rolling window.       |
+| [`slow-test/`](slow-test/)                 | Duration regressions.                                  | A gradual ramp, a bimodal spike, and a flat control.       |
+| [`pass-on-retry/`](pass-on-retry/)         | A test that failed and then passed on the same commit. | A retry ladder, plus a reporter that keeps every attempt.  |
+| [`timeout-inflation/`](timeout-inflation/) | A test that only got slower when it fails.             | A real timeout race, against a fail-fast control.          |
+
+## The pairings worth reading together
+
+Single stories demonstrate a monitor. Pairs demonstrate why you need more than one.
+
+| Read                            | Against                                   | To see                                                                                                           |
+| ------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| [`slow-test`](slow-test/)       | [`timeout-inflation`](timeout-inflation/) | A test that got slower next to one that did not. A slow-test monitor fires on both; only one is worth profiling. |
+| [`failure-rate`](failure-rate/) | [`failure-count`](failure-count/)         | The same failures read as a proportion and as a number.                                                          |
+| [`new-test`](new-test/)         | [`synth/cohorts`](../synth/cohorts/)      | The same lifecycle, live and synthetic, over different windows.                                                  |
+| [`skipped-test`](skipped-test/) | [`new-test`](new-test/)                   | Two kinds of absence: a test that reports a skip, and one that stops reporting.                                  |
 
 ## Conventions
 
