@@ -1,0 +1,60 @@
+version: 2
+
+# Per-package manifests are the point of this repo's layout, and the cost of
+# that choice is dependency-bump fan-out: without grouping, one weekly release
+# becomes one pull request per workspace member. Every ecosystem below is
+# grouped down to a single PR, and the schedule is weekly rather than daily so
+# dependabot never competes with the PR factory for attention.
+#
+# `directories` (plural) with globs is what reaches the per-package manifests.
+# A new story directory is picked up by these globs automatically — if you add a
+# top-level directory, add it here too.
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /monitors/*
+      - /app/*
+      - /integrations/*
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    groups:
+      npm-all:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+
+  - package-ecosystem: cargo
+    directories:
+      - /
+      - /synth/*
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    groups:
+      cargo-all:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+
+  # `/` covers .github/workflows; the composite actions each need their own
+  # directory entry.
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    groups:
+      actions-all:
+        patterns:
+          - "*"
+    labels:
+      - dependencies

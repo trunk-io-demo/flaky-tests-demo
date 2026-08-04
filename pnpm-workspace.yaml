@@ -1,0 +1,17 @@
+# Every TypeScript story is a workspace member. The globs are load-bearing: a
+# directory that no glob matches is invisible to `pnpm install`, to
+# `pnpm --recursive`, and therefore to CI. Check this file whenever you add a
+# top-level directory.
+#
+# `integrations/*` is matched on purpose even though the directory holds no
+# packages yet — see docs/architecture.md.
+packages:
+  - monitors/*
+  - app/*
+  - integrations/*
+
+# pnpm 10 blocks postinstall scripts unless a dependency is listed here.
+# Without this, `pnpm install` prints a warning on every CI run and vitest's
+# bundler is left unbuilt.
+onlyBuiltDependencies:
+  - esbuild

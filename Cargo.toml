@@ -1,0 +1,29 @@
+[workspace]
+members = ["synth/*"]
+resolver = "2"
+
+# A nested Cargo package that is neither a member nor excluded is a hard error,
+# not a warning. If `integrations/` ever gains a Rust suite, add it to `members`
+# or to `exclude` in the same commit. See docs/architecture.md.
+exclude = []
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+anyhow = "1.0"
+chrono = { version = "0.4", default-features = false, features = [
+  "clock",
+  "std",
+] }
+clap = { version = "4.5", features = ["derive", "env"] }
+quick-junit = "0.5"
+rand = "0.8"
+rand_chacha = "0.3"
+
+[profile.release]
+opt-level = "s"
+strip = true

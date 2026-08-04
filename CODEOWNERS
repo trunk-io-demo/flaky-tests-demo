@@ -1,0 +1,15 @@
+# Ownership in this repo does double duty.
+#
+# The default owner is the team that owns the monitors this repo demonstrates.
+# That is the only entry here meant to be a real reviewer.
+#
+# Everything else is deliberately fictional. The uploader parses this file to
+# attribute test failures to code owners, and a demo where every failing test
+# has the same owner demonstrates nothing — so each `app/` scenario is owned by
+# an invented company team, giving failure attribution in the product something
+# to show. Those handles do not resolve on GitHub. That is expected: GitHub
+# flags them as unknown owners and never requests review from them.
+
+* @trunk-io/flaky-tests
+
+# Per-scenario fictional owners are added alongside each `app/` story.

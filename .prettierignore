@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+Cargo.lock
+target/
+**/test-results/
+**/playwright-report/
+PURPOSE.md

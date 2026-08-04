@@ -141,3 +141,18 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Rust
+/target/
+
+# Test result output, uploaded by CI and regenerated on every run
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# synth/ generated JUnit XML and upload manifests
+/synth-out/
+
+# The implementation brief is a working document, not a published one.
+PURPOSE.md
