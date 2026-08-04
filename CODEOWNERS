@@ -12,4 +12,16 @@
 
 * @trunk-io/flaky-tests
 
-# Per-scenario fictional owners are added alongside each `app/` story.
+# Fictional owners, one invented company team per app/ scenario.
+#
+# These give failure attribution in the product something to show: a page of
+# failures all owned by one team demonstrates nothing about owner attribution.
+# None of these handles resolve, which is expected — GitHub flags them as unknown
+# owners and never requests review from them.
+#
+# The paths are matched against each test's `file` attribute, which is why the
+# vitest configs are rooted at the repository rather than at the package.
+/app/parking-meter/     @meterworks-municipal/kerbside-billing
+/app/mass-detection/    @northwind-orders/fulfilment-platform
+/app/third-party-apis/  @northwind-orders/integrations
+/app/github-uptime/     @northwind-orders/site-reliability
