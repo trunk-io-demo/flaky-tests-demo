@@ -77,17 +77,39 @@ repository secrets, so they cannot upload. Every upload step detects the missing
 with a clear log line rather than failing the job** — a red X on a contributor's PR because our
 demo could not upload would be a bug, not a signal.
 
+## Why a red run here means something is actually wrong
+
+Quarantining is deliberately **off** for every upload. Two reasons, and the second is the operational
+one:
+
+- Every failure in this repo is a story. A quarantined failure is a story that stopped being told.
+- With quarantining off and the test process's exit code not forwarded, the upload step's status
+  reflects **upload health only**. Deliberate test failures do not turn the job red, so a red hourly
+  run means something is genuinely broken. That is what makes this usable as a canary rather than as
+  a wall of expected red.
+
+The scheduled workflow runs at **:17**, not on the hour. GitHub queues scheduled workflows across
+every repository on the platform and the top of the hour is the worst minute to ask for one. Delays
+there are routine and long, and since missing runs resolve monitors, a queueing delay would look
+exactly like a story.
+
 ## When data stops arriving
 
-_Checklist populated as the CI wiring lands._
+In order — each step is cheaper than the one after it.
 
-1. Is the hourly workflow still scheduled? GitHub disables scheduled workflows on repositories
-   with no activity for 60 days.
-2. Did the run succeed but skip its upload? Look for the skip log line — a missing token, a
-   missing collection ID, or a fork PR all skip rather than fail.
-3. Is the PR factory's token still valid? See above.
-4. Are the healthcheck tests reporting? If they are, absence elsewhere is intentional retirement,
-   not an outage.
+1. **Is the hourly workflow still scheduled?** GitHub disables scheduled workflows on repositories
+   with no activity for 60 days. This is the most common cause of a demo that "used to work."
+2. **Did the run succeed but skip its upload?** Every upload step logs a notice when it skips, naming
+   the reason: no API token (expected on pull requests from forks), or an unset collection ID.
+   A skip is never a failure, so it will not be red.
+3. **Is `PR_FACTORY_TOKEN` still valid?** If PR-attributed data specifically is missing while
+   scheduled data arrives, this is almost certainly why. See above.
+4. **Are the healthcheck tests reporting?** Every `monitors/` package and every `synth/` generator
+   emits one that always passes and never retires. If the healthchecks are green, absence elsewhere is
+   an intentional retirement rather than an outage. If they are absent too, it is an outage.
+5. **Did a generator produce zero uploads?** That is a legitimate outcome — every cohort may have
+   retired — and it is logged as a count rather than treated as an error. Check the count in the
+   `synth` job's summary before assuming a crash.
 
 ## Deliberately alarming stories, and how to tell them apart from incidents
 

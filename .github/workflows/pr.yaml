@@ -1,0 +1,101 @@
+name: Pull request
+
+# monitors/ and app/ only.
+#
+# synth/ is excluded because it fabricates its own pull-request attribution — a
+# real pull request buys it nothing, and running it here would double-report
+# every synthetic story. integrations/ is excluded because it is slow and tells
+# no monitor story.
+on:
+  pull_request: {}
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # A single variant here rather than the hourly matrix. The point of a
+  # pull-request run is the *branch class* the results arrive under, not platform
+  # coverage — and doubling every pull request's runner cost to re-establish
+  # coverage the schedule already provides is not worth it.
+  monitors:
+    name: monitors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/monitors
+        with:
+          variant: linux
+          org-slug: ${{ vars.TRUNK_ORG_SLUG }}
+          # Empty on pull requests from forks, which this repository being public
+          # guarantees will happen. The action skips the upload with a log line
+          # rather than failing: a red X on a contributor's pull request because
+          # our demo could not upload would be a bug, not a signal.
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+          api-address: ${{ vars.TRUNK_API_ADDRESS }}
+          test-collection-id: ${{ vars.MONITORS_TEST_COLLECTION }}
+
+  app:
+    name: app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/app
+        with:
+          variant: linux
+          org-slug: ${{ vars.TRUNK_ORG_SLUG }}
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+          api-address: ${{ vars.TRUNK_API_ADDRESS }}
+          test-collection-id: ${{ vars.APP_TEST_COLLECTION }}
+
+  # Not a story — a guard. Every generator and every story is checked here so
+  # that a pull request cannot land a change that breaks determinism, orphans a
+  # test's identity, or emits JUnit the uploader would warn about.
+  checks:
+    name: lint, typecheck, and the generators' own tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+      - run: pnpm format
+      - run: pnpm typecheck
+
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          workspaces: . -> target
+
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+
+      # With the uploader binary present, the generators' test suite runs their
+      # output through the uploader's own `validate` subcommand — which parses it
+      # exactly as an upload would, and uploads nothing. That is the check that
+      # catches malformed reports, stale timestamps, and future timestamps before
+      # they reach the product.
+      - name: Resolve the uploader for validation
+        id: cli
+        run: |
+          set -euo pipefail
+          workdir="$(mktemp -d)"
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$workdir/cli.tar.gz" \
+            "https://github.com/trunk-io/analytics-cli/releases/latest/download/trunk-analytics-cli-x86_64-unknown-linux.tar.gz"
+          tar xzf "$workdir/cli.tar.gz" -C "$workdir"
+          echo "path=$workdir/trunk-analytics-cli" >> "$GITHUB_OUTPUT"
+
+      - name: Test the generators
+        env:
+          TRUNK_ANALYTICS_CLI: ${{ steps.cli.outputs.path }}
+        run: cargo test

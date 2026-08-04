@@ -1,0 +1,106 @@
+name: Run the app stories
+description: >
+  Runs every package under app/ and uploads its results. Runner-agnostic: it
+  reads the variant it is handed rather than deciding one, so the same action is
+  callable from the scheduled workflow and from pull requests.
+
+inputs:
+  variant:
+    description: Variant to tag the upload with. Comes from the calling job's matrix.
+    required: true
+  org-slug:
+    description: Trunk org URL slug.
+    required: true
+  token:
+    description: Trunk org API token. Empty on fork pull requests, which skips the upload.
+    required: false
+    default: ""
+  api-address:
+    description: Trunk API address. Lets a fork point at a different environment.
+    required: false
+    default: ""
+  test-collection-id:
+    description: Collection ID for app/. Empty skips the upload.
+    required: false
+    default: ""
+  cli-version:
+    description: Uploader CLI version.
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: 22
+
+    - name: Set up pnpm
+      uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    # Unlike monitors/, some of these tests call real external services. A
+    # network failure here is not a bug in the demo — it is the story — so the
+    # exit code is captured rather than allowed to stop the run.
+    #
+    # `continue-on-error` is not available on composite action steps, which is
+    # why this is done in bash.
+    - name: Run vitest scenarios
+      shell: bash
+      run: |
+        set +e
+        pnpm --filter "./app/**" --no-bail --if-present run test
+        code=$?
+        set -e
+        if [ "$code" -eq 0 ]; then echo "vitest: all scenarios passed"; else echo "vitest: exited $code — expected, these scenarios fail on purpose or on someone else's outage"; fi
+
+    - name: Run playwright scenarios
+      shell: bash
+      run: |
+        set +e
+        pnpm --filter "./app/**" --no-bail --if-present run test:e2e
+        code=$?
+        set -e
+        if [ "$code" -eq 0 ]; then echo "playwright: all scenarios passed"; else echo "playwright: exited $code — expected"; fi
+
+    - name: Report what was produced
+      id: results
+      shell: bash
+      run: |
+        shopt -s nullglob
+        files=(app/*/test-results/*.xml)
+        echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
+        printf 'produced %d result file(s)\n' "${#files[@]}"
+        for file in "${files[@]}"; do echo "  $file"; done
+
+    - name: Skip the upload, with a reason
+      if: ${{ inputs.token == '' || inputs.test-collection-id == '' }}
+      shell: bash
+      env:
+        HAS_TOKEN: ${{ inputs.token != '' }}
+      run: |
+        if [ "$HAS_TOKEN" != "true" ]; then
+          echo "::notice title=app upload skipped::No Trunk API token in this context. Expected on pull requests from forks."
+        else
+          echo "::notice title=app upload skipped::APP_TEST_COLLECTION is unset. Set it rather than letting results land in the org default."
+        fi
+
+    - name: Upload results
+      if: ${{ inputs.token != '' && inputs.test-collection-id != '' && steps.results.outputs.count != '0' }}
+      uses: trunk-io/analytics-uploader@ee0cebf9c5ca9b75118c788d952a7ce37b300425 # main
+      env:
+        TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
+        # Off deliberately — see .github/actions/monitors/action.yaml for why.
+        TRUNK_DISABLE_QUARANTINING: "true"
+      with:
+        junit-paths: app/*/test-results/*.xml
+        org-slug: ${{ inputs.org-slug }}
+        token: ${{ inputs.token }}
+        test-collection-id: ${{ inputs.test-collection-id }}
+        variant: ${{ inputs.variant }}
+        cli-version: ${{ inputs.cli-version }}
+        use-cache: true

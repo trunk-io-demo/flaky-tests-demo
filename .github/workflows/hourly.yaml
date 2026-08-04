@@ -1,0 +1,189 @@
+name: Hourly
+
+# One schedule for the whole repo. There are deliberately no per-folder
+# schedules: pass-on-retry pairs are only formed from runs inside a trailing
+# window of a few hours, so the cadence has to stay well under it, and synth/
+# volume is tuned by its scale variables rather than by running more often.
+#
+# Scheduled at :17 rather than :00. GitHub queues scheduled workflows across
+# every repository on the platform, and the top of the hour is the worst minute
+# to ask for one — delays there are routine and long. That matters here because
+# missing runs resolve monitors: a gap wider than a stale threshold resolves a
+# detection, and our own infrastructure flakiness would become indistinguishable
+# from the story being told. See docs/operations.md.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch: {}
+
+# Two runs of this workflow at once would double-report every story, which reads
+# as a run-count anomaly rather than as a scheduling accident.
+concurrency:
+  group: hourly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # The workflow owns runs-on and the variant matrix, because they are job-level
+  # keys a composite action cannot declare. Each action is a runner-agnostic
+  # step that reads the variant it is handed.
+  #
+  # Both legs are free for public repositories, so a real two-variant matrix
+  # costs nothing. Adding macOS would not be free, which is exactly why
+  # synth/variant-rates fabricates its macOS variant instead.
+  monitors:
+    name: monitors (${{ matrix.variant }})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs-on: ubuntu-latest
+            variant: linux
+          - runs-on: ubuntu-24.04-arm
+            variant: linux-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/monitors
+        with:
+          variant: ${{ matrix.variant }}
+          org-slug: ${{ vars.TRUNK_ORG_SLUG }}
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+          api-address: ${{ vars.TRUNK_API_ADDRESS }}
+          test-collection-id: ${{ vars.MONITORS_TEST_COLLECTION }}
+
+  app:
+    name: app (${{ matrix.variant }})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs-on: ubuntu-latest
+            variant: linux
+          - runs-on: ubuntu-24.04-arm
+            variant: linux-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/app
+        with:
+          variant: ${{ matrix.variant }}
+          org-slug: ${{ vars.TRUNK_ORG_SLUG }}
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+          api-address: ${{ vars.TRUNK_API_ADDRESS }}
+          test-collection-id: ${{ vars.APP_TEST_COLLECTION }}
+
+  # Not in the matrix. synth/ fabricates its variants — that is the point of
+  # synth/variant-rates — so running it twice would duplicate every report under
+  # a variant it already set for itself.
+  synth:
+    name: synth
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/synth
+        with:
+          org-slug: ${{ vars.TRUNK_ORG_SLUG }}
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+          api-address: ${{ vars.TRUNK_API_ADDRESS }}
+          test-collection-id: ${{ vars.SYNTH_TEST_COLLECTION }}
+          repo-url: ${{ github.server_url }}/${{ github.repository }}
+
+  # The PR factory. Opens a pull request so that pr.yaml can upload
+  # PR-attributed results, then closes the *previous* run's — not the one it
+  # just opened, which would race the checks.
+  #
+  # This does not work with the default workflow token: events created with
+  # GITHUB_TOKEN do not trigger further workflow runs, so a pull request opened
+  # with it never fires pr.yaml and no PR-attributed data ever appears. It is
+  # the single most likely reason for "the factory runs but no PR data shows up."
+  # See docs/operations.md.
+  pr-factory:
+    name: pr factory
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for the factory token
+        id: token
+        env:
+          HAS_TOKEN: ${{ secrets.PR_FACTORY_TOKEN != '' }}
+        run: |
+          echo "present=$HAS_TOKEN" >> "$GITHUB_OUTPUT"
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "::notice title=PR factory skipped::PR_FACTORY_TOKEN is unset. The default workflow token cannot be used here — it does not trigger pr.yaml. See docs/operations.md."
+          fi
+
+      - name: Checkout
+        if: ${{ steps.token.outputs.present == 'true' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Checked out with the factory token so that the push below is
+          # attributed to it rather than to the workflow.
+          token: ${{ secrets.PR_FACTORY_TOKEN }}
+
+      - name: Open this hour's pull request
+        if: ${{ steps.token.outputs.present == 'true' }}
+        id: open
+        env:
+          GH_TOKEN: ${{ secrets.PR_FACTORY_TOKEN }}
+          LABEL: pr-factory
+        run: |
+          set -euo pipefail
+          branch="pr-factory/${GITHUB_RUN_ID}"
+          git config user.name "flaky-tests-demo pr factory"
+          git config user.email "pr-factory@users.noreply.github.com"
+          git switch --create "$branch"
+
+          # Overwritten rather than appended to, so the change cannot accumulate.
+          # Nothing here is ever merged, so its content does not matter — only
+          # that it is self-evidently inert and obviously machine-generated.
+          mkdir -p .github/pr-factory
+          cat > .github/pr-factory/heartbeat.txt <<EOF
+          Machine-generated by the hourly PR factory. Never merged, never read.
+
+          Its only job is to exist long enough for pr.yaml to upload test results
+          attributed to a pull request. See docs/operations.md.
+
+          run: ${GITHUB_RUN_ID}
+          EOF
+
+          git add .github/pr-factory/heartbeat.txt
+          git commit --message "Machine-generated heartbeat for run ${GITHUB_RUN_ID}"
+          git push origin "$branch"
+
+          gh label create "$LABEL" --description "Opened by the hourly PR factory. Closed, never merged." --color ededed 2>/dev/null || true
+          url=$(gh pr create \
+            --base "${GITHUB_REF_NAME}" \
+            --head "$branch" \
+            --label "$LABEL" \
+            --title "Machine-generated: PR factory heartbeat" \
+            --body "Opened by the hourly PR factory so that \`pr.yaml\` can upload pull-request-attributed test results. **This is never merged** — it is closed on the next hourly run. See \`docs/operations.md\`.")
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "opened $url"
+
+      # Closing last hour's rather than this hour's gives pr.yaml a full hour to
+      # finish. The prior pull requests are found by the factory's label, not by
+      # number arithmetic — a skipped or failed run makes numbers lie.
+      - name: Close the previous pull requests
+        if: ${{ steps.token.outputs.present == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.PR_FACTORY_TOKEN }}
+          LABEL: pr-factory
+          KEEP: ${{ steps.open.outputs.branch }}
+        run: |
+          set -euo pipefail
+          stale=$(gh pr list --label "$LABEL" --state open --limit 50 \
+            --json number,headRefName \
+            --jq ".[] | select(.headRefName != \"$KEEP\") | .number")
+
+          if [ -z "$stale" ]; then
+            echo "nothing to close"
+            exit 0
+          fi
+
+          for number in $stale; do
+            echo "closing #$number"
+            gh pr close "$number" --delete-branch \
+              --comment "Closed by the PR factory, not merged. Its results have already been uploaded."
+          done
