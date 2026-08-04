@@ -590,6 +590,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "variant-rates"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "junit-gen",
+]
+
+[[package]]
 name = "vte"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
