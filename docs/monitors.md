@@ -27,6 +27,22 @@ section records the deliberate overlaps so that a reader who lands on one story 
 | ------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
 | [`monitors/failure-rate`](../monitors/failure-rate/README.md) | `failure-count`, `new-test` | Three tests failing in one run is a count as well as a rate, and every test is new exactly once. |
 
+## Live scenarios
+
+`app/` produces the failure shapes that cannot be fabricated convincingly, using real tests against
+surfaces that genuinely misbehave.
+
+| Scenario              | Demonstrates                                                                                                         | Story                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Parking meter         | A periodic, predictable pattern no percentage-based rate can imitate — and one an aggregate actively misleads about. | [`app/parking-meter`](../app/parking-meter/README.md)       |
+| Mass detection event  | Alert **volume** and grouping rather than single detections. Twenty tests fail together, one day a month.            | [`app/mass-detection`](../app/mass-detection/README.md)     |
+| Third-party API calls | Failures that cluster in time and **correlate across tests**, recovering together when a shared budget resets.       | [`app/third-party-apis`](../app/third-party-apis/README.md) |
+| GitHub uptime         | A real external dependency causing real intermittency.                                                               | [`app/github-uptime`](../app/github-uptime/README.md)       |
+
+⚠️ Three of those fail on somebody else's schedule or somebody else's behalf. Each one's README says
+how to tell "the monitor worked" from "we have a problem" in one lookup, and
+[`operations.md`](operations.md) lists them together.
+
 ## Synthetic stories
 
 `synth/` demonstrates the arcs that no live test can produce inside a demo — a 30-day test

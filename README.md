@@ -13,13 +13,13 @@ and alert volume still look right.
 
 ## How to read this repo
 
-| Directory                        | What it is                                                                                                                                          |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`monitors/`](monitors/)         | One package per monitor type. Each has a healthcheck test that always passes, plus tests that trip its monitor by obvious means. Start here.        |
-| [`app/`](app/)                   | Real tests running against surfaces that genuinely misbehave — time-of-day windows, external dependencies, rate limits.                             |
-| [`synth/`](synth/)               | Synthetic JUnit results. Nothing executes; a Rust generator fabricates the run history that would otherwise take weeks of wall clock to accumulate. |
-| [`integrations/`](integrations/) | Deferred. Reserved for per-framework upload wiring.                                                                                                 |
-| [`docs/`](docs/)                 | The real documentation.                                                                                                                             |
+| Directory                        | What it is                                                                                                                                                     |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`monitors/`](monitors/)         | Seven packages, one per monitor. Each has a healthcheck that always passes plus tests that trip its monitor by obvious means. **Start here.**                  |
+| [`app/`](app/)                   | Four scenarios of real tests against surfaces that genuinely misbehave — a time-of-day schedule, a monthly event, a shared rate limit, GitHub's actual uptime. |
+| [`synth/`](synth/)               | Synthetic JUnit. Nothing executes; three Rust generators fabricate the run history that would otherwise take weeks of wall clock to accumulate.                |
+| [`integrations/`](integrations/) | Deferred. Reserved for per-framework upload wiring.                                                                                                            |
+| [`docs/`](docs/)                 | The real documentation.                                                                                                                                        |
 
 The layout is organized by **purpose, not by language**. There is no `typescript/` or `rust/`
 level: `monitors/` and `app/` are TypeScript, `synth/` is Rust, and that is a commitment rather
@@ -52,6 +52,16 @@ so a default would let a fork's synthetic runs merge into the original's test hi
 Local runs upload nothing. Uploads need an org token, which only CI has, and which is absent by
 design on pull requests from forks — those runs skip the upload with a log line rather than
 failing.
+
+## If a monitor here fires, is something wrong?
+
+Usually not — most of what happens here is the demo working. Three stories are deliberately
+alarming, and each is triageable in one lookup: [`docs/operations.md`](docs/operations.md) lists them
+with their triggers. Every deliberate failure message also ends with a sentence saying so.
+
+The one thing that _is_ a real signal: a **red hourly job**. Quarantining is off and test outcomes do
+not affect the job's exit code, so a red run means uploads are failing rather than that a demo test
+failed on purpose.
 
 ## A caveat worth stating up front
 

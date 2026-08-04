@@ -5,8 +5,9 @@ owning team alerts on, so an outage here and a story here look alike until you c
 
 ## Cadence
 
-One hourly scheduled workflow runs `synth/`, `monitors/`, and `app/`, and also drives the PR
-factory. There are deliberately **no per-folder schedules** — a single cadence is what keeps the
+One hourly scheduled workflow ([`hourly.yaml`](../.github/workflows/hourly.yaml)) runs `synth/`,
+`monitors/`, and `app/`, and also drives the PR factory. A second workflow
+([`pr.yaml`](../.github/workflows/pr.yaml)) runs `monitors/` and `app/` on every pull request. There are deliberately **no per-folder schedules** — a single cadence is what keeps the
 evaluation windows below satisfiable, and `synth/` volume is tuned by its scale variables rather
 than by running more often.
 
@@ -113,11 +114,20 @@ In order — each step is cheaper than the one after it.
 
 ## Deliberately alarming stories, and how to tell them apart from incidents
 
-_Populated as the stories land. Anything in this repo that looks like an incident is listed here
-with the date or condition that triggers it, so that an alert can be triaged in one lookup._
+Everything in this repo that can look like an incident is listed here with the condition that
+triggers it, so an alert can be triaged in one lookup rather than by reading code.
 
-| Story | Trigger | Why it looks like an incident |
-| ----- | ------- | ----------------------------- |
+| Story                                                       | Trigger                                                                                                                      | Why it looks like an incident                                                                                                                | How to confirm in one step                                                                                            |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| [`app/mass-detection`](../app/mass-detection/README.md)     | **Day 13 of every month, UTC** (`APP_MASS_DETECTION_DAY_OF_MONTH`)                                                           | Twenty tests in one suite fail together, in the same run, all day. That is exactly what a bad deploy or an infrastructure change looks like. | Check the date. Also: its healthcheck stays green, so the suite has not died.                                         |
+| [`app/third-party-apis`](../app/third-party-apis/README.md) | GitHub's unauthenticated rate limit exhausted for the runner's IP — 60/hour, **shared with everything else on the platform** | Two tests fail in the same run and recover together at the top of the hour. Reads like a broken integration.                                 | The failure message names the cause: rate limited, request failed, or budget unreadable. Only the first is the story. |
+| [`app/github-uptime`](../app/github-uptime/README.md)       | A real GitHub incident at or above `APP_UPTIME_THRESHOLD` (`major` by default)                                               | It is a real outage — just not ours.                                                                                                         | Open <https://www.githubstatus.com>, the same page the test reads.                                                    |
+| [`app/parking-meter`](../app/parking-meter/README.md)       | Weekdays and Saturday, 08:00–18:00 UTC                                                                                       | Nothing, once you look at _when_. Listed because a 42% failure rate looks like ordinary flakiness until you do.                              | The failure message prints the day, the hour, and the schedule.                                                       |
+| [`monitors/*`](../monitors/)                                | Continuously, by design                                                                                                      | Deliberate failures at configured rates.                                                                                                     | Every deliberate failure message ends with "This is the demo working, not a broken test."                             |
+
+**A change to a trigger variable can fire an event immediately.** Setting
+`APP_MASS_DETECTION_DAY_OF_MONTH` to today starts twenty failures on the next run. That is not a bug,
+but it will page somebody.
 
 ## Related
 

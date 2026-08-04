@@ -76,6 +76,7 @@ start failing on the next run. That is not a bug, but it will page somebody.
 ## Links
 
 - Up: [`app/README.md`](../README.md)
+- Up: [`docs/monitors.md`](../../docs/monitors.md) — the whole catalog
 - Up: [`docs/operations.md`](../../docs/operations.md) — where this trigger is also recorded
 - Sideways: [`monitors/failure-count`](../../monitors/failure-count/README.md) — a count that is
   steady rather than a burst

@@ -89,6 +89,15 @@ A rate outside 0–100, or one that is not a number, logs a warning and falls ba
 rather than failing the suite. A typo should show up as the demo being quieter than expected, not as
 a red run that looks like a real breakage.
 
+### `app/`
+
+| Key                               | Kind | Default | Effect                                                                                                                                                                 |
+| --------------------------------- | ---- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_PARKING_PAID_HOURS`          | var  | `8-18`  | The paid-parking window, as `START-END` hours **UTC**. A local timezone would make the pattern depend on the runner and on daylight saving.                            |
+| `APP_MASS_DETECTION_DAY_OF_MONTH` | var  | 13      | Day of each month twenty tests fail together. Capped at 28, because 29–31 do not exist in every month. **Setting this to today fires the event on the next run.**      |
+| `APP_THIRD_PARTY_BURST`           | var  | 6       | Requests per run that spend GitHub's shared unauthenticated budget. Capped at 20 in code. At the default this repo uses about 10% of a 60/hour budget it does not own. |
+| `APP_UPTIME_THRESHOLD`            | var  | `major` | Minimum GitHub status severity that fails: `minor`, `major`, `critical`. `minor` fires considerably more often.                                                        |
+
 ## The PR factory
 
 | Key                | Kind   | Purpose                                                                                                                                      |
