@@ -37,11 +37,17 @@ than a default. See [`docs/architecture.md`](docs/architecture.md).
 ## Running it locally
 
 ```bash
-pnpm install          # one lockfile resolves every workspace member
-pnpm test             # every vitest story
-pnpm test:e2e         # every playwright story
-cargo run -p cohorts  # a synth generator, writing JUnit XML to disk
+pnpm install     # one lockfile resolves every workspace member
+pnpm test        # every vitest story
+pnpm test:e2e    # every playwright story
+cargo test       # the synth generators' own tests
+
+# a synth generator, writing JUnit XML and an upload manifest to ./synth-out
+SYNTH_REPO_URL=https://github.com/your-org/your-fork cargo run -p cohorts
 ```
+
+`SYNTH_REPO_URL` has no default on purpose: the repository name is part of every test's identity,
+so a default would let a fork's synthetic runs merge into the original's test history.
 
 Local runs upload nothing. Uploads need an org token, which only CI has, and which is absent by
 design on pull requests from forks — those runs skip the upload with a log line rather than

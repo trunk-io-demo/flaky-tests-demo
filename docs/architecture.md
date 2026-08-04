@@ -115,6 +115,17 @@ explicitly: name, classname, file, and suite are all derived from the story ID, 
 things that are _not_ part of identity — durations, outcomes, message text — are drawn from the
 seeded RNG.
 
+### Report timestamps are anchored to the finish, not the start
+
+The uploader validates report timestamps from both ends, and a generator can trip either: a report
+stamped more than an hour ago warns as **stale**, and a test case stamped later than now warns as a
+**future timestamp**. Laying cases out forward from a report stamped at now produces the second;
+backdating a report to tell a dated story produces the first.
+
+So a report is laid out to _end_ at the moment it was generated, and a story's dates live in its
+test _names_ rather than in its timestamps. Neither warning fails an upload, but both are visible
+on screen during a demo.
+
 ### Determinism
 
 Seeds are derived, never random: `seed = hash(storyId, dateBucket)`. The data looks random,

@@ -1,0 +1,161 @@
+//! The upload manifest.
+//!
+//! A generator writes JUnit files and a manifest describing how each one should
+//! be attributed; the CI action reads the manifest and performs the uploads.
+//! The split exists because a single `synth/` run produces many uploads with
+//! *different* attribution — a different branch, PR number, or variant each
+//! time — and a composite action cannot loop a `uses:` step.
+//!
+//! The format is JSON Lines: one self-contained upload per line, so the action
+//! can stream it in a shell loop and so a partial write is visibly partial
+//! rather than invalid.
+
+use std::collections::BTreeMap;
+use std::fs;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+
+use anyhow::{Context, Result};
+use serde::Serialize;
+
+use crate::attribution::{Attribution, BranchClass};
+
+/// The manifest's file name inside the output directory.
+pub const MANIFEST_FILE_NAME: &str = "uploads.jsonl";
+
+/// One upload: a JUnit file plus the environment to upload it with.
+#[derive(Debug, Clone, Serialize)]
+pub struct UploadEntry {
+    /// Path to the JUnit XML, relative to the repository root so the action can
+    /// use it verbatim.
+    pub junit_path: String,
+    /// Human-readable description, logged by the action before each upload.
+    /// This is what someone reads when they are trying to work out which
+    /// upload went wrong.
+    pub label: String,
+    /// The class this upload should arrive as, recorded so the action can log
+    /// the intent next to the result. Derived, never sent.
+    pub branch_class: BranchClass,
+    /// Environment variables to set for this upload.
+    pub env: BTreeMap<String, String>,
+}
+
+impl UploadEntry {
+    pub fn new(
+        junit_path: impl Into<String>,
+        label: impl Into<String>,
+        attribution: &Attribution,
+    ) -> Self {
+        Self {
+            junit_path: junit_path.into(),
+            label: label.into(),
+            branch_class: attribution.branch_class,
+            env: attribution.to_env(),
+        }
+    }
+}
+
+/// Every upload a generator run produced.
+#[derive(Debug, Clone, Default)]
+pub struct Manifest {
+    entries: Vec<UploadEntry>,
+}
+
+impl Manifest {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn push(&mut self, entry: UploadEntry) {
+        self.entries.push(entry);
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    pub fn entries(&self) -> &[UploadEntry] {
+        &self.entries
+    }
+
+    /// Write the manifest into `dir`, returning its path.
+    ///
+    /// An empty manifest is still written. "Zero uploads today" is a legitimate
+    /// outcome — every cohort may have retired — and the action needs to be able
+    /// to tell that apart from a generator that crashed before writing.
+    pub fn write(&self, dir: impl AsRef<Path>) -> Result<PathBuf> {
+        let dir = dir.as_ref();
+        fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
+
+        let path = dir.join(MANIFEST_FILE_NAME);
+        let mut file =
+            fs::File::create(&path).with_context(|| format!("creating {}", path.display()))?;
+
+        for entry in &self.entries {
+            let line = serde_json::to_string(entry).context("serializing manifest entry")?;
+            writeln!(file, "{line}").with_context(|| format!("writing {}", path.display()))?;
+        }
+        Ok(path)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::attribution::{AttributionBase, ProtectedBranches};
+    use chrono::DateTime;
+
+    fn attribution() -> Attribution {
+        let base = AttributionBase::new(
+            "https://github.com/example/repo",
+            "0123456789abcdef0123456789abcdef01234567",
+            "synth",
+            DateTime::from_timestamp(1_770_000_000, 0).expect("valid epoch"),
+            ProtectedBranches::new(["main"]),
+        );
+        Attribution::on_pull_request(base, 99, "feature/x")
+    }
+
+    #[test]
+    fn each_entry_is_one_self_contained_line() {
+        let mut manifest = Manifest::new();
+        for i in 0..3 {
+            manifest.push(UploadEntry::new(
+                format!("synth-out/junit-{i}.xml"),
+                format!("upload {i}"),
+                &attribution(),
+            ));
+        }
+
+        let dir = std::env::temp_dir().join(format!("junit-gen-manifest-{}", std::process::id()));
+        let path = manifest.write(&dir).expect("writes");
+        let contents = fs::read_to_string(&path).expect("reads");
+
+        let lines: Vec<&str> = contents.lines().collect();
+        assert_eq!(lines.len(), 3);
+        for line in lines {
+            let parsed: serde_json::Value = serde_json::from_str(line).expect("valid json");
+            assert!(parsed["junit_path"].as_str().is_some());
+            assert_eq!(parsed["branch_class"], "PullRequest");
+            assert_eq!(parsed["env"]["TRUNK_PR_NUMBER"], "99");
+            assert_eq!(parsed["env"]["TRUNK_USE_UNCLONED_REPO"], "true");
+        }
+
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn an_empty_manifest_is_still_written() {
+        // Otherwise "every cohort retired today" is indistinguishable from
+        // "the generator crashed".
+        let dir = std::env::temp_dir().join(format!("junit-gen-empty-{}", std::process::id()));
+        let path = Manifest::new().write(&dir).expect("writes");
+        assert!(path.exists());
+        assert_eq!(fs::read_to_string(&path).expect("reads"), "");
+        fs::remove_dir_all(&dir).ok();
+    }
+}

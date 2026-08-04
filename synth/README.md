@@ -35,6 +35,34 @@ absence. Retirement dates are therefore derivable from the cohort's own name and
 separate state — otherwise an unplanned gap in the schedule would be indistinguishable from an
 intentional retirement.
 
+## Verifying it locally
+
+```bash
+cargo test -p junit-gen
+```
+
+That covers determinism, identity stability, and the branch-class mapping. It does **not** cover
+whether the uploader accepts the output, which is a separate and more useful check:
+
+```bash
+curl -sSL -o cli.tar.gz \
+  https://github.com/trunk-io/analytics-cli/releases/latest/download/trunk-analytics-cli-x86_64-unknown-linux.tar.gz
+tar xzf cli.tar.gz
+TRUNK_ANALYTICS_CLI="$PWD/trunk-analytics-cli" cargo test -p junit-gen
+```
+
+With `TRUNK_ANALYTICS_CLI` set, the test suite runs generated reports through the uploader's own
+`validate` subcommand, which parses them exactly as an upload would and reports nothing to any
+server. The test is skipped with a printed note when the variable is unset, so a plain
+`cargo test` needs no download.
+
+Report timestamps are the thing this check catches. A report stamped more than an hour ago warns
+as stale, and a case stamped later than now warns as a future timestamp — so reports are laid out
+to _end_ at the moment they were generated, and a story's dates live in its test names instead.
+
+What none of this verifies is whether a monitor fired. That is only observable in the product,
+hours or days later.
+
 ## Related
 
 - [`../docs/architecture.md`](../docs/architecture.md) — the identity constraint in full
