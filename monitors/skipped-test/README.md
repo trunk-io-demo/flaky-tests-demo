@@ -12,7 +12,10 @@ fails, after which five tests report as skipped without anyone having decided th
 one failure and looks almost fine.
 
 The setup fails 60% of runs rather than all of them, so the five downstream steps have **partial**
-history: mostly skipped, occasionally run, each at its own small rate. Partial history is the harder
+history: mostly skipped, occasionally run, each at its own small rate. And when the setup does pass, the
+break point moves — a serial group stops at whichever test fails first, so a downstream step failing at
+its own 2–10% skips only the steps behind _it_. Observed: setup passed, `reindexes after the update`
+failed, and the two after it were skipped. Partial history is the harder
 signal — a test that runs sometimes looks maintained. Retries are off, since a retried test that
 eventually passes is a pass-on-retry story and would give the cascade a second chance to not cascade.
 
