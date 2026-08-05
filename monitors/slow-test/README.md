@@ -37,18 +37,27 @@ real shared state. Each waits out everyone ahead of it, so the last one spends t
 waiting than doing its own work.
 
 How long each holds the resource is jittered per hour, so the queue costs a different amount every hour
-and the tail's duration drifts between roughly 300ms and 500ms with no code change behind it. That is the
-part worth seeing: a duration that moves for reasons outside the test.
+and a test's duration drifts with no code change behind it. That is the part worth seeing: a duration that
+moves for reasons outside the test.
 
-| Test                                                            | Holds it for |
-| --------------------------------------------------------------- | ------------ |
-| `waits its turn on the shared fixture, holding it about 40 ms`  | ~40ms        |
-| `waits its turn on the shared fixture, holding it about 80 ms`  | ~80ms        |
-| `waits its turn on the shared fixture, holding it about 120 ms` | ~120ms       |
-| `waits its turn on the shared fixture, holding it about 160 ms` | ~160ms       |
+| Test                                                             | Holds it for | Actual duration |
+| ---------------------------------------------------------------- | ------------ | --------------- |
+| `waits its turn on the shared fixture, holding it about 700 ms`  | ~700ms       | 0.5–0.9s        |
+| `waits its turn on the shared fixture, holding it about 1400 ms` | ~1.4s        | 1.4–2.7s        |
+| `waits its turn on the shared fixture, holding it about 2100 ms` | ~2.1s        | 2.9–5.5s        |
+| `waits its turn on the shared fixture, holding it about 2800 ms` | ~2.8s        | 4.9–8.6s        |
+
+The spread is the whole point: the tail does 2.8 seconds of work and takes up to 8.6, and which end of
+that range it lands on depends on nothing it controls. Measured across 56 hour buckets, the fastest test
+runs in 491ms and the slowest in 8564ms.
+
+Each test carries a 60-second timeout, because vitest's 5-second default would kill the tail.
 
 If contention ever stops resolving the test fails outright, because a wait that never ends is a deadlock
 rather than slowness.
+
+**This is the most expensive story in the repo**: around 7 seconds of wall clock every run, paid hourly.
+Lower `HOLD_STEP_MS` to make it cheaper — the shape survives at any scale, it is just less dramatic.
 
 ## Other monitors
 

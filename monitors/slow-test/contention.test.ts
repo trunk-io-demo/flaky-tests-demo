@@ -7,9 +7,10 @@ import { describe, it } from "vitest";
 // times are jittered per hour, so the queue costs a different amount every hour and
 // a duration drifts for reasons outside the test. See README.md.
 
-const HOLD_STEP_MS = 40;
-const POLL_MS = 5;
-const GIVE_UP_MS = 10_000;
+const HOLD_STEP_MS = 700;
+const POLL_MS = 25;
+const GIVE_UP_MS = 30_000;
+const TEST_TIMEOUT_MS = 60_000;
 
 let nextTicket = 0;
 let nowServing = 0;
@@ -17,9 +18,10 @@ let nowServing = 0;
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-/** 0.5x to 1.5x, fixed within the hour. */
+// 0.7x to 1.3x, fixed within the hour: enough to move the queue's cost without
+// letting the tail run away past the timeout.
 const jitter = (key: string): number =>
-  0.5 + randomPercentage(`contention-${key}`, hourBucket()) / 100;
+  0.7 + (randomPercentage(`contention-${key}`, hourBucket()) * 0.6) / 100;
 
 async function waitForTurn(): Promise<number> {
   const ticket = nextTicket++;
@@ -53,6 +55,8 @@ describe("slow-test contention", () => {
         }
         expect(waited).toBeGreaterThanOrEqual(0);
       },
+      // Well above the tail's worst case: vitest's 5s default would kill it.
+      TEST_TIMEOUT_MS,
     );
   }
 });
