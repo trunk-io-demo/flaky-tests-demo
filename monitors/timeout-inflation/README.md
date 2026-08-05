@@ -14,9 +14,7 @@ failures all take almost exactly the ceiling while its passes are unaffected:
   failures:                   ▁█▁    ~5000ms, at the ceiling
 ```
 
-Every aggregate misses this. The mean barely moves while the failure rate is low. A slow-test monitor
-sees p95 climb and sends somebody to profile code that did not change. A failure-rate monitor sees the
-failures but not why. The inflation is the _diagnosis_: go look at what it is waiting for.
+A timeout inflation monitor firing indicates that the timeout is likely too high and valuable CI time is being wasted.
 
 ## The story
 
@@ -34,9 +32,9 @@ byte-identical, which reads as generated.
 
 ## What you should see
 
-About 5 failures out of 24 for each test per day. The inflating one's failures cluster tightly at 5s
-while its passes cluster at 150ms; the control's failures are instant. A timeout-inflation monitor fires
-on the first and not the second, while a slow-test monitor cannot tell them apart.
+About 5 failures out of 24 for each test per day. Measured: a failing run takes **5109ms** and a passing
+one **151ms**, while the control fails in **2ms**. A timeout-inflation monitor fires on the first and not
+the second; a slow-test monitor cannot tell them apart.
 
 Cost: roughly 1s of wall clock per run on average, 5s on a failing one.
 
