@@ -2,28 +2,32 @@ import { relative, resolve } from "node:path";
 
 import { defineConfig } from "@playwright/test";
 
-// Rooted at the repository: `file` and `classname` feed test identity.
+// testDir is the repo root so that the junit reporter's classname is
+// repository-relative: it uses the path from rootDir, and both classname and file
+// feed test identity.
 const repoRoot = resolve(import.meta.dirname, "../..");
 const packagePath = relative(repoRoot, import.meta.dirname);
 
 export default defineConfig({
-  testDir: import.meta.dirname,
-  testMatch: ["**/*.spec.ts"],
+  testDir: repoRoot,
+  testMatch: [`${packagePath}/**/*.spec.ts`],
 
-  // A retried test that eventually passes is a pass-on-retry story, and would
-  // give the cascade a second chance to not cascade.
   retries: 0,
-
   workers: 1,
   fullyParallel: false,
   forbidOnly: false,
   maxFailures: 0,
 
+  // includeRetries is what puts every attempt in the XML as a run.
   reporter: [
     ["list"],
     [
-      "./junit-reporter.ts",
-      { outputFile: `${packagePath}/test-results/playwright.junit.xml` },
+      "junit",
+      {
+        // Relative to cwd, which pnpm sets to this package.
+        outputFile: "test-results/playwright.junit.xml",
+        includeRetries: true,
+      },
     ],
   ],
 

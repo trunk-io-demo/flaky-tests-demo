@@ -1,8 +1,4 @@
-import {
-  daysAgoIso,
-  randomPercentage,
-  testIter,
-} from "@flaky-tests-demo/monitors-utils";
+import { daysAgoIso, randomPercentage } from "@flaky-tests-demo/monitors-utils";
 import { describe, expect, it } from "vitest";
 
 // A test is only new once, so this generates one per day over a rolling window,
@@ -22,10 +18,6 @@ const rateForAge = (ageInDays: number): number =>
 describe("new-test", () => {
   it("healthcheck always passes", () => {
     expect(1).toBe(1);
-  });
-
-  it("has been here since the beginning", () => {
-    expect(testIter(WINDOW_DAYS)).toHaveLength(WINDOW_DAYS);
   });
 
   for (let age = WINDOW_DAYS - 1; age >= 0; age--) {

@@ -37,3 +37,13 @@ the ladder separates cleanly, and a threshold anywhere in it fires on the rungs 
 the ones below. `fails 100 percent` fails every run, and is the one rung that needs no history at all.
 
 Over a week, the weekday test's rate is visibly a function of the day rather than a constant.
+
+## This also feeds pass-on-retry
+
+Scheduled runs report against the same head commit hour after hour, so any test here that fails one hour
+and passes the next has failed and passed on the same commit — a
+[pass-on-retry](../pass-on-retry/README.md) pair, formed by accident rather than by design. The higher
+rungs pair most often.
+
+That overlap is worth knowing rather than removing: real flakiness trips several monitors at once, and a
+detection appearing in two places is a property of the data, not a bug in the story.

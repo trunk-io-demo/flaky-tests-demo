@@ -91,7 +91,7 @@ keep matching the globs they were chosen to distinguish.
 appear and get closed on schedule, and nothing shows up.
 
 It matters more than it looks. Scheduled runs all report against the same head commit, so the factory
-is the only source of distinct commits — and `pass-on-retry` needs those to form pairs.
+is the only source of pull-request commits, so PR-attributed data comes from nowhere else.
 
 ## Verifying a fork
 
@@ -99,7 +99,7 @@ is the only source of distinct commits — and `pass-on-retry` needs those to fo
 | --------- | ----------------------------------------------------------------------------------- |
 | First run | Jobs green, **no upload-skipped notices**, ~90 test cases across three collections. |
 | ~2 hours  | PR-attributed runs exist. If not, it is the token.                                  |
-| ~6 hours  | Pass-on-retry pairs, which need several distinct commits in one window.             |
+| ~2 hours  | Pass-on-retry pairs from the retry ladder, which pair inside a single upload.       |
 | ~1 day    | Failure rates separate; counts and schedules become readable.                       |
 | ~14 days  | The new-test window elapses for the first dated cohorts.                            |
 | ~30 days  | The first long-lived cohort retires, having lived the full arc.                     |

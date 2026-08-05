@@ -2,28 +2,32 @@ import { relative, resolve } from "node:path";
 
 import { defineConfig } from "@playwright/test";
 
-// Rooted at the repository: `file` and `classname` feed test identity.
+// testDir is the repo root so that the junit reporter's classname is
+// repository-relative: it uses the path from rootDir, and both classname and file
+// feed test identity.
 const repoRoot = resolve(import.meta.dirname, "../..");
 const packagePath = relative(repoRoot, import.meta.dirname);
 
 export default defineConfig({
-  testDir: import.meta.dirname,
-  testMatch: ["**/*.spec.ts"],
+  testDir: repoRoot,
+  testMatch: [`${packagePath}/**/*.spec.ts`],
 
-  // The mechanism, not a robustness setting: every attempt is reported, so one
-  // upload holds both halves of every pair.
   retries: 3,
-
   workers: 1,
   fullyParallel: false,
   forbidOnly: false,
   maxFailures: 0,
 
+  // includeRetries is what puts every attempt in the XML as a run.
   reporter: [
     ["list"],
     [
-      "./junit-reporter.ts",
-      { outputFile: `${packagePath}/test-results/playwright.junit.xml` },
+      "junit",
+      {
+        // Relative to cwd, which pnpm sets to this package.
+        outputFile: "test-results/playwright.junit.xml",
+        includeRetries: true,
+      },
     ],
   ],
 

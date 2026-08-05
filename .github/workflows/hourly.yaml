@@ -1,8 +1,7 @@
 name: Hourly
 
 # One schedule for the whole repo. There are deliberately no per-folder
-# schedules: pass-on-retry pairs are only formed from runs inside a trailing
-# window of a few hours, so the cadence has to stay well under it, and synth/
+# schedules: a single cadence is what keeps the stories comparable, and synth/
 # volume is tuned by its scale variables rather than by running more often.
 #
 # Scheduled at :17 rather than :00. GitHub queues scheduled workflows across

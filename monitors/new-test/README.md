@@ -11,9 +11,6 @@ A test is only new once, and adding one by hand is a commit. So this generates o
 21-day window, each named `first appeared on <date>`. Every day a genuinely new test appears and one at
 the far end stops being emitted, so after three weeks every stage of the lifecycle is visible at once.
 
-`has been here since the beginning` is the control — without it, "everything here is new" is
-indistinguishable from "the monitor flags everything".
-
 Each member fails at a rate that decays with age — newest 15%, oldest 1%. That is realistic, since tests
 stabilize as they settle, and it is the reason the monitor exists: a new test has no history to judge a
 rate against. It also keeps the 21 members from being 21 identical tests.

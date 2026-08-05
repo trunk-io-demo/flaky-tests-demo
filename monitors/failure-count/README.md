@@ -46,3 +46,12 @@ run is therefore a `PR` run; `GITHUB_REF_NAME=main pnpm test` exercises the othe
 Within an hour, one to four failures from the scheduled run and a different set on the factory's pull
 request. Within a day, a count visibly different per branch class, and a threshold at one firing while one
 above four does not. The count steps up for a full day each Monday.
+
+## This also feeds pass-on-retry
+
+Scheduled runs report against the same head commit hour after hour, so any test here that fails one hour
+and passes the next has failed and passed on the same commit — a
+[pass-on-retry](../pass-on-retry/README.md) pair, formed by accident rather than by design. The 20% and 30% rungs pair most often; the always-fails tests never do, since they never pass.
+
+That overlap is worth knowing rather than removing: real flakiness trips several monitors at once, and a
+detection appearing in two places is a property of the data, not a bug in the story.

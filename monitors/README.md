@@ -82,11 +82,10 @@ The two quieter ways it happens.
 
 ### [`new-test/`](new-test/) · [`canonical.test.ts`](new-test/canonical.test.ts)
 
-| Test                                | Behavior                                                                 |
-| ----------------------------------- | ------------------------------------------------------------------------ |
-| `healthcheck always passes`         | Never fails.                                                             |
-| `has been here since the beginning` | The control: emphatically not new.                                       |
-| `first appeared on <date>` × 21     | One per day of a rolling window, failing at a rate that decays with age. |
+| Test                            | Behavior                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `healthcheck always passes`     | Never fails.                                                             |
+| `first appeared on <date>` × 21 | One per day of a rolling window, failing at a rate that decays with age. |
 
 ### [`slow-test/`](slow-test/) · [`canonical.test.ts`](slow-test/canonical.test.ts)
 
@@ -99,7 +98,7 @@ The two quieter ways it happens.
 
 ### [`pass-on-retry/`](pass-on-retry/) · [`retry-ladder.spec.ts`](pass-on-retry/retry-ladder.spec.ts)
 
-Playwright, three retries.
+Playwright, three retries. Pairs form **within one upload**.
 
 | Test                                            | Behavior                                            |
 | ----------------------------------------------- | --------------------------------------------------- |
@@ -111,11 +110,13 @@ Playwright, three retries.
 
 ### [`pass-on-retry/`](pass-on-retry/) · [`canonical.test.ts`](pass-on-retry/canonical.test.ts)
 
-Vitest, so the healthcheck cannot be retried.
+Vitest, no retries. Pairs form **across uploads**, since scheduled runs share a head commit.
 
-| Test                        | Behavior     |
-| --------------------------- | ------------ |
-| `healthcheck always passes` | Never fails. |
+| Test                                       | Behavior           |
+| ------------------------------------------ | ------------------ |
+| `healthcheck always passes`                | Never fails.       |
+| `fails 1 percent, pairing across uploads`  | Fails 1% of runs.  |
+| `fails 10 percent, pairing across uploads` | Fails 10% of runs. |
 
 ### [`timeout-inflation/`](timeout-inflation/) · [`canonical.test.ts`](timeout-inflation/canonical.test.ts)
 

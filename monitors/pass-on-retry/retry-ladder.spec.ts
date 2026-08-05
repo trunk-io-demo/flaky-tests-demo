@@ -1,9 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 // A test that failed and then passed on the same commit is the least deniable
-// flakiness signal there is. Every attempt is reported, so one upload holds both
-// halves of every pair — pairs form only inside a window of a few hours, so a
-// ladder spread across hourly runs never completes.
+// flakiness signal there is: failing on one commit and passing on the next has an
+// ordinary explanation, doing both on the same code has none.
+//
+// This half of the story pairs within a single upload — playwright retries the
+// test and `includeRetries` puts every attempt in the report as its own run. The
+// other half, pairing across uploads, is in canonical.test.ts.
 
 const LADDER = [
   { name: "passes on the second attempt", attemptsNeeded: 2 },
@@ -21,22 +24,17 @@ for (const { name, attemptsNeeded } of LADDER) {
   test(name, ({}, testInfo) => {
     const attempt = testInfo.retry + 1;
 
-    if (attempt < attemptsNeeded) {
-      throw new Error(
-        `deliberate failure: attempt ${String(attempt)} of ${String(attemptsNeeded)}. ` +
-          `This failure and the eventual success form a pass-on-retry pair on one ` +
-          `commit. This is the demo working.`,
-      );
-    }
-
-    expect(attempt).toBe(attemptsNeeded);
+    expect(
+      attempt,
+      `fails until attempt ${String(attemptsNeeded)}, pairing the failures with the ` +
+        `eventual success on one commit — the demo working`,
+    ).toBe(attemptsNeeded);
   });
 }
 
 test("never passes however many times it is retried", () => {
-  throw new Error(
-    "deliberate failure: this test fails on every attempt. Retried and still " +
-      "failing is not a pass-on-retry pair, and that boundary is the point. " +
-      "This is the demo working.",
-  );
+  expect(
+    "retried and still failing",
+    "not a pass-on-retry pair, which is the boundary this test draws — the demo working",
+  ).toBe("passing");
 });
