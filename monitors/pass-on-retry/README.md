@@ -52,12 +52,3 @@ over several.
 
 The PR factory also contributes commits of its own, so pairs appear against pull-request commits as well
 as against the default branch.
-
-## One known gap
-
-Playwright's built-in JUnit reporter writes `classname` but no `file` attribute, and the uploader uses
-`file` to correlate a test with its code owner. So the uploader reports one warning for this report and
-cannot attribute these tests to an owner.
-
-It costs nothing today — `monitors/` has no per-package CODEOWNERS rules, so everything here resolves to
-the default owner regardless. It would matter if per-monitor owners were ever added.

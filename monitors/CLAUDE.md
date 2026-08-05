@@ -67,9 +67,6 @@ The playwright packages use the built-in JUnit reporter with `includeRetries: tr
 attempt as its own run. `testDir` is the repository root so that `classname` is repository-relative, and
 `outputFile` is cwd-relative because that is what the reporter resolves against.
 
-It writes no `file` attribute, so those two packages cannot correlate to a code owner and the uploader
-warns once per report. Accepted rather than fixed with a custom reporter — see their READMEs.
-
 ## Configs
 
 - Both configs root themselves at the **repository**, not the package: `file` and `classname` resolve

@@ -35,12 +35,3 @@ eventually passes is a pass-on-retry story and would give the cascade a second c
 Five tests skipped on most runs and executed on the rest, one test always skipped, and one skipped
 intermittently. The partial ones are the interesting shape: a history that is mostly absent hides in any
 aggregate.
-
-## One known gap
-
-Playwright's built-in JUnit reporter writes `classname` but no `file` attribute, and the uploader uses
-`file` to correlate a test with its code owner. So the uploader reports one warning for this report and
-cannot attribute these tests to an owner.
-
-It costs nothing today — `monitors/` has no per-package CODEOWNERS rules, so everything here resolves to
-the default owner regardless. It would matter if per-monitor owners were ever added.
