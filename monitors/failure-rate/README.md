@@ -38,12 +38,14 @@ the ones below. `fails 100 percent` fails every run, and is the one rung that ne
 
 Over a week, the weekday test's rate is visibly a function of the day rather than a constant.
 
-## This also feeds pass-on-retry
+## Other monitors
 
-Scheduled runs report against the same head commit hour after hour, so any test here that fails one hour
-and passes the next has failed and passed on the same commit — a
-[pass-on-retry](../pass-on-retry/README.md) pair, formed by accident rather than by design. The higher
-rungs pair most often.
+| Monitor                                               | How it overlaps                                                                                                                                                                   |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`pass-on-retry`](../pass-on-retry/README.md)         | Scheduled runs share a head commit, so a rung that fails one hour and passes the next has done both on one commit — a pair, formed by accident. The higher rungs pair most often. |
+| [`failure-count`](../failure-count/README.md)         | The same failures read as a number rather than a proportion. A rate cannot tell one noisy test from twelve.                                                                       |
+| [`new-test`](../new-test/README.md)                   | Every rung was new once, and a rate over three runs means nothing — which is the reason the new-test window exists.                                                               |
+| [`timeout-inflation`](../timeout-inflation/README.md) | A rate says nothing about _how_ a test fails. Two tests at the same rate can need completely different investigations.                                                            |
+| [`slow-test`](../slow-test/README.md)                 | Everything there passes, so a rate monitor sees nothing at all. A test can rot without ever failing.                                                                              |
 
-That overlap is worth knowing rather than removing: real flakiness trips several monitors at once, and a
-detection appearing in two places is a property of the data, not a bug in the story.
+Real flakiness trips several monitors at once, so these overlaps are the point rather than a smell.

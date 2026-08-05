@@ -30,3 +30,14 @@ eventually passes is a pass-on-retry story and would give the cascade a second c
 Five tests skipped on most runs and executed on the rest, one test always skipped, and one skipped
 intermittently. The partial ones are the interesting shape: a history that is mostly absent hides in any
 aggregate.
+
+## Other monitors
+
+| Monitor                                       | How it overlaps                                                                                                                                                                |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`slow-test`](../slow-test/README.md)         | A skipped test has no duration at all, which is not the same as being fast. A duration monitor that fails to exclude skips reports a suite getting faster as it stops running. |
+| [`failure-count`](../failure-count/README.md) | The cascade contributes **one** failure while hiding five tests, so the count understates the blast radius by five.                                                            |
+| [`new-test`](../new-test/README.md)           | Two kinds of absence: this one reports and says it did not run; a retiring cohort stops reporting entirely.                                                                    |
+| [`pass-on-retry`](../pass-on-retry/README.md) | Retries are off here on purpose. With them on, the cascade's setup would get a second chance not to cascade and would pair instead.                                            |
+
+Real flakiness trips several monitors at once, so these overlaps are the point rather than a smell.

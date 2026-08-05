@@ -52,3 +52,14 @@ over several.
 
 The PR factory also contributes commits of its own, so pairs appear against pull-request commits as well
 as against the default branch.
+
+## Other monitors
+
+| Monitor                                               | How it overlaps                                                                                                                                                                                                     |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`timeout-inflation`](../timeout-inflation/README.md) | A timeout that succeeds on a second go is the classic pair, and the two halves have wildly different durations — milliseconds against the ceiling. Reading a pair's durations tells you which kind of flake it was. |
+| [`failure-rate`](../failure-rate/README.md)           | `never passes` sits at 100% and is never paired, while a 10% test pairs often. A rate monitor and this one disagree about which is worse, and both are right.                                                       |
+| [`failure-count`](../failure-count/README.md)         | A test that fails and then passes contributes nothing to a failure count, since its final result is a pass. The count and the pair see different halves of the same run.                                            |
+| [`skipped-test`](../skipped-test/README.md)           | Its cascade runs with retries off deliberately: with them on, the setup would get a second chance not to cascade and would pair here instead of skipping there.                                                     |
+
+Real flakiness trips several monitors at once, so these overlaps are the point rather than a smell.

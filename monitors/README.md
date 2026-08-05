@@ -95,6 +95,17 @@ The two quieter ways it happens.
 | `duration grows a little each day`              | Ramps over a 14-day cycle, then resets.        |
 | `duration is usually fast but sometimes is not` | Bimodal: 10% of runs take eight times as long. |
 
+### [`slow-test/`](slow-test/) · [`contention.test.ts`](slow-test/contention.test.ts)
+
+Vitest, `it.concurrent`. Four tests queue on one shared resource; hold times are jittered per hour.
+
+| Test                                                            | Behavior                                      |
+| --------------------------------------------------------------- | --------------------------------------------- |
+| `waits its turn on the shared fixture, holding it about 40 ms`  | Slow from waiting, not from working.          |
+| `waits its turn on the shared fixture, holding it about 80 ms`  | Same, holding longer.                         |
+| `waits its turn on the shared fixture, holding it about 120 ms` | Same, holding longer.                         |
+| `waits its turn on the shared fixture, holding it about 160 ms` | The tail: 2–3x its own work, drifting hourly. |
+
 ### [`pass-on-retry/`](pass-on-retry/) · [`retry-ladder.spec.ts`](pass-on-retry/retry-ladder.spec.ts)
 
 Playwright, three retries. Pairs form **within one upload**.

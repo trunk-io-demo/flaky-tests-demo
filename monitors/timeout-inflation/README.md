@@ -39,3 +39,13 @@ while its passes cluster at 150ms; the control's failures are instant. A timeout
 on the first and not the second, while a slow-test monitor cannot tell them apart.
 
 Cost: roughly 1s of wall clock per run on average, 5s on a failing one.
+
+## Other monitors
+
+| Monitor                                       | How it overlaps                                                                                                                                                                                                                                                               |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`slow-test`](../slow-test/README.md)         | **The pairing worth reading.** A slow-test monitor fires here too — p95 climbs as failures pile up at the ceiling — and it is wrong: nothing got slower. That folder holds a test that genuinely did. The discriminator is whether duration varies by _time_ or by _outcome_. |
+| [`pass-on-retry`](../pass-on-retry/README.md) | A timeout that succeeds on a second go is the classic pair, and it is the one whose two halves have wildly different durations — milliseconds against the ceiling. Across hourly uploads on one commit, the story here pairs the same way.                                    |
+| [`failure-rate`](../failure-rate/README.md)   | Both tests here sit at the same rate, so a rate monitor treats them identically. That is exactly why the rate is not enough.                                                                                                                                                  |
+
+Real flakiness trips several monitors at once, so these overlaps are the point rather than a smell.

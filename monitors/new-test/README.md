@@ -22,3 +22,13 @@ newest are still in it. No absolute dates anywhere: history ages out, so a fixed
 
 Today's member flagged as new on day 1. By day 15 the oldest have graduated while the newest have not, and
 the graduated ones are visibly quieter. On day 22 the oldest stops being emitted and resolves by absence.
+
+## Other monitors
+
+| Monitor                                          | How it overlaps                                                                                                                                |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`failure-rate`](../failure-rate/README.md)      | The newest members fail at 15% on a handful of runs, which is exactly the unreliable rate this monitor exists to hold off on judging.          |
+| [`synth/cohorts`](../../synth/cohorts/README.md) | The same lifecycle told synthetically, over a 30-day arc against this one's 21 days, and with a short-lived family that never stops being new. |
+| [`skipped-test`](../skipped-test/README.md)      | Two kinds of absence: a retiring member stops reporting entirely, while a skipped test reports and says it did not run.                        |
+
+Real flakiness trips several monitors at once, so these overlaps are the point rather than a smell.
