@@ -36,6 +36,9 @@ runs:
       with:
         workspaces: . -> target
 
+    # SYNTH_* comes from the calling job's `env:`, mapped there from repository
+    # variables — `vars` is not ambient in a process. Unset is fine: each one is
+    # read through a bounded Var that treats blank as "use the default".
     - name: Generate synthetic reports
       shell: bash
       run: |

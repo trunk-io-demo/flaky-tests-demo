@@ -54,6 +54,12 @@ jobs:
   synth:
     name: synth
     runs-on: ubuntu-latest
+    env:
+      SYNTH_FAILURE_RATE: ${{ vars.SYNTH_FAILURE_RATE }}
+      SYNTH_FLAKE_RATE: ${{ vars.SYNTH_FLAKE_RATE }}
+      SYNTH_RUNS_PER_TEST: ${{ vars.SYNTH_RUNS_PER_TEST }}
+      SYNTH_DURABLE_TEST_COUNT: ${{ vars.SYNTH_DURABLE_TEST_COUNT }}
+      SYNTH_CHURN_TEST_COUNT: ${{ vars.SYNTH_CHURN_TEST_COUNT }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/synth

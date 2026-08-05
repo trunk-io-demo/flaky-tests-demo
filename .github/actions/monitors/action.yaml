@@ -75,3 +75,8 @@ runs:
         cli-version: ${{ inputs.cli-version }}
         allow-missing-junit-files: false
         use-cache: true
+        # The uploader owns this job's exit code. Without this input it exits zero even
+        # when it has just reported unquarantined failures, so a red job would be
+        # impossible and "not quarantined yet" would look identical to "all clear".
+        previous-step-outcome: >-
+          ${{ (steps.vitest.outcome == 'failure' || steps.playwright.outcome == 'failure') && 'failure' || 'success' }}

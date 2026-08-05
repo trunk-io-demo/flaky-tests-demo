@@ -54,6 +54,7 @@ runs:
     - name: Run playwright scenarios
       id: playwright
       shell: bash
+      continue-on-error: true
       run: pnpm --filter "./apps/**" --no-bail --if-present run test:e2e
 
     - name: Report what was produced
@@ -66,6 +67,7 @@ runs:
 
     - name: Upload results
       uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
+      if: always()
       env:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
       with:
@@ -77,3 +79,8 @@ runs:
         cli-version: ${{ inputs.cli-version }}
         allow-missing-junit-files: false
         use-cache: true
+        # The uploader owns this job's exit code. Without this input it exits zero even
+        # when it has just reported unquarantined failures, so a red job would be
+        # impossible and "not quarantined yet" would look identical to "all clear".
+        previous-step-outcome: >-
+          ${{ (steps.vitest.outcome == 'failure' || steps.playwright.outcome == 'failure') && 'failure' || 'success' }}
