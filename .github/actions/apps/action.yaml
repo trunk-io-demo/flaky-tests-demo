@@ -57,14 +57,6 @@ runs:
       continue-on-error: true
       run: pnpm --filter "./apps/**" --no-bail --if-present run test:e2e
 
-    - name: Report what was produced
-      shell: bash
-      run: |
-        shopt -s nullglob
-        files=(apps/*/test-results/*.xml)
-        printf 'produced %d result file(s)\n' "${#files[@]}"
-        for file in "${files[@]}"; do echo "  $file"; done
-
     - name: Upload results
       uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
       if: always()
