@@ -32,7 +32,7 @@ for (const { name, attemptsNeeded } of LADDER) {
   });
 }
 
-test("never passes however many times it is retried", () => {
+test("never passes", () => {
   expect(
     "retried and still failing",
     "not a pass-on-retry pair, which is the boundary this test draws — the demo working",

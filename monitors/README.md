@@ -100,13 +100,13 @@ The two quieter ways it happens.
 
 Playwright, three retries. Pairs form **within one upload**.
 
-| Test                                            | Behavior                                            |
-| ----------------------------------------------- | --------------------------------------------------- |
-| `passes on the first attempt`                   | The control. Never retried, so never pairs.         |
-| `passes on the second attempt`                  | Fails once, then passes.                            |
-| `passes on the third attempt`                   | Fails twice, then passes.                           |
-| `passes on the fourth attempt`                  | Fails three times, then passes.                     |
-| `never passes however many times it is retried` | Fails every attempt. **Not** a pair — the boundary. |
+| Test                           | Behavior                                            |
+| ------------------------------ | --------------------------------------------------- |
+| `passes on the first attempt`  | The control. Never retried, so never pairs.         |
+| `passes on the second attempt` | Fails once, then passes.                            |
+| `passes on the third attempt`  | Fails twice, then passes.                           |
+| `passes on the fourth attempt` | Fails three times, then passes.                     |
+| `never passes`                 | Fails every attempt. **Not** a pair — the boundary. |
 
 ### [`pass-on-retry/`](pass-on-retry/) · [`canonical.test.ts`](pass-on-retry/canonical.test.ts)
 
