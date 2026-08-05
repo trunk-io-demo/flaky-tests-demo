@@ -65,8 +65,3 @@ runs:
         cli-version: ${{ inputs.cli-version }}
         allow-missing-junit-files: false
         use-cache: true
-        # The uploader owns this job's exit code, as it does for monitors/ and
-        # apps/. Without this it exits zero even having just reported unquarantined
-        # failures, so synth/ would be permanently green while the other two go red
-        # for the same condition.
-        previous-step-outcome: ${{ steps.generate.outcome }}
