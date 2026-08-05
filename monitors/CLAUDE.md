@@ -71,9 +71,12 @@ not a monitor: it has no tests, so `pnpm --filter --if-present` skips it in CI.
 
 Two rules for it:
 
-- **`getBranchClass()` is the way to ask where a run came from.** It reproduces the uploader's
-  precedence, including that a merge-queue branch is `MQ` even when a PR number is also set. Rolling
-  your own check produces a story that fails on the wrong runs and a name that claims something else.
+- **`getBranchClass()` is the way to ask where a run came from.** Three classes, no fallthrough:
+  `MQ` for `trunk-merge/…` and `gh-readonly-queue/…`, `PB` for `main`/`master`/`develop`/`release`, and
+  `PR` for everything else. Order matters — a merge-queue branch is `MQ` even with a PR number set.
+  Rolling your own check produces a story that fails on the wrong runs under a name claiming otherwise.
+  Note this is deliberately narrower than the uploader's own four-class inference, which has a `NONE`
+  fallthrough; on the branches CI actually runs, the two agree.
 - **Everything in `when.ts` is UTC.** A local timezone makes a periodic story depend on where the
   runner is and on daylight saving, turning a clean pattern into an almost-periodic one.
 

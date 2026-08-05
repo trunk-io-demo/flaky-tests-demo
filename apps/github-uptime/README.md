@@ -23,7 +23,7 @@ a Tuesday is not a distribution anyone writes down.
 
 ## Telling "the monitor worked" from "we have a problem"
 
-1. Open **https://www.githubstatus.com** — the same page this test reads.
+1. Open **<https://www.githubstatus.com>** — the same page this test reads.
 2. If GitHub is degraded, the monitor worked. Nothing here is broken.
 3. If GitHub is fine but this is failing, the failure message says which of two things happened:
    - **the request did not complete** — network or DNS on the runner;

@@ -68,8 +68,11 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm lint
-      - run: pnpm format
+      # Linting and formatting go through trunk, which is also what the
+      # pre-commit and pre-push hooks run — so a green local commit means a green
+      # job here.
+      - uses: trunk-io/trunk-action@04ba50e7658c81db7356da96657e6e77f220bfa3 # v1.3.1
+
       - run: pnpm typecheck
 
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1

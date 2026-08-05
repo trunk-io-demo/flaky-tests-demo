@@ -1,12 +1,7 @@
 # `failure-rate`
 
 > [!NOTE]
-> **What this monitor does, in the product docs:**
 > <https://docs.trunk.io/flaky-tests/detection/failure-rate-monitor>
->
-> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has the three rate variables.
->
-> Read this against [`failure-count`](../failure-count/README.md) for the same failures as a count, and [`synth/branch-rates`](../../synth/branch-rates/README.md) for the same monitor scoped by branch.
 
 ## What this monitor detects
 

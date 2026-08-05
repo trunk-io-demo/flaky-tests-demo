@@ -13,7 +13,7 @@ name: Hourly
 # from the story being told. See CONTRIBUTING.md.
 on:
   schedule:
-    - cron: "17 * * * *"
+    - cron: 17 * * * *
   workflow_dispatch: {}
 
 # Two runs of this workflow at once would double-report every story, which reads

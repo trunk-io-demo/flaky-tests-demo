@@ -91,11 +91,15 @@ runs:
 
     - name: Upload results
       if: ${{ inputs.token != '' && inputs.test-collection-id != '' && steps.results.outputs.count != '0' }}
-      uses: trunk-io/analytics-uploader@ee0cebf9c5ca9b75118c788d952a7ce37b300425 # main
+      uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
       env:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
-        # Off deliberately — see .github/actions/monitors/action.yaml for why.
-        TRUNK_DISABLE_QUARANTINING: "true"
+        # Quarantining is left to the org's configuration rather than forced off
+        # here — this repo is a place to exercise auto-quarantine, not to opt out
+        # of it. What is deliberately *not* forwarded is the test process's exit
+        # code, so a deliberate failure cannot turn this job red. The job's status
+        # therefore reports upload health only, which is what makes it usable as a
+        # canary.
       with:
         junit-paths: apps/*/test-results/*.xml
         org-slug: ${{ inputs.org-slug }}

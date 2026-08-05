@@ -89,9 +89,8 @@ Three stories are deliberately alarming. Each is triageable in one lookup:
 | `third-party-apis` | GitHub's shared unauthenticated rate limit, 60/hour per IP | The failure message names the cause.         |
 | `github-uptime`    | A real GitHub incident at or above `major`                 | Open <https://www.githubstatus.com>.         |
 
-The one thing that **is** a real signal: a red hourly job. Quarantining is off and test outcomes do
-not affect the job's exit code, so a red run means uploads are failing rather than that a demo test
-failed on purpose.
+The one thing that **is** a real signal: a red hourly job. Test outcomes deliberately do not affect a
+job's exit code, so a red run means uploads are failing rather than that a demo test failed on purpose.
 
 ## Running it
 

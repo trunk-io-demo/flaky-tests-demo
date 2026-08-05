@@ -1,12 +1,7 @@
 # `new-test`
 
 > [!NOTE]
-> **What this monitor does, in the product docs:**
 > <https://docs.trunk.io/flaky-tests/detection/new-test-monitor>
->
-> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has `MONITORS_NEW_TEST_WINDOW_DAYS`.
->
-> Read this against [`synth/cohorts`](../../synth/cohorts/README.md): the same lifecycle told synthetically, over a longer arc.
 
 ## What this monitor detects
 

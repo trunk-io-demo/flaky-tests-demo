@@ -12,13 +12,20 @@ If you are changing code rather than running it, read [`CLAUDE.md`](CLAUDE.md) f
 pnpm install          # one lockfile resolves every workspace member
 ```
 
-| Command                                        | Runs                                        |
-| ---------------------------------------------- | ------------------------------------------- |
-| `pnpm test`                                    | Every vitest story.                         |
-| `pnpm test:e2e`                                | Every playwright story.                     |
-| `pnpm lint` / `pnpm format` / `pnpm typecheck` | The checks CI runs.                         |
-| `cargo test`                                   | The `synth/` generators' own tests.         |
-| `cd monitors/failure-rate && pnpm test`        | One story on its own. Works in any package. |
+| Command                                 | Runs                                        |
+| --------------------------------------- | ------------------------------------------- |
+| `pnpm test`                             | Every vitest story.                         |
+| `pnpm test:e2e`                         | Every playwright story.                     |
+| `trunk check --all`                     | Every linter and formatter.                 |
+| `trunk fmt`                             | Applies formatting.                         |
+| `pnpm typecheck`                        | TypeScript across every package.            |
+| `cargo test`                            | The `synth/` generators' own tests.         |
+| `cd monitors/failure-rate && pnpm test` | One story on its own. Works in any package. |
+
+Linting and formatting go through [trunk](https://docs.trunk.io/cli). `trunk init` has already been
+run and both git hooks are enabled, so `trunk fmt` applies on commit and `trunk check` runs before a
+push — you should not need to invoke either by hand. `pnpm lint` and `pnpm format` are aliases if you
+prefer them. Rust is checked by cargo rather than by trunk; see `.trunk/trunk.yaml` for why.
 
 **Expect failures.** Most stories here fail on purpose, and every deliberate failure message ends by
 saying so. A story whose tests all pass is usually a story that is not working.
@@ -62,13 +69,21 @@ forking work.
 
 ### Where a run came from
 
-| Key                  | Kind | Purpose                                                                                                                                                 |
-| -------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PROTECTED_BRANCHES` | var  | Branches the org protects, comma-separated. Matched **exactly**, not by glob. Read by `monitors/utils` to decide whether a run is `PB`. Default `main`. |
+Several monitor stories branch on where a run came from. `monitors/utils` derives that from CI's own
+environment, in three classes with no fallthrough:
 
-Several monitor stories branch on how the product will classify a run — `PB`, `PR`, `MQ`, or `NONE`.
-That is derived from CI's own environment, so nothing needs setting for it to work; `PROTECTED_BRANCHES`
-only matters if your default branch is not `main`.
+| Class | Branch                                    |
+| ----- | ----------------------------------------- |
+| `MQ`  | `trunk-merge/…` or `gh-readonly-queue/…`  |
+| `PB`  | `main`, `master`, `develop`, or `release` |
+| `PR`  | everything else                           |
+
+| Key                  | Kind | Purpose                                                                                                                               |
+| -------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `PROTECTED_BRANCHES` | var  | Overrides the `PB` list, comma-separated. Matched **exactly**, not by glob. Only needed if your trunk branch is named something else. |
+
+Nothing needs setting for this to work. Note that a local run is a `PR` run, since a feature branch is
+not in the `PB` list.
 
 ### Identity and destination
 

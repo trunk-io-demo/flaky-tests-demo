@@ -11,7 +11,9 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
-use quick_junit::{NonSuccessKind, Report, TestCase, TestCaseStatus, TestRerun, TestSuite};
+use quick_junit::{
+    NonSuccessKind, NonSuccessReruns, Report, TestCase, TestCaseStatus, TestRerun, TestSuite,
+};
 
 use crate::identity::TestIdentity;
 use crate::seed::StoryRng;
@@ -244,7 +246,10 @@ fn render_status(spec: &TestCaseSpec, started_at: DateTime<Utc>) -> (TestCaseSta
                 message: Some(spec.message.clone().unwrap_or_else(default_message).into()),
                 ty: Some("AssertionError".into()),
                 description: None,
-                reruns: Vec::new(),
+                // quick-junit 0.7 models reruns as a kind plus a list; the
+                // default kind is `rerunFailure`, which is what a retried and
+                // still-failing test should serialize as.
+                reruns: NonSuccessReruns::default(),
             },
             spec.duration,
         ),

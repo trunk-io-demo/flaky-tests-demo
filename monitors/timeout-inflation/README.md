@@ -1,12 +1,7 @@
 # `timeout-inflation`
 
 > [!NOTE]
-> **What this monitor does, in the product docs:**
 > <https://docs.trunk.io/flaky-tests/detection/timeout-inflation-monitor>
->
-> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has the four timeout variables.
->
-> **Read this against [`slow-test`](../slow-test/README.md).** That is a test that genuinely got slower. This one did not. A slow-test monitor cannot tell them apart, which is why this monitor exists.
 
 ## What this monitor detects
 

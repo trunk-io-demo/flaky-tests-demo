@@ -104,7 +104,6 @@ runs:
         TRUNK_API_TOKEN: ${{ inputs.token }}
         TRUNK_TEST_COLLECTION_ID: ${{ inputs.test-collection-id }}
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
-        TRUNK_DISABLE_QUARANTINING: "true"
         CLI_VERSION: ${{ inputs.cli-version }}
       run: |
         set -euo pipefail

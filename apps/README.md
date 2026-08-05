@@ -23,7 +23,7 @@ problem."_ Every scenario below is triageable in one lookup:
 | ------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `mass-detection`   | A bad deploy or an infrastructure change.                           | It fires on **day 13 of every month, UTC** by default. Check the date. Also written in [`CONTRIBUTING.md`](../CONTRIBUTING.md). |
 | `third-party-apis` | A broken integration.                                               | The failure message names the cause: rate limited, request failed, or budget unreadable. Only the first is the story.           |
-| `github-uptime`    | A broken integration.                                               | Open https://www.githubstatus.com. If GitHub is degraded, the monitor worked.                                                   |
+| `github-uptime`    | A broken integration.                                               | Open <https://www.githubstatus.com>. If GitHub is degraded, the monitor worked.                                                 |
 | `parking-meter`    | Nothing — it is periodic, so it is obvious once you look at _when_. | The failure message prints the day, the hour, and the schedule.                                                                 |
 
 Tests that depend on a third party carry a `⚠️` note at the top of their file, and their failure

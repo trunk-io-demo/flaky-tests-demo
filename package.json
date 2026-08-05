@@ -12,10 +12,10 @@
     "test": "pnpm --recursive --if-present --no-bail test",
     "test:e2e": "pnpm --recursive --if-present --no-bail test:e2e",
     "typecheck": "pnpm --recursive --if-present typecheck",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --check .",
-    "format:fix": "prettier --write ."
+    "lint": "trunk check --all",
+    "lint:fix": "trunk check --all --fix",
+    "format": "trunk fmt --all",
+    "format:fix": "trunk fmt --all"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

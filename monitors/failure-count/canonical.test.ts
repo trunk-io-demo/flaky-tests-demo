@@ -13,17 +13,13 @@ import { describe, expect, it } from "vitest";
 /**
  * The failure-count monitor counts failures in a window as an absolute number
  * rather than a proportion. A rate cannot tell one test failing half the time
- * from twelve tests each failing half the time; only the second wakes somebody
- * up.
+ * from twelve tests each failing half the time; only the second wakes somebody up.
  *
- * So this folder produces counts whose *size depends on where the run came from*
- * — one branch class at a time. On a scheduled run against the protected branch,
- * the protected group fails and the others do not. On a pull request, the PR
- * group fails instead. The total count therefore swings by class while each
- * individual test's rate stays flat, which is precisely the thing a rate cannot
- * express.
- *
- * The two date-driven tests add a count that moves on a calendar instead.
+ * So the counts here depend on *where the run came from* — every run is exactly
+ * one of `PB`, `PR`, or `MQ`, so exactly one always-on group fires. The total
+ * swings by class while no individual test's rate changes, which is precisely
+ * what a rate cannot express. The two date-driven tests move it on a calendar
+ * instead.
  */
 
 const BRANCH = getBranch();

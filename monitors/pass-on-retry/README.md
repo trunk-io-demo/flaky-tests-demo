@@ -1,12 +1,7 @@
 # `pass-on-retry`
 
 > [!NOTE]
-> **What this monitor does, in the product docs:**
 > <https://docs.trunk.io/flaky-tests/detection/pass-on-retry-monitor>
->
-> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) covers the PR factory.
->
-> **If detections are not appearing, check `PR_FACTORY_TOKEN` first.** Scheduled runs all report against one commit, so the PR factory is the only source of the distinct commits this monitor needs.
 
 ## What this monitor detects
 

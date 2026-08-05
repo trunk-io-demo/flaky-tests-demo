@@ -1,21 +1,26 @@
 /**
  * Where a run came from, as CI reports it.
  *
- * These read the same signals the uploader reads, so a story that branches on
- * `getBranchClass()` behaves the same way the product will classify it. Getting
- * that wrong produces a test that fails on the wrong runs and a story that says
- * something other than what its name claims.
+ * Three classes, and every branch is one of them:
+ *
+ * | Class | Branch                                   |
+ * | ----- | ---------------------------------------- |
+ * | `MQ`  | `trunk-merge/…` or `gh-readonly-queue/…` |
+ * | `PB`  | `main`, `master`, `develop`, or `release` |
+ * | `PR`  | everything else                          |
+ *
+ * Order matters: a merge-queue branch is `MQ` even when a PR number is also set,
+ * so checking for a pull request first would misclassify every merge-queue run.
  */
 
-/** The classes the product groups runs by. `MQ` is the merge queue. */
-export type BranchClass = "PR" | "PB" | "MQ" | "NONE";
+/** The classes the stories branch on. `MQ` is the merge queue. */
+export type BranchClass = "PR" | "PB" | "MQ";
 
-/** Branch-name fragments that mean a merge-queue run. */
-const MERGE_QUEUE_MARKERS = ["gh-readonly-queue/", "trunk-merge/", "/gtmq_"];
-const MERGE_QUEUE_PREFIX = "gtmq_";
+/** Branch prefixes that mean a merge-queue run. */
+const MERGE_QUEUE_PREFIXES = ["trunk-merge/", "gh-readonly-queue/"];
 
-/** Branch prefixes that imply a pull request with no PR number set. */
-const PULL_REQUEST_PREFIXES = ["pull/", "remotes/pull/"];
+/** Branches treated as protected. Matched exactly, not by glob. */
+const DEFAULT_PROTECTED_BRANCHES = ["main", "master", "develop", "release"];
 
 /**
  * The branch this run is for.
@@ -32,10 +37,12 @@ export const getBranch = (): string =>
   ]) ?? "unknown";
 
 /**
- * The pull request number, if this run is for one.
+ * The pull request number, if CI reports one.
  *
- * `GITHUB_REF` is `refs/pull/<n>/merge` on a `pull_request` event, which is the
- * one signal that survives without reading the event payload off disk.
+ * `GITHUB_REF` is `refs/pull/<n>/merge` on a `pull_request` event, the one signal
+ * that survives without reading the event payload off disk. It is absent on a
+ * branch classified as `PR` without being a real pull request, which is why the
+ * class never depends on it.
  */
 export const getPrNumber = (): number | undefined => {
   const override = process.env.MONITORS_PR_NUMBER_OVERRIDE;
@@ -50,39 +57,26 @@ export const getPrNumber = (): number | undefined => {
   return Number.isNaN(parsed) ? undefined : parsed;
 };
 
-/**
- * Branches the org protects. Matched **exactly**, not by glob — `release/*`
- * looking like a protected pattern does not make `release/1.4.2` protected, and
- * that is the usual reason a run intended as `PB` arrives as `NONE`.
- */
-export const protectedBranches = (): string[] =>
-  (process.env.PROTECTED_BRANCHES ?? "main")
+/** Overridable, for a fork whose trunk branch is named something else. */
+export const protectedBranches = (): string[] => {
+  const configured = process.env.PROTECTED_BRANCHES;
+  if (configured === undefined || configured.trim() === "")
+    return DEFAULT_PROTECTED_BRANCHES;
+  return configured
     .split(",")
     .map((branch) => branch.trim())
     .filter((branch) => branch !== "");
+};
 
-/**
- * How the product will classify this run.
- *
- * The precedence is the uploader's, and the order matters: a merge-queue branch
- * is `MQ` even if a PR number is also set, so checking for a PR number first
- * would misclassify every merge-queue run.
- */
+/** How a run is classified. See the table above for the rules. */
 export const getBranchClass = (
   branch: string = getBranch(),
-  prNumber: number | undefined = getPrNumber(),
   protected_: string[] = protectedBranches(),
 ): BranchClass => {
-  const mergeQueue =
-    MERGE_QUEUE_MARKERS.some((marker) => branch.includes(marker)) ||
-    branch.startsWith(MERGE_QUEUE_PREFIX);
-
-  if (mergeQueue) return "MQ";
-  if (prNumber !== undefined) return "PR";
-  if (PULL_REQUEST_PREFIXES.some((prefix) => branch.startsWith(prefix)))
-    return "PR";
+  if (MERGE_QUEUE_PREFIXES.some((prefix) => branch.startsWith(prefix)))
+    return "MQ";
   if (protected_.includes(branch)) return "PB";
-  return "NONE";
+  return "PR";
 };
 
 const firstNonEmpty = (values: (string | undefined)[]): string | undefined =>

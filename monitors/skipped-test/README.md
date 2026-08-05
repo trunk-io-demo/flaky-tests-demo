@@ -1,12 +1,7 @@
 # `skipped-test`
 
 > [!NOTE]
-> **What this monitor does, in the product docs:**
 > <https://docs.trunk.io/flaky-tests/detection/skipped-test-monitor>
->
-> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has `MONITORS_SKIP_RATE`.
->
-> Read this against [`new-test`](../new-test/README.md): two kinds of absence, resolved differently.
 
 ## What this monitor detects
 
