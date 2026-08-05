@@ -1,5 +1,13 @@
 # `skipped-test`
 
+> [!NOTE]
+> **What this monitor does, in the product docs:**
+> <https://docs.trunk.io/flaky-tests/detection/skipped-test-monitor>
+>
+> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has `MONITORS_SKIP_RATE`.
+>
+> Read this against [`new-test`](../new-test/README.md): two kinds of absence, resolved differently.
+
 ## What this monitor detects
 
 Tests that have stopped running without anybody deleting them.
@@ -48,10 +56,3 @@ history, which is worse than none: it looks maintained.
 
 Keep it well away from 0 and 100. At either end the test stops being the interesting case and
 becomes a duplicate of one of its neighbours.
-
-## Links
-
-- Up: [`docs/monitors.md`](../../docs/monitors.md)
-- Up: [`docs/configuration.md`](../../docs/configuration.md)
-- Sideways: [`slow-test`](../slow-test/README.md) — the other monitor that has to reason about tests
-  which did not run

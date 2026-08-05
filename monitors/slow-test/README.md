@@ -1,5 +1,13 @@
 # `slow-test`
 
+> [!NOTE]
+> **What this monitor does, in the product docs:**
+> <https://docs.trunk.io/flaky-tests/detection/slow-test-monitor>
+>
+> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has the four duration variables.
+>
+> **Read this against [`timeout-inflation`](../timeout-inflation/README.md).** That is a test that did _not_ get slower. A slow-test monitor fires on both and only one is worth profiling — the most useful pairing in the repo.
+
 ## What this monitor detects
 
 Duration regressions: a test that still passes but takes materially longer than it used to.
@@ -65,9 +73,3 @@ original about what day of the ramp it is on.
 `GROWTH_MS × CYCLE_DAYS` is real wall clock on the last day of every cycle, on every run. At the
 defaults that is a 1.8-second test at the peak, which is cheap. Raising both is the fastest way to
 make this folder the most expensive thing in the hourly run.
-
-## Links
-
-- Up: [`docs/monitors.md`](../../docs/monitors.md)
-- Up: [`docs/configuration.md`](../../docs/configuration.md)
-- Sideways: [`timeout-inflation`](../timeout-inflation/README.md) — slowness that is not a slowdown

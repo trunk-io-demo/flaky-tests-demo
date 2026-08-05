@@ -65,6 +65,6 @@ hours or days later.
 
 ## Related
 
-- [`../docs/architecture.md`](../docs/architecture.md) — the identity constraint in full
-- [`../docs/configuration.md`](../docs/configuration.md) — `SYNTH_*` variables
-- [`../docs/monitors.md`](../docs/monitors.md) — which monitor each capability demonstrates
+- [`../CLAUDE.md`](../CLAUDE.md) — the identity constraint in full
+- [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — `SYNTH_*` variables
+- [`../README.md`](../README.md) — which monitor each capability demonstrates

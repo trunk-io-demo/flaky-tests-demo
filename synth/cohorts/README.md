@@ -80,6 +80,6 @@ reads against the branch that accumulates history.
 ## Related
 
 - [`../README.md`](../README.md) — how `synth/` works and how to verify it locally
-- [`../../docs/monitors.md`](../../docs/monitors.md) — the monitor catalog
-- [`../../docs/configuration.md`](../../docs/configuration.md) — every variable
-- [`../../docs/operations.md`](../../docs/operations.md) — why missing runs resolve monitors
+- [`../../README.md`](../../README.md) — the monitor catalog
+- [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md) — every variable
+- [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md) — why missing runs resolve monitors

@@ -1,5 +1,10 @@
 # `third-party-apis`
 
+> [!NOTE]
+> **Depends on a third party.** It fails when GitHub's shared unauthenticated rate limit is exhausted for the runner's IP. Every failure message names which of three causes it was.
+>
+> [`apps/README.md`](../README.md) frames the live scenarios. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has `APPS_THIRD_PARTY_BURST` and the cap.
+
 ## ⚠️ This scenario depends on a third party
 
 **It fails when GitHub's unauthenticated rate limit is exhausted for the runner's IP**, and that is
@@ -72,10 +77,3 @@ moment, and recover at the same moment.
 
 At the default this repo uses about 6 of 60 requests per hour on a shared IP — around 10% of a budget
 it does not own. That is the number to have in mind before raising it.
-
-## Links
-
-- Up: [`apps/README.md`](../README.md)
-- Up: [`docs/monitors.md`](../../docs/monitors.md)
-- Sideways: [`github-uptime`](../github-uptime/README.md) — the other scenario that fails on somebody
-  else's behalf

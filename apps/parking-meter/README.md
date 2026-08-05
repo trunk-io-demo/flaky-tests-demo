@@ -1,5 +1,10 @@
 # `parking-meter`
 
+> [!NOTE]
+> [`apps/README.md`](../README.md) frames the live scenarios. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has `APPS_PARKING_PAID_HOURS`.
+>
+> Read this against [`monitors/failure-rate`](../../monitors/failure-rate/README.md): a rate that really is a rate.
+
 ## What this scenario demonstrates
 
 A failure pattern that is **periodic and predictable**, and that no percentage-based rate can
@@ -57,10 +62,3 @@ worst of both.
 
 Widening the window raises the failure rate of the first test and lowers the second's. It cannot make
 the total count anything other than exactly one per run.
-
-## Links
-
-- Up: [`apps/README.md`](../README.md)
-- Up: [`docs/monitors.md`](../../docs/monitors.md)
-- Sideways: [`monitors/failure-rate`](../../monitors/failure-rate/README.md) — a rate that genuinely
-  _is_ a rate, for contrast

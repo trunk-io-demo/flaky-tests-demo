@@ -19,12 +19,12 @@ convincingly — a periodic schedule, an external outage, a shared rate limit.
 That is the point, but it has to be possible to tell _"the monitor worked"_ from _"we have a
 problem."_ Every scenario below is triageable in one lookup:
 
-| Scenario           | Looks like                                                          | How to tell                                                                                                                           |
-| ------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `mass-detection`   | A bad deploy or an infrastructure change.                           | It fires on **day 13 of every month, UTC** by default. Check the date. Also written in [`docs/operations.md`](../docs/operations.md). |
-| `third-party-apis` | A broken integration.                                               | The failure message names the cause: rate limited, request failed, or budget unreadable. Only the first is the story.                 |
-| `github-uptime`    | A broken integration.                                               | Open https://www.githubstatus.com. If GitHub is degraded, the monitor worked.                                                         |
-| `parking-meter`    | Nothing — it is periodic, so it is obvious once you look at _when_. | The failure message prints the day, the hour, and the schedule.                                                                       |
+| Scenario           | Looks like                                                          | How to tell                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `mass-detection`   | A bad deploy or an infrastructure change.                           | It fires on **day 13 of every month, UTC** by default. Check the date. Also written in [`CONTRIBUTING.md`](../CONTRIBUTING.md). |
+| `third-party-apis` | A broken integration.                                               | The failure message names the cause: rate limited, request failed, or budget unreadable. Only the first is the story.           |
+| `github-uptime`    | A broken integration.                                               | Open https://www.githubstatus.com. If GitHub is degraded, the monitor worked.                                                   |
+| `parking-meter`    | Nothing — it is periodic, so it is obvious once you look at _when_. | The failure message prints the day, the hour, and the schedule.                                                                 |
 
 Tests that depend on a third party carry a `⚠️` note at the top of their file, and their failure
 messages always say so explicitly. A failure caused by somebody else's outage should never require
@@ -43,6 +43,6 @@ explains each choice.
 
 ## Related
 
-- [`docs/monitors.md`](../docs/monitors.md) — which monitor each scenario demonstrates
-- [`docs/operations.md`](../docs/operations.md) — the mass-detection trigger, and what to check when data stops
+- [`README.md`](../README.md) — which monitor each scenario demonstrates
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — the mass-detection trigger, and what to check when data stops
 - [`monitors/`](../monitors/) — the same monitors, demonstrated by mechanism rather than by scenario

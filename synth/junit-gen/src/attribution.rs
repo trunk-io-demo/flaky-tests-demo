@@ -13,7 +13,7 @@
 //! The crate that owns it upstream also pulls in protobuf, vendored OpenSSL,
 //! and git bindings — minutes of build time and a protobuf compiler on the
 //! runner, to reuse one `match`. The tests below pin the behavior instead, and
-//! the mapping is documented in `docs/architecture.md` where a reader will
+//! the mapping is documented in `CLAUDE.md` where a reader will
 //! find it.
 
 use std::collections::BTreeMap;

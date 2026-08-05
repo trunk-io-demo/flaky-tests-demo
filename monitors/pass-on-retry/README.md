@@ -1,5 +1,13 @@
 # `pass-on-retry`
 
+> [!NOTE]
+> **What this monitor does, in the product docs:**
+> <https://docs.trunk.io/flaky-tests/detection/pass-on-retry-monitor>
+>
+> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) covers the PR factory.
+>
+> **If detections are not appearing, check `PR_FACTORY_TOKEN` first.** Scheduled runs all report against one commit, so the PR factory is the only source of the distinct commits this monitor needs.
+
 ## What this monitor detects
 
 A test that **failed and then passed on the same commit**.
@@ -41,7 +49,7 @@ That makes pass-on-retry undetectable from its output. A pair needs a failing ru
 and if the failing attempts are not in the XML **as runs**, there is nothing to pair.
 
 The JUnit dialect the parser reads does have elements for this, so
-[`retry-reporter.ts`](retry-reporter.ts) emits them:
+[`junit-reporter.ts`](junit-reporter.ts) emits them:
 
 | Situation                         | Elements emitted                                               |
 | --------------------------------- | -------------------------------------------------------------- |
@@ -65,7 +73,7 @@ nothing can age out mid-story.
 Scheduled runs all report against the same head commit, because `main` does not move hourly. So the
 schedule alone supplies **one** distinct commit no matter how often it runs.
 
-The [PR factory](../../docs/operations.md) is what supplies fresh ones: it opens a pull request every
+The [PR factory](../../CONTRIBUTING.md) is what supplies fresh ones: it opens a pull request every
 hour, each with its own commit, and `pr.yaml` runs this ladder against it. **If pass-on-retry
 detections are not appearing, the factory's token is the first thing to check** — the default workflow
 token cannot trigger `pr.yaml` at all.
@@ -93,9 +101,3 @@ because its window is the shortest in the repo.
 Nothing here is tunable, on purpose. The attempt counts are the story, and `retries: 3` in
 [`playwright.config.ts`](playwright.config.ts) has to stay at or above the deepest rung of the ladder
 or the deepest test stops passing at all and silently becomes a second `never_passes…`.
-
-## Links
-
-- Up: [`docs/monitors.md`](../../docs/monitors.md)
-- Up: [`docs/operations.md`](../../docs/operations.md) — the PR factory and its token requirement
-- Sideways: [`failure-rate`](../failure-rate/README.md)

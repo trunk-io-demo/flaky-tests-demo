@@ -12,7 +12,7 @@
 # to show. Those handles do not resolve on GitHub. That is expected: GitHub
 # flags them as unknown owners and never requests review from them.
 
-* @trunk-io-demo/flaky-tests-demo
+* @trunk-io/flaky-tests-demo
 
 # Fictional owners, one invented company team per apps/ scenario.
 #

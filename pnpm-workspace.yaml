@@ -4,7 +4,7 @@
 # top-level directory.
 #
 # `integrations/*` is matched on purpose even though the directory holds no
-# packages yet — see docs/architecture.md.
+# packages yet — see CLAUDE.md.
 packages:
   - monitors/*
   - apps/*

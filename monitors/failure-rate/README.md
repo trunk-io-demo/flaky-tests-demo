@@ -1,5 +1,13 @@
 # `failure-rate`
 
+> [!NOTE]
+> **What this monitor does, in the product docs:**
+> <https://docs.trunk.io/flaky-tests/detection/failure-rate-monitor>
+>
+> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has the three rate variables.
+>
+> Read this against [`failure-count`](../failure-count/README.md) for the same failures as a count, and [`synth/branch-rates`](../../synth/branch-rates/README.md) for the same monitor scoped by branch.
+
 ## What this monitor detects
 
 What fraction of a test's recent runs failed. Not "did it fail" — every test fails sometimes — but
@@ -33,12 +41,12 @@ Three things have to be true at once, and they pull against each other:
   replayed.
 
 `Math.random()` gives up the third. A hardcoded outcome gives up the second. So
-[`flake.ts`](flake.ts) seeds a small, fully specified generator from the test's name and the current
+[`utils`](../utils/) seeds a small, fully specified generator from the test's name and the current
 UTC hour. Within one hourly run each test has a fixed, computable outcome; the next hour is a fresh
 draw. Every failure message prints its rate and its hour bucket, so a failure can always be traced
 back to a decision rather than to chance.
 
-`flake.ts` is deliberately duplicated in the monitor packages that need it rather than shared from
+`monitors/utils` is deliberately duplicated in the monitor packages that need it rather than shared from
 one place — each story is meant to be readable by someone who opened one folder and nothing else.
 
 ### The test names do not contain the numbers
@@ -87,12 +95,3 @@ expected, not as a red run that looks like a real breakage.
 
 Keep the three separated by enough margin that a day's worth of runs distinguishes them. Low at 8
 and medium at 12 is not a story anyone can read.
-
-## Links
-
-- Up: [`docs/monitors.md`](../../docs/monitors.md) — the whole catalog
-- Up: [`docs/configuration.md`](../../docs/configuration.md) — every variable and secret
-- Sideways: [`synth/branch-rates`](../../synth/branch-rates/README.md) — the same monitor, but
-  demonstrating branch-filtered configuration
-- Sideways: [`synth/variant-rates`](../../synth/variant-rates/README.md) — the same monitor, per
-  variant

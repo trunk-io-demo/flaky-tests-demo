@@ -1,5 +1,13 @@
 # `new-test`
 
+> [!NOTE]
+> **What this monitor does, in the product docs:**
+> <https://docs.trunk.io/flaky-tests/detection/new-test-monitor>
+>
+> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has `MONITORS_NEW_TEST_WINDOW_DAYS`.
+>
+> Read this against [`synth/cohorts`](../../synth/cohorts/README.md): the same lifecycle told synthetically, over a longer arc.
+
 ## What this monitor detects
 
 Tests that have not been around long enough to be judged on the same terms as everything else.
@@ -68,9 +76,3 @@ tests.
 
 Lowering it retires the excess members immediately, which is a real resolution-by-absence event
 rather than a mistake — but it is a lot of them at once, and will look like an incident.
-
-## Links
-
-- Up: [`docs/monitors.md`](../../docs/monitors.md)
-- Up: [`docs/configuration.md`](../../docs/configuration.md)
-- Sideways: [`synth/cohorts`](../../synth/cohorts/README.md) — the same lifecycle, synthetically

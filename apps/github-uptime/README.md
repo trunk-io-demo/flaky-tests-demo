@@ -1,5 +1,10 @@
 # `github-uptime`
 
+> [!NOTE]
+> **Depends on a third party.** It fails during a real GitHub incident. Confirm at <https://www.githubstatus.com> before treating a failure as ours.
+>
+> [`apps/README.md`](../README.md) frames the live scenarios. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has `APPS_UPTIME_THRESHOLD`.
+
 ## ⚠️ This scenario depends on a third party
 
 **It fails during a real GitHub incident**, and that is deliberate. See "telling the two apart" below
@@ -61,10 +66,3 @@ most days and everything on a few.
 
 `minor` makes this fire considerably more often — Statuspage reports minor degradations fairly
 routinely — which is the honest way to make the scenario more active without polling harder.
-
-## Links
-
-- Up: [`apps/README.md`](../README.md)
-- Up: [`docs/monitors.md`](../../docs/monitors.md)
-- Sideways: [`third-party-apis`](../third-party-apis/README.md) — the other scenario that fails on
-  somebody else's behalf

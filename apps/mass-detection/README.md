@@ -1,11 +1,16 @@
 # `mass-detection`
 
+> [!NOTE]
+> **This fires on day 13 of every month, UTC.** Twenty tests fail together and it looks exactly like a real incident. Also recorded in [`../README.md`](../README.md) and [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
+>
+> Read this against [`monitors/failure-count`](../../monitors/failure-count/README.md): a steady count beside a monthly burst.
+
 ## ⚠️ Read this first: the trigger
 
 **Twenty tests in this folder fail on day 13 of every month, UTC.** By default —
 `APPS_MASS_DETECTION_DAY_OF_MONTH` changes it.
 
-This is written here, in [`docs/operations.md`](../../docs/operations.md), and in a passing test named
+This is written here, in [`CONTRIBUTING.md`](../../CONTRIBUTING.md), and in a passing test named
 `the_next_mass_detection_event_is_announced_here` that logs the next occurrence. Three places, because
 a whole suite going flaky at once is **indistinguishable from a real incident**, and this org is one
 the team alerts on. Somebody paged at 03:00 needs to answer "is this ours?" in one lookup.
@@ -72,11 +77,3 @@ a fork should tune without deciding it wants a different demonstration.
 
 **Changing the day mid-month can fire the event immediately.** If you set it to today, twenty tests
 start failing on the next run. That is not a bug, but it will page somebody.
-
-## Links
-
-- Up: [`apps/README.md`](../README.md)
-- Up: [`docs/monitors.md`](../../docs/monitors.md) — the whole catalog
-- Up: [`docs/operations.md`](../../docs/operations.md) — where this trigger is also recorded
-- Sideways: [`monitors/failure-count`](../../monitors/failure-count/README.md) — a count that is
-  steady rather than a burst

@@ -6,7 +6,7 @@ correctly. Conflicting dependency trees between frameworks is the entire point, 
 will carry its own `package.json`.
 
 It is deliberately kept out of the current pass because framework breadth is not the story this
-repo tells — see [`docs/architecture.md`](../docs/architecture.md) for why, and the predecessor
+repo tells — see [`CLAUDE.md`](../CLAUDE.md) for why, and the predecessor
 repo `trunk-io/flake-farm` for the framework-breadth version of this idea.
 
 Two things are already in place so that landing it later needs no restructuring:

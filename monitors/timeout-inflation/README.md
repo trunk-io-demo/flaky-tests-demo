@@ -1,5 +1,13 @@
 # `timeout-inflation`
 
+> [!NOTE]
+> **What this monitor does, in the product docs:**
+> <https://docs.trunk.io/flaky-tests/detection/timeout-inflation-monitor>
+>
+> [`monitors/README.md`](../README.md) indexes every monitor story and [`CLAUDE.md`](../CLAUDE.md) has the conventions for changing them. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) has the four timeout variables.
+>
+> **Read this against [`slow-test`](../slow-test/README.md).** That is a test that genuinely got slower. This one did not. A slow-test monitor cannot tell them apart, which is why this monitor exists.
+
 ## What this monitor detects
 
 A test that **did not get slower** — it only got slower _when it fails_, because it is blocking on a
@@ -88,9 +96,3 @@ bimodality more dramatic, and it is paid for in runner minutes on every failing 
 Keep the ceiling well under the vitest timeout, which is set to ceiling + 10s in the test. If vitest
 kills the test first it reports **its** timeout instead, pinning the duration at vitest's limit rather
 than at the one the story is about — and the story quietly becomes about the wrong number.
-
-## Links
-
-- Up: [`docs/monitors.md`](../../docs/monitors.md)
-- Up: [`docs/configuration.md`](../../docs/configuration.md)
-- Sideways: [`slow-test`](../slow-test/README.md) — the monitor this one exists to disambiguate from

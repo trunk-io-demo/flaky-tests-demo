@@ -62,5 +62,5 @@ makes a demo wrong in a way nobody notices.
 
 - [`../README.md`](../README.md) — how `synth/` works and how to verify it locally
 - [`../branch-rates/README.md`](../branch-rates/README.md) — the same idea, but per branch
-- [`../../docs/monitors.md`](../../docs/monitors.md) — the monitor catalog
-- [`../../docs/configuration.md`](../../docs/configuration.md) — every variable
+- [`../../README.md`](../../README.md) — the monitor catalog
+- [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md) — every variable
