@@ -3,19 +3,13 @@
 > [!NOTE]
 > <https://docs.trunk.io/flaky-tests/detection/skipped-test-monitor>
 
-Tests that have stopped running without anybody deleting them. The quietest real problem a suite has: a
-skipped test looks green, appears in no failure rate and no failure count, satisfies whoever asked for
-coverage, and can sit there for a year.
+Tests that have stopped running without anybody deleting them. Either intentionally skipped or bypassed by the test reporter. Flags with a label for human intervention.
 
 ## The story
 
 **[`cascade.spec.ts`](cascade.spec.ts) is the canonical case.** A playwright serial group whose first test
 fails, after which five tests report as skipped without anyone having decided they should. The suite shows
 one failure and looks almost fine.
-
-That is how the problem actually arrives. Nobody writes `test.skip` on nineteen tests — one setup step
-breaks and the runner declines to attempt the rest, so a single failure hides an arbitrary amount of
-coverage behind it.
 
 The setup fails 60% of runs rather than all of them, so the five downstream steps have **partial**
 history: mostly skipped, occasionally run, each at its own small rate. Partial history is the harder
@@ -28,7 +22,8 @@ eventually passes is a pass-on-retry story and would give the cascade a second c
 | ------------------------------------------ | ----------------------------------------------------------- |
 | `always skipped never deleted`             | `it.skip`. The body still compiles and still passes review. |
 | `sometimes skipped by a runtime condition` | Skips 40% of runs. Partial history looks _maintained_.      |
-| `never skipped`                            | The control.                                                |
+
+`healthcheck always passes` is the control here: it never fails and never skips.
 
 ## What you should see
 

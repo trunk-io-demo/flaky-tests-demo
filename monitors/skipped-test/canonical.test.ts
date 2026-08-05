@@ -2,7 +2,8 @@ import { hourBucket, randomPercentage } from "@flaky-tests-demo/monitors-utils";
 import { describe, expect, it } from "vitest";
 
 // The serial cascade — the canonical case — is in cascade.spec.ts. These are the
-// two quieter ways a test stops running without anybody deleting it.
+// two quieter ways a test stops running without anybody deleting it. The
+// healthcheck is the control: it never fails and never skips.
 
 const SOMETIMES_SKIPPED_RATE = 40;
 
@@ -28,9 +29,5 @@ describe("skipped-test", () => {
       );
     }
     expect(bucket).toBeTruthy();
-  });
-
-  it("never skipped", () => {
-    expect(1).toBe(1);
   });
 });

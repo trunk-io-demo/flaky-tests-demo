@@ -3,9 +3,7 @@
 > [!NOTE]
 > <https://docs.trunk.io/flaky-tests/detection/slow-test-monitor>
 
-Duration regressions: a test that still passes but takes materially longer than it used to. Slowness is
-the failure mode nobody files a bug for — a suite gains four seconds a week until people stop running it
-locally, and then it stops catching things.
+Duration regressions: a test that still passes but takes long enough to be flagged. Slowness can build up over time. Slowness monitors capture latency regressions and inter-test harness slowness.
 
 ## The story
 

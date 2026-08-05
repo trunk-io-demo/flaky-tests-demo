@@ -78,7 +78,6 @@ The two quieter ways it happens.
 | `healthcheck always passes`                | Never fails, never skips.                                         |
 | `always skipped never deleted`             | `it.skip`. Has not executed since somebody typed four characters. |
 | `sometimes skipped by a runtime condition` | Skips 40% of runs. Partial history looks maintained.              |
-| `never skipped`                            | The control.                                                      |
 
 ### [`new-test/`](new-test/) · [`canonical.test.ts`](new-test/canonical.test.ts)
 
