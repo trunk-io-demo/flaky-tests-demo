@@ -153,6 +153,3 @@ blob-report/
 
 # synth/ generated JUnit XML and upload manifests
 /synth-out/
-
-# The implementation brief is a working document, not a published one.
-PURPOSE.md

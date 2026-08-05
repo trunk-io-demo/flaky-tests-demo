@@ -23,11 +23,6 @@ clap = { version = "4.5", features = ["derive", "env"] }
 quick-junit = "0.7"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-
-# rand_chacha is pinned deliberately: ChaCha8Rng is reproducible across
-# platforms and across versions of the crate, which `StdRng` explicitly does
-# not promise. Every seeded stream in synth/ goes through it, so a fork of this
-# repo reproduces the original's stories byte for byte.
 rand = "0.8"
 rand_chacha = "0.3"
 
