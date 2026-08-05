@@ -3,7 +3,7 @@
 //! the original's stories exactly.
 
 use chrono::{DateTime, NaiveDate, Timelike, Utc};
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
 pub fn stable_hash(parts: &[&str]) -> u64 {
@@ -90,19 +90,19 @@ impl StoryRng {
         if percent >= 100 {
             return true;
         }
-        self.rng.gen_range(0..100u8) < percent
+        self.rng.random_range(0..100u8) < percent
     }
 
     pub fn in_range(&mut self, low: u64, high: u64) -> u64 {
         if high <= low {
             return low;
         }
-        self.rng.gen_range(low..=high)
+        self.rng.random_range(low..=high)
     }
 
     pub fn pick<'a, T>(&mut self, choices: &'a [T]) -> &'a T {
         assert!(!choices.is_empty(), "cannot pick from an empty slice");
-        let index = self.rng.gen_range(0..choices.len());
+        let index = self.rng.random_range(0..choices.len());
         &choices[index]
     }
 
