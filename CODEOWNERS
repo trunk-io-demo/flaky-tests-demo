@@ -1,7 +1,9 @@
 # Ownership in this repo does double duty.
 #
 # The default owner is the team that owns the monitors this repo demonstrates.
-# That is the only entry here meant to be a real reviewer.
+# That is the only entry here meant to be a real reviewer, and it has to live in
+# the same org as the repo — a CODEOWNERS team from another org does not resolve,
+# which is why this is not @trunk-io/flaky-tests.
 #
 # Everything else is deliberately fictional. The uploader parses this file to
 # attribute test failures to code owners, and a demo where every failing test
@@ -10,7 +12,7 @@
 # to show. Those handles do not resolve on GitHub. That is expected: GitHub
 # flags them as unknown owners and never requests review from them.
 
-* @trunk-io/flaky-tests
+* @trunk-io-demo/flaky-tests-demo
 
 # Fictional owners, one invented company team per apps/ scenario.
 #

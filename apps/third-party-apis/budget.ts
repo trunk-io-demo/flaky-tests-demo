@@ -30,7 +30,7 @@ export const BURST_URL = "https://api.github.com/zen";
 const HEADERS = {
   // Identifying the caller is the polite minimum when calling somebody else's
   // API on a schedule.
-  "user-agent": "flaky-tests-demo (github.com/trunk-io/flaky-tests-demo)",
+  "user-agent": "flaky-tests-demo (github.com/trunk-io-demo/flaky-tests-demo)",
   accept: "application/vnd.github+json",
 } as const;
 

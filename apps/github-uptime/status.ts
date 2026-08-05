@@ -39,7 +39,8 @@ export const fetchStatus = async (
       headers: {
         // Identifying the caller is the polite minimum when polling somebody
         // else's endpoint on a schedule.
-        "user-agent": "flaky-tests-demo (github.com/trunk-io/flaky-tests-demo)",
+        "user-agent":
+          "flaky-tests-demo (github.com/trunk-io-demo/flaky-tests-demo)",
         accept: "application/json",
       },
     });
