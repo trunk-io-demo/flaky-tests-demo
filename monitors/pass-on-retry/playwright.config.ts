@@ -45,7 +45,7 @@ export default defineConfig({
   reporter: [
     ["list"],
     [
-      "./retry-reporter.ts",
+      "./junit-reporter.ts",
       { outputFile: `${packagePath}/test-results/playwright.junit.xml` },
     ],
   ],

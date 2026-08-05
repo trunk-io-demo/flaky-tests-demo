@@ -1,48 +1,39 @@
+import {
+  hourBucket,
+  randomPercentage,
+  ratePercent,
+} from "@flaky-tests-demo/monitors-utils";
 import { describe, expect, it } from "vitest";
 
-import { failsThisRun, hourBucket, ratePercent } from "./flake";
-
 /**
- * The skipped-test monitor detects tests that have stopped running without
- * anybody deleting them.
+ * A skipped test looks green. It appears in no failure rate and no failure
+ * count, satisfies whoever asked for coverage, and can sit there for a year.
  *
- * This is the quietest real problem in a test suite. A skipped test looks green.
- * It shows up in no failure rate and no failure count, it satisfies whoever
- * asked for coverage, and it can sit there for a year — usually with a comment
- * saying it will be re-enabled next sprint.
- *
- * The three tests below are the three ways it happens.
+ * The serial cascade — the canonical case — is in cascade.spec.ts. These are the
+ * two quieter ways it happens.
  */
 
 const SOMETIMES_SKIPPED_RATE = ratePercent("MONITORS_SKIP_RATE", 40);
 
 describe("skipped-test", () => {
-  /** Never fails and never skips. See ../README.md. */
-  it("healthcheck_always_passes", () => {
-    expect(hourBucket()).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}$/);
+  it("healthcheck always passes", () => {
+    expect(1).toBe(1);
   });
 
-  /**
-   * The classic: skipped at authoring time and never revisited.
-   *
-   * `it.skip` is what a real one looks like — the body is still here, still
-   * compiles, still passes review, and has not executed since the day someone
-   * put four characters in front of it.
-   */
-  it.skip("always_skipped_never_deleted", () => {
-    expect("this body has not run in a very long time").toBeTruthy();
+  /** The classic: skipped at authoring time and never revisited. The body still
+   * compiles and still passes review. */
+  it.skip("always skipped never deleted", () => {
+    expect(1).toBe(1);
   });
 
-  /**
-   * The harder one: skipped only sometimes, by a runtime condition.
-   *
-   * A test guarded by an environment check, a feature flag, or a platform test
-   * is *usually* running, so nobody notices the runs where it did not. It has
-   * partial history, which is worse than none — it looks maintained.
-   */
-  it("sometimes_skipped_by_a_runtime_condition", (ctx) => {
+  /** The harder case. A test guarded by an environment check or a feature flag
+   * is usually running, so nobody notices the runs where it was not — partial
+   * history looks maintained. */
+  it("sometimes skipped by a runtime condition", (ctx) => {
     const bucket = hourBucket();
-    if (failsThisRun("sometimes_skipped", SOMETIMES_SKIPPED_RATE, bucket)) {
+    if (
+      randomPercentage("sometimes skipped", bucket) < SOMETIMES_SKIPPED_RATE
+    ) {
       ctx.skip(
         `deliberately skipped this run (${String(SOMETIMES_SKIPPED_RATE)}% of runs, ` +
           `bucket ${bucket}). This is the demo working.`,
@@ -52,7 +43,7 @@ describe("skipped-test", () => {
   });
 
   /** The control. Runs every time, so the contrast is visible. */
-  it("never_skipped", () => {
-    expect(new Date().getUTCFullYear()).toBeGreaterThan(2000);
+  it("never skipped", () => {
+    expect(1).toBe(1);
   });
 });
