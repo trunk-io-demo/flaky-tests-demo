@@ -65,3 +65,9 @@ runs:
         cli-version: ${{ inputs.cli-version }}
         allow-missing-junit-files: false
         use-cache: true
+        # Required, not redundant. Removing this was tried on 380b4f0: the
+        # generator exited non-zero, ran under continue-on-error, and sat
+        # immediately before this step, and the uploader still chose exit code 0.
+        # It reads this input and nothing else — there is no implicit fallback to
+        # the preceding step, and the default is success.
+        previous-step-outcome: ${{ steps.generate.outcome }}
