@@ -28,8 +28,8 @@ test's rate changes.
 
 Each rung fails at its own rate, so no two are the same test twice over.
 
-So a scheduled run on `main` produces 1–4 failures and a pull request 1–4, from the same file, both
-stepping up on Mondays and alternating days. The always-fails tests are deterministic, which makes them a
+So a scheduled run on `main` produces 1–6 failures and a pull request 1–6, from the same file: one
+always-fails, nought to three from the ladder, and one each for Monday and the alternating day. The always-fails tests are deterministic, which makes them a
 clean input to a threshold; the ladders give it something to be noisy about.
 
 `fails every other day` is anchored to the epoch day, not the day of the month — day-of-month parity
@@ -43,9 +43,9 @@ run is therefore a `PR` run; `GITHUB_REF_NAME=main pnpm test` exercises the othe
 
 ## What you should see
 
-Within an hour, one to four failures from the scheduled run and a different set on the factory's pull
+Within an hour, one to six failures from the scheduled run and a different set on the factory's pull
 request. Within a day, a count visibly different per branch class, and a threshold at one firing while one
-above four does not. The count steps up for a full day each Monday.
+above six does not. The count steps up for a full day each Monday.
 
 ## Other monitors
 

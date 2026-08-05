@@ -12,6 +12,10 @@ export default defineConfig({
   testDir: repoRoot,
   testMatch: [`${packagePath}/**/*.spec.ts`],
 
+  // Playwright wipes outputDir on start, so it must not be test-results itself:
+  // that is where the vitest report lives, and CI runs vitest first.
+  outputDir: "test-results/artifacts",
+
   retries: 0,
   workers: 1,
   fullyParallel: false,

@@ -33,8 +33,8 @@ the cycle rollover — which is behavior nobody usually gets to watch.
 
 [`contention.test.ts`](contention.test.ts) is a different cause of the same symptom. Four tests run
 **concurrently** — `it.concurrent` — and take turns on one shared resource through a real ticket lock over
-real shared state. Each waits out everyone ahead of it, so the last one spends two to three times longer
-waiting than doing its own work.
+real shared state. Each waits out everyone ahead of it, so the last one's duration is two to three times
+the work it actually does.
 
 How long each holds the resource is jittered per hour, so the queue costs a different amount every hour
 and a test's duration drifts with no code change behind it. That is the part worth seeing: a duration that

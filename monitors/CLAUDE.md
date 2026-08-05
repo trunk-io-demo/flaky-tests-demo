@@ -2,11 +2,14 @@
 
 Repo-wide conventions are in [`../CLAUDE.md`](../CLAUDE.md), including the ten-comment-line limit.
 
-## Keep the index current
+## Keep each package's README current
 
-Every test here is listed in [`README.md`](README.md). When you add, rename, or remove one, update that
-index and the table in the package's own README. A test that exists but is not indexed is invisible; one
-that is indexed but does not exist sends a reviewer looking for a story that is not there.
+A package's own `README.md` is where its tests are enumerated. When you add, rename, or remove one, update
+that table in the same commit. A test that exists but is not described is invisible; one that is described
+but does not exist sends a reviewer looking for a story that is not there.
+
+[`README.md`](README.md) here stays at the level of one row per monitor — what it detects and what the
+story is. It deliberately does not index individual tests, because two places to update is one too many.
 
 ## No two tests with the same failure pattern
 

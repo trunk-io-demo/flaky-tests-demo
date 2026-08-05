@@ -13,7 +13,6 @@ const CLIENT_TIMEOUT_MS = 5_000;
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-// A few percent either side; byte-identical failures would read as generated.
 const clientTimeoutMs = (bucket: string): number =>
   Math.round(
     CLIENT_TIMEOUT_MS *

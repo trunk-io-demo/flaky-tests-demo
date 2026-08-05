@@ -18,16 +18,18 @@ A timeout inflation monitor firing indicates that the timeout is likely too high
 
 ## The story
 
-`blocks on a timeout only when it fails` races the work against a timer, which is how the real bug is
-written — on a failing run the work is a promise that never resolves, so the duration is a consequence
-of the timeout rather than a number chosen to look like one.
+The narrative is a service calling a downstream one. `blocks on a timeout only when it fails` gets a
+`200 OK` in 150ms when downstream answers, and sits on a 5-second client timeout before giving up when it
+does not. Nothing is actually called — the variable names carry the story and the elapsed time is real,
+which is all the monitor reads.
 
-`fails fast when it fails` is the control: same failure rate, returns immediately. Side by side, the
-inflation is obviously a property of _how_ it fails.
+`fails fast when it fails` is the control: it rejects the request _before_ it would call downstream, so it
+fails at the same 20% rate in a millisecond. Side by side, the inflation is obviously a property of _how_
+a test fails rather than of the failure.
 
 Naive randomness cannot produce this. Drawing duration and outcome independently gives failures the same
-distribution as passes, which is exactly what is not happening in a real timeout — so durations are
-pinned per outcome and only a few percent of jitter is drawn. Zero jitter would make every failure
+distribution as passes, which is exactly what is not happening in a real timeout — so the duration follows
+from the outcome, with a few percent of jitter on the ceiling. Zero jitter would make every failure
 byte-identical, which reads as generated.
 
 ## What you should see
