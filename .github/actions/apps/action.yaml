@@ -1,12 +1,14 @@
 name: Run the apps stories
 description: >
   Runs every package under apps/ and uploads its results. Runner-agnostic: it
-  reads the variant it is handed rather than deciding one, so the same action is
+  reads the platform it is handed rather than deciding one, so the same action is
   callable from the scheduled workflow and from pull requests.
 
 inputs:
   variant:
-    description: Variant to tag the upload with. Comes from the calling job's matrix.
+    description: >
+      Platform this run happened on, tagged onto the upload. apps/ is the only
+      folder that uses one: it is the only place the platform changes the answer.
     required: true
   org-slug:
     description: Trunk org URL slug.
@@ -43,63 +45,29 @@ runs:
       shell: bash
       run: pnpm install --frozen-lockfile
 
-    # Unlike monitors/, some of these tests call real external services. A
-    # network failure here is not a bug in the demo — it is the story — so the
-    # exit code is captured rather than allowed to stop the run.
-    #
-    # `continue-on-error` is not available on composite action steps, which is
-    # why this is done in bash.
     - name: Run vitest scenarios
+      id: vitest
       shell: bash
-      run: |
-        set +e
-        pnpm --filter "./apps/**" --no-bail --if-present run test
-        code=$?
-        set -e
-        if [ "$code" -eq 0 ]; then echo "vitest: all scenarios passed"; else echo "vitest: exited $code — expected, these scenarios fail on purpose or on someone else's outage"; fi
+      continue-on-error: true
+      run: pnpm --filter "./apps/**" --no-bail --if-present run test
 
     - name: Run playwright scenarios
+      id: playwright
       shell: bash
-      run: |
-        set +e
-        pnpm --filter "./apps/**" --no-bail --if-present run test:e2e
-        code=$?
-        set -e
-        if [ "$code" -eq 0 ]; then echo "playwright: all scenarios passed"; else echo "playwright: exited $code — expected"; fi
+      run: pnpm --filter "./apps/**" --no-bail --if-present run test:e2e
 
     - name: Report what was produced
-      id: results
       shell: bash
       run: |
         shopt -s nullglob
         files=(apps/*/test-results/*.xml)
-        echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
         printf 'produced %d result file(s)\n' "${#files[@]}"
         for file in "${files[@]}"; do echo "  $file"; done
 
-    - name: Skip the upload, with a reason
-      if: ${{ inputs.token == '' || inputs.test-collection-id == '' }}
-      shell: bash
-      env:
-        HAS_TOKEN: ${{ inputs.token != '' }}
-      run: |
-        if [ "$HAS_TOKEN" != "true" ]; then
-          echo "::notice title=apps upload skipped::No Trunk API token in this context. Expected on pull requests from forks."
-        else
-          echo "::notice title=apps upload skipped::APPS_TEST_COLLECTION is unset. Set it rather than letting results land in the org default."
-        fi
-
     - name: Upload results
-      if: ${{ inputs.token != '' && inputs.test-collection-id != '' && steps.results.outputs.count != '0' }}
       uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
       env:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
-        # Quarantining is left to the org's configuration rather than forced off
-        # here — this repo is a place to exercise auto-quarantine, not to opt out
-        # of it. What is deliberately *not* forwarded is the test process's exit
-        # code, so a deliberate failure cannot turn this job red. The job's status
-        # therefore reports upload health only, which is what makes it usable as a
-        # canary.
       with:
         junit-paths: apps/*/test-results/*.xml
         org-slug: ${{ inputs.org-slug }}
@@ -107,4 +75,5 @@ runs:
         test-collection-id: ${{ inputs.test-collection-id }}
         variant: ${{ inputs.variant }}
         cli-version: ${{ inputs.cli-version }}
+        allow-missing-junit-files: false
         use-cache: true

@@ -1,0 +1,15 @@
+[package]
+name = "synth-config"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Every parameter the synth generator reads, with the bounds each one is held to."
+
+[lib]
+name = "synth_config"
+path = "src/lib.rs"
+
+[dependencies]
+bounded-integer.workspace = true
+serde.workspace = true

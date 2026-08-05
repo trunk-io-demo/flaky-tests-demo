@@ -12,6 +12,10 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@flaky-tests-demo/monitors-utils": "workspace:*"
+    "@flaky-tests-demo/monitors-utils": "workspace:*",
+    "@octokit/plugin-retry": "^8.1.1",
+    "@octokit/plugin-throttling": "^11.0.5",
+    "@octokit/rest": "^22.0.1",
+    "zod": "^4.4.3"
   }
 }

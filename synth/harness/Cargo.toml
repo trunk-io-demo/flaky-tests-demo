@@ -1,0 +1,27 @@
+[package]
+name = "harness"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Shared library for generating deterministic synthetic JUnit reports and upload manifests."
+
+[lib]
+name = "harness"
+path = "src/lib.rs"
+
+[dependencies]
+synth-config = { path = "../config" }
+
+anyhow.workspace = true
+fake.workspace = true
+rand_distr.workspace = true
+chrono.workspace = true
+quick-junit.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
+serde.workspace = true
+
+
+[dev-dependencies]
+synth-config = { path = "../config" }

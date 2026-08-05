@@ -1,0 +1,19 @@
+[package]
+name = "generate"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Fabricates synthetic JUnit and an upload manifest. Runs no tests."
+
+[[bin]]
+name = "generate"
+path = "src/main.rs"
+
+[dependencies]
+harness = { path = "../harness" }
+synth-config = { path = "../config" }
+
+anyhow.workspace = true
+chrono.workspace = true
+clap.workspace = true

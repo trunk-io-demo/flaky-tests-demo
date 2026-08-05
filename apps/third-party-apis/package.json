@@ -12,6 +12,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@flaky-tests-demo/monitors-utils": "workspace:*"
+    "@flaky-tests-demo/monitors-utils": "workspace:*",
+    "zod": "^4.4.3"
   }
 }

@@ -1,13 +1,10 @@
 name: Run the monitors stories
 description: >
   Runs every package under monitors/ and uploads its results. Runner-agnostic:
-  it reads the variant it is handed rather than deciding one, so the same action
+  it takes no variant — these tests do not touch a network, so the same action
   is callable from the scheduled workflow and from pull requests.
 
 inputs:
-  variant:
-    description: Variant to tag the upload with. Comes from the calling job's matrix.
-    required: true
   org-slug:
     description: Trunk org URL slug.
     required: true
@@ -24,7 +21,10 @@ inputs:
     required: false
     default: ""
   cli-version:
-    description: Uploader CLI version.
+    description: >
+      Uploader CLI version, or "latest". Workflows pass
+      vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION so a pre-release build can be
+      exercised across every folder at once.
     required: false
     default: latest
 
@@ -43,78 +43,35 @@ runs:
       shell: bash
       run: pnpm install --frozen-lockfile
 
-    # `continue-on-error` is not available on composite action steps, so the exit
-    # code is captured in bash instead. It has to be captured rather than
-    # ignored: a failing test here is the demo working, and the run must reach
-    # the upload either way.
-    #
-    # The filter iterates workspace members rather than naming paths, so adding a
-    # story needs no edit to this file. An empty match is not an error, which is
-    # what lets this action exist before its folder has any packages.
     - name: Run vitest stories
       id: vitest
       shell: bash
-      run: |
-        set +e
-        pnpm --filter "./monitors/**" --no-bail --if-present run test
-        code=$?
-        set -e
-        if [ "$code" -eq 0 ]; then echo "vitest: all stories passed"; else echo "vitest: exited $code — expected, these stories fail on purpose"; fi
+      continue-on-error: true
+      run: pnpm --filter "./monitors/**" --no-bail --if-present run test
 
     - name: Run playwright stories
       id: playwright
       shell: bash
-      run: |
-        set +e
-        pnpm --filter "./monitors/**" --no-bail --if-present run test:e2e
-        code=$?
-        set -e
-        if [ "$code" -eq 0 ]; then echo "playwright: all stories passed"; else echo "playwright: exited $code — expected, these stories fail on purpose"; fi
+      continue-on-error: true
+      run: pnpm --filter "./monitors/**" --no-bail --if-present run test:e2e
 
     - name: Report what was produced
-      id: results
       shell: bash
       run: |
         shopt -s nullglob
         files=(monitors/*/test-results/*.xml)
-        echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
         printf 'produced %d result file(s)\n' "${#files[@]}"
         for file in "${files[@]}"; do echo "  $file"; done
 
-    # A public repo receives pull requests from forks, and those runs have no
-    # access to repository secrets. Skipping with a clear line is the correct
-    # behavior: a red X on a contributor's pull request because our demo could
-    # not upload would be a bug, not a signal.
-    - name: Skip the upload, with a reason
-      if: ${{ inputs.token == '' || inputs.test-collection-id == '' }}
-      shell: bash
-      # The token is compared in an expression and never interpolated into the
-      # script, so it cannot end up in a process listing or a log.
-      env:
-        HAS_TOKEN: ${{ inputs.token != '' }}
-      run: |
-        if [ "$HAS_TOKEN" != "true" ]; then
-          echo "::notice title=monitors upload skipped::No Trunk API token in this context. Expected on pull requests from forks."
-        else
-          echo "::notice title=monitors upload skipped::MONITORS_TEST_COLLECTION is unset. Set it rather than letting results land in the org default."
-        fi
-
     - name: Upload results
-      if: ${{ inputs.token != '' && inputs.test-collection-id != '' && steps.results.outputs.count != '0' }}
       uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
       env:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
-        # Quarantining is left to the org's configuration rather than forced off
-        # here — this repo is a place to exercise auto-quarantine, not to opt out
-        # of it. What is deliberately *not* forwarded is the test process's exit
-        # code, so a deliberate failure cannot turn this job red. The job's status
-        # therefore reports upload health only, which is what makes it usable as a
-        # canary.
       with:
         junit-paths: monitors/*/test-results/*.xml
         org-slug: ${{ inputs.org-slug }}
         token: ${{ inputs.token }}
         test-collection-id: ${{ inputs.test-collection-id }}
-        variant: ${{ inputs.variant }}
         cli-version: ${{ inputs.cli-version }}
+        allow-missing-junit-files: false
         use-cache: true

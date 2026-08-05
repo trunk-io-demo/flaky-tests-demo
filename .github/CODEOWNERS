@@ -1,0 +1,34 @@
+# Ownership in this repo does double duty.
+#
+# The default owner is the team that owns the monitors this repo demonstrates.
+# That is the only entry here meant to be a real reviewer, and it has to live in
+# the same org as the repo — a CODEOWNERS team from another org does not resolve,
+# which is why this is not @trunk-io/flaky-tests.
+#
+# Everything else is deliberately fictional. The uploader parses this file to
+# attribute test failures to code owners, and a demo where every failing test
+# has the same owner demonstrates nothing — so each `apps/` scenario is owned by
+# an invented company team, giving failure attribution in the product something
+# to show. Those handles do not resolve on GitHub. That is expected: GitHub
+# flags them as unknown owners and never requests review from them.
+
+* @trunk-io/flaky-tests-demo
+
+# Fictional owners, one invented company team per apps/ scenario.
+#
+# These give failure attribution in the product something to show: a page of
+# failures all owned by one team demonstrates nothing about owner attribution.
+# None of these handles resolve, which is expected — GitHub flags them as unknown
+# owners and never requests review from them.
+#
+# The paths are matched against each test's `file` attribute, which is why the
+# vitest configs are rooted at the repository rather than at the package.
+/apps/parking-meter/     @abc/parking-fee
+/apps/mass-detection/    @def/spikes
+/apps/third-party-apis/  @ghi/api
+/apps/github-uptime/     @jkl/gh
+
+# synth/ fabricates `file` paths under this prefix — they resolve to nothing on
+# disk, which is the point, but they still have to match something here or every
+# synthetic failure lands on the default owner and attribution shows one row.
+/synth/fabricated/       @mno/platform

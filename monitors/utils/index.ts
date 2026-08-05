@@ -18,8 +18,6 @@ export {
   todayIso,
 } from "./date";
 
-export { getOs, type Os } from "./os";
-
 export { randomPercentage } from "./random";
 
 export { testIter } from "./test-iter";

@@ -15,7 +15,11 @@ import { describe, expect, it } from "vitest";
 // because they are constants in this file — nothing outside it can make them lie.
 
 const branchClass = getBranchClass();
-const STEPPED_PR_RATES = [40, 80];
+const RUNGS = testIter(10).map((member) => ({
+  member,
+  rate: Number(member) * 10,
+}));
+const STEPPED = [40, 80].map((prRate) => ({ prRate, elsewhere: prRate / 2 }));
 const RATE_BY_WEEKDAY = [10, 20, 30, 40, 50, 60, 70]; // Sunday first.
 
 describe("failure-rate", () => {
@@ -23,28 +27,23 @@ describe("failure-rate", () => {
     expect(1).toBe(1);
   });
 
-  for (const member of testIter(10)) {
-    const rate = Number(member) * 10;
+  it.each(RUNGS)("fails $rate percent", ({ member, rate }) => {
+    expect(
+      randomPercentage(`rate-${member}`),
+      `fails ${String(rate)}% of runs — the demo working`,
+    ).toBeGreaterThanOrEqual(rate);
+  });
 
-    it(`fails ${String(rate)} percent`, () => {
-      expect(
-        randomPercentage(`rate-${member}`),
-        `fails ${String(rate)}% of runs — the demo working`,
-      ).toBeGreaterThanOrEqual(rate);
-    });
-  }
-
-  for (const prRate of STEPPED_PR_RATES) {
-    const elsewhere = prRate / 2;
-    const rate = branchClass === "PR" ? prRate : elsewhere;
-
-    it(`fails ${String(prRate)} percent on prs and ${String(elsewhere)} percent elsewhere`, () => {
+  it.each(STEPPED)(
+    "fails $prRate percent on prs and $elsewhere percent elsewhere",
+    ({ prRate, elsewhere }) => {
+      const rate = branchClass === "PR" ? prRate : elsewhere;
       expect(
         randomPercentage(`stepped-${String(prRate)}`),
         `fails ${String(rate)}% of ${branchClass} runs — the demo working`,
       ).toBeGreaterThanOrEqual(rate);
-    });
-  }
+    },
+  );
 
   it("fails at a rate that climbs through the week", () => {
     const rate = RATE_BY_WEEKDAY[getDay()] ?? 10;

@@ -16,7 +16,10 @@ import { describe, expect, it } from "vitest";
 
 const branchClass = getBranchClass();
 const MEMBERS = testIter(3);
-const rateFor = (member: string): number => Number(member) * 10;
+const LADDER = MEMBERS.map((member) => ({
+  member,
+  rate: Number(member) * 10,
+}));
 
 describe("failure-count", () => {
   it("healthcheck always passes", () => {
@@ -29,15 +32,13 @@ describe("failure-count", () => {
     );
   });
 
-  for (const member of MEMBERS) {
-    it(`sometimes fails PB ${String(rateFor(member))} percent`, () => {
-      if (branchClass !== "PB") return;
-      expect(
-        randomPercentage(`pb-${member}`),
-        `fails ${String(rateFor(member))}% of PB runs — the demo working`,
-      ).toBeGreaterThanOrEqual(rateFor(member));
-    });
-  }
+  it.each(LADDER)("sometimes fails PB $rate percent", ({ member, rate }) => {
+    if (branchClass !== "PB") return;
+    expect(
+      randomPercentage(`pb-${member}`),
+      `fails ${String(rate)}% of PB runs — the demo working`,
+    ).toBeGreaterThanOrEqual(rate);
+  });
 
   it("always fails PR", () => {
     expect(branchClass, "fails on every PR run — the demo working").not.toBe(
@@ -45,15 +46,13 @@ describe("failure-count", () => {
     );
   });
 
-  for (const member of MEMBERS) {
-    it(`sometimes fails PR ${String(rateFor(member))} percent`, () => {
-      if (branchClass !== "PR") return;
-      expect(
-        randomPercentage(`pr-${member}`),
-        `fails ${String(rateFor(member))}% of PR runs — the demo working`,
-      ).toBeGreaterThanOrEqual(rateFor(member));
-    });
-  }
+  it.each(LADDER)("sometimes fails PR $rate percent", ({ member, rate }) => {
+    if (branchClass !== "PR") return;
+    expect(
+      randomPercentage(`pr-${member}`),
+      `fails ${String(rate)}% of PR runs — the demo working`,
+    ).toBeGreaterThanOrEqual(rate);
+  });
 
   it("always fails MQ", () => {
     expect(branchClass, "fails on every MQ run — the demo working").not.toBe(
@@ -61,15 +60,13 @@ describe("failure-count", () => {
     );
   });
 
-  for (const member of MEMBERS) {
-    it(`sometimes fails MQ ${String(rateFor(member))} percent`, () => {
-      if (branchClass !== "MQ") return;
-      expect(
-        randomPercentage(`mq-${member}`),
-        `fails ${String(rateFor(member))}% of MQ runs — the demo working`,
-      ).toBeGreaterThanOrEqual(rateFor(member));
-    });
-  }
+  it.each(LADDER)("sometimes fails MQ $rate percent", ({ member, rate }) => {
+    if (branchClass !== "MQ") return;
+    expect(
+      randomPercentage(`mq-${member}`),
+      `fails ${String(rate)}% of MQ runs — the demo working`,
+    ).toBeGreaterThanOrEqual(rate);
+  });
 
   it("fails on mondays", () => {
     expect(getDay(), "fails every Monday, UTC — the demo working").not.toBe(

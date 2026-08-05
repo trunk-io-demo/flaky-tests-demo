@@ -1,11 +1,7 @@
 name: Pull request
 
-# monitors/ and apps/ only.
-#
-# synth/ is excluded because it fabricates its own pull-request attribution — a
-# real pull request buys it nothing, and running it here would double-report
-# every synthetic story. integrations/ is excluded because it is slow and tells
-# no monitor story.
+# monitors/, apps/, and synth/, plus the checks. Each of these uploads genuinely PR-attributed results
+# instead of duplicating the hourly run.
 on:
   pull_request: {}
 
@@ -17,10 +13,6 @@ permissions:
   contents: read
 
 jobs:
-  # A single variant here rather than the hourly matrix. The point of a
-  # pull-request run is the *branch class* the results arrive under, not platform
-  # coverage — and doubling every pull request's runner cost to re-establish
-  # coverage the schedule already provides is not worth it.
   monitors:
     name: monitors
     runs-on: ubuntu-latest
@@ -28,32 +20,51 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/monitors
         with:
-          variant: linux
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
-          # Empty on pull requests from forks, which this repository being public
-          # guarantees will happen. The action skips the upload with a log line
-          # rather than failing: a red X on a contributor's pull request because
-          # our demo could not upload would be a bug, not a signal.
           token: ${{ secrets.TRUNK_API_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.MONITORS_TEST_COLLECTION }}
+          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
 
+  # Matrixed here as well as hourly: these call real services, and the platform can
+  # change the answer. A pull request that only ever ran on Linux would not tell
+  # you a change broke macOS.
   apps:
-    name: apps
-    runs-on: ubuntu-latest
+    name: apps (${{ matrix.variant }})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs-on: ubuntu-latest
+            variant: linux
+          - runs-on: macos-latest
+            variant: macos
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/apps
         with:
-          variant: linux
+          variant: ${{ matrix.variant }}
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
           token: ${{ secrets.TRUNK_API_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.APPS_TEST_COLLECTION }}
+          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
 
-  # Not a story — a guard. Every generator and every story is checked here so
-  # that a pull request cannot land a change that breaks determinism, orphans a
-  # test's identity, or emits JUnit the uploader would warn about.
+  synth:
+    name: synth
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/synth
+        with:
+          org-slug: ${{ vars.TRUNK_ORG_SLUG }}
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+          api-address: ${{ vars.TRUNK_API_ADDRESS }}
+          test-collection-id: ${{ vars.SYNTH_TEST_COLLECTION }}
+          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
+
+  # Required job to make sure this repo adheres to its own rules and conventions.
   checks:
     name: lint, typecheck, and the generators' own tests
     runs-on: ubuntu-latest
@@ -87,15 +98,28 @@ jobs:
       # exactly as an upload would, and uploads nothing. That is the check that
       # catches malformed reports, stale timestamps, and future timestamps before
       # they reach the product.
+      #
+      # The same version the uploads use, or this gate validates against a
+      # different parser than the one that will read the results.
       - name: Resolve the uploader for validation
         id: cli
+        env:
+          CLI_VERSION: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
         run: |
           set -euo pipefail
+          artifact=trunk-analytics-cli-x86_64-unknown-linux.tar.gz
+          if [ "$CLI_VERSION" = "latest" ]; then
+            url="https://github.com/trunk-io/analytics-cli/releases/latest/download/${artifact}"
+          else
+            url="https://github.com/trunk-io/analytics-cli/releases/download/${CLI_VERSION}/${artifact}"
+          fi
+
           workdir="$(mktemp -d)"
+          echo "resolving the uploader from $url"
           curl --fail --silent --show-error --location --retry 3 \
-            --output "$workdir/cli.tar.gz" \
-            "https://github.com/trunk-io/analytics-cli/releases/latest/download/trunk-analytics-cli-x86_64-unknown-linux.tar.gz"
+            --output "$workdir/cli.tar.gz" "$url"
           tar xzf "$workdir/cli.tar.gz" -C "$workdir"
+          "$workdir/trunk-analytics-cli" --version
           echo "path=$workdir/trunk-analytics-cli" >> "$GITHUB_OUTPUT"
 
       - name: Test the generators

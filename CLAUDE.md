@@ -103,9 +103,13 @@ cargo clippy --all-targets -- -D warnings
 
 Results reach the product through `@trunk-io/analytics-uploader`.
 
-**The test process's exit code is deliberately not forwarded**, so a deliberate failure cannot turn a job
-red and a job's status reports upload health only. Quarantining itself is left to the org's configuration
-rather than forced off in the actions.
+**The uploader owns the job's exit code, not the test process.** Test steps run under
+`continue-on-error` and their outcome is handed to the uploader through `previous-step-outcome`; it exits
+zero when every failure is quarantined and non-zero when one is not. A red job therefore means "not
+quarantined yet" rather than "the tests failed", which is the only version of red worth acting on here.
+
+Quarantining itself is left to the org's configuration rather than forced off in the actions — this repo
+exists to exercise auto-quarantine.
 
 **Branch class is derived, not set.** The precedence and the illegal pairs are in
 [`synth/branch-rates`](synth/branch-rates/README.md). One trap worth knowing anywhere: protected matching

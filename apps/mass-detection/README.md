@@ -1,7 +1,7 @@
 # `mass-detection`
 
 > [!NOTE]
-> **Twenty tests here fail on day 13 of every month, UTC.** A passing test logs the same thing into the
+> **Twenty tests here fail on the 1st and the 15th of every month, UTC.** A passing test logs the same thing into the
 > run history, because a whole suite going flaky at once is indistinguishable from a real regression.
 
 ## What this demonstrates
@@ -25,9 +25,9 @@ Twenty tests named after order-processing operations — `charges a card`, `rese
 burst reads like a real subsystem failing rather than a loop with an index.
 
 Each also carries its own small everyday rate, 1% through 20%, so the twenty are distinguishable on
-ordinary days rather than twenty identical rows. On the event day they fail together regardless.
+ordinary days rather than twenty identical rows. On an event day they fail together regardless.
 
-`healthcheck always passes` passes on the event day too, which makes it the only green thing in the
+`healthcheck always passes` passes on an event day too, which makes it the only green thing in the
 folder that day and the fastest way to tell a mass detection from a dead suite.
 
 ## Why a recurring rule, not a date
@@ -35,12 +35,17 @@ folder that day and the fastest way to tell a mass detection from a dead suite.
 Two constraints pull against each other. History ages out, so every window here is relative to now and a
 fixed date would rot. But this story has to stay **discoverable**, which usually means a date.
 
-"The 13th of every month" satisfies both: computable from any date, never rots, and exactly as easy to
-check against a timestamp in the product. Capped at 28 so it never skips February.
+"The 1st and the 15th" satisfies both: computable from any date, never rots, and exactly as easy to check
+against a timestamp in the product. Both are under 28, so February behaves like every other month.
+
+Twice a month rather than once, because two spikes in a short history read as a cycle where one reads as an
+accident. The gaps are 14, 16, or 17 days depending on the month — near-fortnightly rather than exactly so.
+An exact 14-day rule would need to count from the epoch, which drifts across months and stops being a date
+anyone can check at a glance.
 
 ## What you should see
 
-On ordinary days, a handful of failures spread across the twenty at their own rates. On the event day, 20 failures in a single run, repeated hourly for 24
-hours, then all resolving at once. **What your monitor configuration does with 20 simultaneous
+On ordinary days, a handful of failures spread across the twenty at their own rates. On an event day, 20
+failures in a single run, repeated hourly for 24 hours, then all resolving at once — twice a month. **What your monitor configuration does with 20 simultaneous
 detections is the thing being tested** — how they group, and how much coverage quarantining takes with
 them.

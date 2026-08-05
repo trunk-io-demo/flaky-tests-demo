@@ -1,36 +1,99 @@
 # `github-uptime`
 
 > [!NOTE]
-> **Depends on a third party.** This fails during a real GitHub incident. Confirm at
-> <https://www.githubstatus.com> — the same page the test reads — before treating a failure as ours.
+> **Depends on a third party.** These fail when GitHub has a problem, or when enough strangers file
+> issues. Confirm at <https://www.githubstatus.com> before treating a failure as ours.
 
 ## What this demonstrates
 
 A real external dependency causing real intermittency. Every other story here is something we made
-happen; this one tracks whether GitHub is actually up.
+happen; this one tracks whether GitHub is actually up and busy.
 
 No generator produces this. Real dependencies fail in shapes nobody thinks to simulate, at times nobody
 would pick, for durations nobody would choose — a 40-minute partial degradation at 06:00 on a Tuesday is
 not a distribution anyone writes down.
 
-## Telling the two apart
+## The tests
 
-1. Open <https://www.githubstatus.com>.
-2. If GitHub is degraded, the monitor worked.
-3. If it is fine, the failure message says which of two things happened: the request did not complete
-   (network or DNS on the runner), or the status was at or above `major` (the page and this test
-   disagree, which is worth a look).
+| File                                                     | Test                                                     | Goes red when                                              |
+| -------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------- |
+| [`status-page.test.ts`](__tests__/status-page.test.ts)   | `github reports no incident at or above major right now` | The status page says `major` or `critical`.                |
+|                                                          | `github opened no incident in the last 24 hours`         | Any incident overlapped the last 24 hours.                 |
+| [`issue-volume.test.ts`](__tests__/issue-volume.test.ts) | `actions/runner opened fewer than 6 issues this week`    | The weekly issue count reaches that repository's median.   |
+|                                                          | `github/gh-stack opened fewer than 15 issues this week`  | Same, at its own median.                                   |
+|                                                          | `github/docs opened fewer than 22 issues this week`      | Same again.                                                |
+| [`reachability.test.ts`](__tests__/reachability.test.ts) | `github.com answers`                                     | DNS or the network on the runner.                          |
+|                                                          | `the latest analytics-cli release downloads`             | The release is missing, or the download does not complete. |
+| [`healthcheck.test.ts`](__tests__/healthcheck.test.ts)   | `healthcheck always passes`                              | Never.                                                     |
 
-`healthcheck always passes` never touches the network, so it separates "the dependency is down" from "our
-suite is down" — otherwise the same red.
+Split by concern rather than kept in one file: each reads a different source, and vitest's
+`classnameTemplate: "{filename}"` means the split shows up in the product as separate classes.
 
-## Cadence
+## The two shapes here
 
-Once per run, never in a loop, with a 10-second timeout and a user-agent identifying this repository. The
-endpoint is Statuspage's summary JSON, which exists to be polled, but hourly is already generous.
+**Incidents are rare and long.** Long quiet stretches, then everything goes red at once for an hour.
+`no incident in the last 24 hours` stays red after the status page has gone green again, so the two status
+tests recover at different times — deliberately.
 
-## What you should see
+**Issue volume is a block, not a coin flip.** Each threshold is that repository's median weekly issue
+count over six or seven measured weeks, so about half of _weeks_ land above it — but the count barely moves
+inside a week. Hourly runs therefore see days of red, then days of green. That is a slow square wave rather
+than a per-run rate, and it is the closest thing here to how a real regression reads: a long block of
+failures that ends when something outside the suite changes.
 
-Long quiet stretches. GitHub is up most of the time, so this contributes almost nothing on most days and
-everything on a few. Over months, a failure history that matches GitHub's published incidents — which is
-more interesting than any generated series.
+Worth knowing: **the three issue tests are not independent.** A busy week on GitHub is busy across all
+three repositories, so they tend to fail together — a correlated failure across distinct tests, which is
+what separates a failure count from a failure rate.
+
+## Maintaining the medians
+
+They came from six or seven weekly samples each, and they drift — `github/docs` ranged from 19 to 42 over
+that span. When one sits permanently on one side, re-measure rather than reading it as a signal:
+
+```bash
+since=$(date -u -d '7 days ago' +%F)
+for repo in actions/runner github/gh-stack github/docs; do
+  curl -s "https://api.github.com/search/issues?q=repo:$repo+type:issue+created:>=$since&per_page=1" \
+    | python3 -c 'import sys,json;print(json.load(sys.stdin)["total_count"])'
+done
+```
+
+## Rate limits
+
+Issue counts go through [`@octokit/rest`](https://github.com/octokit/rest.js), which is the client the
+endpoint is documented against — it also means `advanced_search` is set, and GitHub is retiring the search
+backend that runs without it. The status page and reachability checks use plain `fetch`: Statuspage is not
+a GitHub API and a release download is not either.
+
+The search API allows 10 requests a minute unauthenticated, per IP, shared with everything else on the
+runner. `GITHUB_TOKEN` lifts it to 30 where present.
+
+**Issue volume is not allowed to fail for a rate limit**, because a limit says nothing about GitHub's
+health. Three things make that structural rather than hopeful:
+
+1. `@octokit/plugin-throttling` and `@octokit/plugin-retry` **wait the limit out** — up to 70 seconds, which
+   is wider than a search window, so a limit that will clear is simply waited through rather than reported.
+2. All three counts are fetched **before any test body runs**, at module scope and sequentially. By the time
+   a test executes there is no request left to fail in.
+3. If a count still never arrived, the group **skips** with a logged reason and the budget it started with.
+   A skip says "not measured", which is true; a pass would not be.
+
+The other tests here do fail on a rate limit, deliberately — they are not trying to return a measurement,
+and a limit while reading a status page is worth seeing.
+
+## Telling a real problem from a working monitor
+
+1. Open <https://www.githubstatus.com>. If GitHub is degraded, the monitor worked.
+2. `healthcheck always passes` touches no network. Green means our suite is fine and the dependency is not.
+3. `github.com answers` is the crudest check. Red means the runner's network, and it explains every other
+   failure in the package.
+4. Every failure message names its cause: the request did not complete, it was rate limited, or GitHub
+   answered with something. Only the last is the story.
+
+## Usage
+
+```bash
+pnpm --filter @flaky-tests-demo/apps-github-uptime test
+```
+
+Non-zero exit is expected — these fail on purpose. The report lands in `test-results/vitest.junit.xml`.

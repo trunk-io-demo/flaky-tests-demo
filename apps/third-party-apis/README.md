@@ -1,41 +1,94 @@
 # `third-party-apis`
 
 > [!NOTE]
-> **Depends on a third party.** This fails when GitHub's unauthenticated rate limit is exhausted for the
-> runner's IP. Every failure message names which of three causes it was.
+> **Depends on seventeen third parties.** These go red when a service is degraded, under maintenance, or
+> its status page will not answer. Every failure message links the page it read.
 
 ## What this demonstrates
 
 **Failures that cluster in time and correlate across tests.**
 
-When the budget runs out, every test that needs it fails — in the same run, for the same reason — and then
-they all recover together at the top of the hour. No per-test failure rate models that, and no generator
-produces it, because the cause is shared state outside the suite entirely.
+Most of the time a handful of these are amber for their own unrelated reasons. Then a shared dependency
+goes — a CDN, a cloud region, a certificate — and eight of them turn together in one run and recover
+together. No per-test failure rate models that, because the cause is outside every one of them.
 
-## Telling the two apart
+It is also the only story here whose rate nobody chose. Each service has whatever real uptime it has.
 
-| Message says          | Meaning                                                                                                                                           |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **rate limited**      | The budget was gone. **The monitor worked.** The limit is 60/hour _per IP_ and CI runners share IPs, so this happens for reasons unrelated to us. |
-| **request failed**    | Network or DNS on the runner. Not the story.                                                                                                      |
-| **budget unreadable** | `/rate_limit` did not answer, which usually means the first case too.                                                                             |
+## The list
 
-## Politeness, decided explicitly
+Fifteen services on Atlassian Statuspage, which exposes the same `/api/v2/status.json` on every page it
+hosts — one client, fifteen tests via `it.each`:
 
-The naive way to demonstrate rate limiting is to hammer an endpoint until it says no. This does not do
-that.
+| Registries                     | Infrastructure                             | AI                                      |
+| ------------------------------ | ------------------------------------------ | --------------------------------------- |
+| npm, PyPI, crates.io, RubyGems | Cloudflare, HashiCorp, CircleCI, Atlassian | OpenAI, Anthropic, Braintrust, Langfuse |
+|                                | Sentry, Datadog, LaunchDarkly              |                                         |
 
-`GET /rate_limit` does not count against the limit it reports, so the budget is observed for free every
-run. The burst that spends budget is small, **sequential**, and capped — sequential because a parallel
-burst is a spike against somebody else's service, and because it would make the outcome depend on
-connection scheduling rather than on the budget.
+Plus the two clouds, in [`cloud-providers.test.ts`](__tests__/cloud-providers.test.ts). Neither is on
+Statuspage, so neither reports an indicator — they publish incident feeds, and "is anything open" is the
+nearest equivalent question:
 
-**The failures come from the budget being shared, not from us exhausting it.** At six requests per run
-this repo uses about 10% of an hourly budget it does not own, which is the number to have in mind before
-raising it.
+| Test                                         | Reads                                                  |
+| -------------------------------------------- | ------------------------------------------------------ |
+| `google cloud has no open incident`          | `status.cloud.google.com/incidents.json`, any product. |
+| `the vertex gemini api has no open incident` | The same feed, filtered to one product.                |
+| `aws has no current event`                   | `status.aws.amazon.com/currentevents.json`.            |
+
+Gemini can be red while Google Cloud as a whole is green, which is the point of naming one product inside a
+very large cloud. And these three are the tests most likely to _explain_ the other file: when a cloud region
+goes, a dozen status pages follow within minutes.
+
+**AWS needs its own decoding.** The feed is JSON encoded **UTF-16 with a byte-order mark**, so
+`response.json()` fails on it outright — the bytes are read as an `ArrayBuffer` and decoded by BOM. That is
+the whole reason it is not just another reader.
+
+**GitHub is deliberately absent.** [`apps/github-uptime`](../github-uptime/) already reads that page at a
+`major` threshold; polling it here as well would be one story told in two places.
+
+## Anything other than operational is red
+
+Including **maintenance**. A service under maintenance is one you cannot rely on right now, which is the
+question these ask. The message says so when that is the reason, because it is the one indicator a reader
+might expect to be excused.
+
+So `none` passes and `minor`, `major`, `critical`, `maintenance` all fail. A status page that will not
+answer also fails, with a different message — that is its own kind of bad news, but not the same as the
+service being down.
+
+## Parsing
+
+Every response goes through a [zod](https://zod.dev) schema rather than a cast. Two choices are worth
+knowing:
+
+- **Unknown severities degrade to `none`**, and missing fields take defaults, via `.catch()`. A new
+  indicator word appearing upstream should not read as fifteen services breaking at once.
+- **`looseObject`** where the feed carries far more per entry than any test needs, which is both cloud feed.
+
+A response that cannot be parsed at all fails with the first zod issue in the message, which is a different
+failure from the service being down.
+
+## Read once, in parallel, before any test runs
+
+Fifteen hosts sampled at the same instant is what makes "together" mean anything. If each test fetched when
+it happened to run, a correlated outage would smear across whichever ones were unlucky.
 
 ## What you should see
 
-A log line with the remaining budget every run. When the shared budget is low, both network tests failing
-in the same run with the healthcheck green, then both recovering at the top of the hour. Over a week,
-clusters rather than scatter — and a correlation between two tests that a per-test view cannot show.
+A count every run — `status pages: 4/15 not operational — RubyGems, CircleCI, Cloudflare, OpenAI` — and
+usually a few red. Over a week: mostly independent scatter, punctuated by moments where many go at once.
+Those moments are the point.
+
+## Telling a real problem from a working monitor
+
+1. `healthcheck always passes` reads no status page. Green means the suite is fine and the internet is not.
+2. Every failure links the page it read. Open it; if the service says it is degraded, the monitor worked.
+3. "Could not read" is a different message from "reports minor". The first is usually the runner's network.
+
+## Usage
+
+```bash
+pnpm --filter @flaky-tests-demo/apps-third-party-apis test
+```
+
+Non-zero exit is expected. Seventeen outbound requests per run, hourly, to pages built to be polled —
+worth keeping in mind before lengthening the list.

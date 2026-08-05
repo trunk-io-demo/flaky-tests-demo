@@ -11,6 +11,23 @@ but does not exist sends a reviewer looking for a story that is not there.
 [`README.md`](README.md) here stays at the level of one row per monitor — what it detects and what the
 story is. It deliberately does not index individual tests, because two places to update is one too many.
 
+## Use `it.each` for a ladder, and printf for strings
+
+A rung, a cohort, a step: `it.each` rather than a `for` loop around `it`, so the table of cases reads as
+data. One gotcha decides which name form to use — `$var` runs a string through pretty-format and **quotes
+it**, so `$name` becomes `'creates an order'` and the identity is not the name you wrote:
+
+| Form                                | Renders                         |
+| ----------------------------------- | ------------------------------- |
+| `it.each(objects)("$rate percent")` | `10 percent` — numbers are fine |
+| `it.each(objects)("$name")`         | `'creates an order'` — quoted   |
+| `it.each(tuples)("%s")`             | `creates an order`              |
+
+So: object form with `$var` when only numbers appear in the name, tuple form with `%s` when a string does.
+
+Playwright has no `test.each`. A `for` loop over a table is the idiom there, and `cascade.spec.ts` needs
+one anyway because the order is the story.
+
 ## No two tests with the same failure pattern
 
 See [`../CLAUDE.md`](../CLAUDE.md). Where a group is needed, vary it: `sometimes fails PB 01` … `03`
@@ -51,11 +68,12 @@ after.
 
 ## Shared helpers live in `utils/`
 
-| File        | Holds                                                                         |
-| ----------- | ----------------------------------------------------------------------------- |
-| `git.ts`    | `getBranch`, `getPrNumber`, `getBranchClass`.                                 |
-| `date.ts`   | `now`, `getDay`, `getDate`, `getEpochDay`, `isEveryOtherDay`, `hourBucket`, … |
-| `random.ts` | `randomPercentage`, over a seeded generator.                                  |
+| File           | Holds                                                                         |
+| -------------- | ----------------------------------------------------------------------------- |
+| `git.ts`       | `getBranch`, `getPrNumber`, `getBranchClass`.                                 |
+| `date.ts`      | `now`, `getDay`, `getDate`, `getEpochDay`, `isEveryOtherDay`, `hourBucket`, … |
+| `random.ts`    | `randomPercentage`, over a seeded generator.                                  |
+| `test-iter.ts` | `testIter`, the zero-padded members a ladder is built from.                   |
 
 Depend on it with `"@flaky-tests-demo/monitors-utils": "workspace:*"`. It is a workspace member but not
 a monitor — no tests, so `pnpm --filter --if-present` skips it.

@@ -1,15 +1,15 @@
 name: Generate and upload the synth stories
 description: >
-  Runs every generator under synth/ and uploads each fabricated report with its
-  own attribution. Runner-agnostic: it reads the variant it is handed rather
-  than deciding one.
+  Runs synth/generate and uploads what it wrote, through the same uploader action
+  every other folder uses. Attribution is whatever the workflow put in the
+  environment.
 
 inputs:
   org-slug:
     description: Trunk org URL slug.
     required: true
   token:
-    description: Trunk org API token. Empty skips every upload.
+    description: Trunk org API token. Empty on fork pull requests, which skips the upload.
     required: false
     default: ""
   api-address:
@@ -17,21 +17,16 @@ inputs:
     required: false
     default: ""
   test-collection-id:
-    description: Collection ID for synth/. Empty skips every upload.
+    description: Collection ID for synth/. Empty skips the upload.
     required: false
     default: ""
   cli-version:
     description: >
-      Uploader CLI version, or "latest". Resolved directly rather than through
-      the uploader action — see the comment on the upload step.
+      Uploader CLI version, or "latest". Workflows pass
+      vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION so a pre-release build can be
+      exercised across every folder at once.
     required: false
     default: latest
-  repo-url:
-    description: >
-      Repository URL uploads are attributed to. No default: the repository name
-      is part of every test's identity, so a fork must supply its own or its
-      runs merge into the original's history.
-    required: true
 
 runs:
   using: composite
@@ -41,112 +36,35 @@ runs:
       with:
         workspaces: . -> target
 
-    # Nothing here executes a test, so a release build is worth it: these are
-    # short-lived processes that run every hour, and the generators are
-    # allocation-heavy relative to how long they live.
     - name: Generate synthetic reports
       shell: bash
-      env:
-        SYNTH_REPO_URL: ${{ inputs.repo-url }}
-        SYNTH_QUIET: "false"
       run: |
+        set -euo pipefail
         rm -rf synth-out
-        for generator in cohorts branch-rates variant-rates; do
-          echo "::group::synth/$generator"
-          cargo run --release --quiet -p "$generator"
-          echo "::endgroup::"
-        done
+        echo "::group::synth/generate"
+        cargo run --release --quiet -p generate
+        echo "::endgroup::"
 
-    - name: Summarize what was generated
-      id: generated
+    - name: Report what was generated
       shell: bash
       run: |
         shopt -s nullglob
-        manifests=(synth-out/*/uploads.jsonl)
-        total=0
-        for manifest in "${manifests[@]}"; do
-          count=$(wc -l < "$manifest")
-          total=$((total + count))
-          echo "$manifest: $count upload(s)"
+        reports=(synth-out/*.xml)
+        for report in "${reports[@]}"; do
+          echo "$report: $(grep -c '<testcase ' "$report") case(s)"
         done
-        echo "uploads=$total" >> "$GITHUB_OUTPUT"
-        # Zero is a legitimate outcome — every cohort may have retired — so it is
-        # reported rather than treated as an error.
-        echo "total: $total upload(s)"
+        # Zero is a legitimate outcome, so it is reported rather than an error.
+        printf 'generated %d report(s)\n' "${#reports[@]}"
 
-    - name: Skip the uploads, with a reason
-      if: ${{ inputs.token == '' || inputs.test-collection-id == '' }}
-      shell: bash
+    - name: Upload results
+      uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
       env:
-        HAS_TOKEN: ${{ inputs.token != '' }}
-      run: |
-        if [ "$HAS_TOKEN" != "true" ]; then
-          echo "::notice title=synth uploads skipped::No Trunk API token in this context. Expected on pull requests from forks."
-        else
-          echo "::notice title=synth uploads skipped::SYNTH_TEST_COLLECTION is unset. Set it rather than letting results land in the org default."
-        fi
-
-    # This is the one folder that does not use the uploader *action*, and the
-    # reason is structural rather than a preference: a single synth run performs
-    # many uploads, each with different fabricated attribution — a different
-    # branch, commit, PR number, or variant per upload — and a composite action
-    # cannot loop a `uses:` step.
-    #
-    # So the CLI the action would have downloaded is resolved once and driven
-    # directly. Same binary, same code path. Each upload's attribution is passed
-    # with `env K=V …` rather than exported, so a variant or PR number set for
-    # one entry cannot leak into the next — which would silently retag a test.
-    - name: Upload each fabricated report
-      if: ${{ inputs.token != '' && inputs.test-collection-id != '' && steps.generated.outputs.uploads != '0' }}
-      shell: bash
-      env:
-        TRUNK_ORG_URL_SLUG: ${{ inputs.org-slug }}
-        TRUNK_API_TOKEN: ${{ inputs.token }}
-        TRUNK_TEST_COLLECTION_ID: ${{ inputs.test-collection-id }}
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
-        CLI_VERSION: ${{ inputs.cli-version }}
-      run: |
-        set -euo pipefail
-
-        target=x86_64-unknown-linux
-        case "$(uname -m)" in
-          aarch64 | arm64) target=aarch64-unknown-linux ;;
-        esac
-        artifact="trunk-analytics-cli-${target}.tar.gz"
-        if [ "$CLI_VERSION" = "latest" ]; then
-          url="https://github.com/trunk-io/analytics-cli/releases/latest/download/${artifact}"
-        else
-          url="https://github.com/trunk-io/analytics-cli/releases/download/${CLI_VERSION}/${artifact}"
-        fi
-
-        workdir="$(mktemp -d)"
-        echo "resolving the uploader from $url"
-        curl --fail --silent --show-error --location --retry 3 --output "$workdir/cli.tar.gz" "$url"
-        tar xzf "$workdir/cli.tar.gz" -C "$workdir"
-        cli="$workdir/trunk-analytics-cli"
-        "$cli" --version
-
-        failures=0
-        for manifest in synth-out/*/uploads.jsonl; do
-          while IFS= read -r entry; do
-            [ -n "$entry" ] || continue
-            label=$(jq -r '.label' <<<"$entry")
-            junit=$(jq -r '.junit_path' <<<"$entry")
-            intended=$(jq -r '.branch_class' <<<"$entry")
-            mapfile -t attribution < <(jq -r '.env | to_entries[] | "\(.key)=\(.value)"' <<<"$entry")
-
-            echo "::group::$label (intended class: $intended)"
-            if env "${attribution[@]}" "$cli" upload --junit-paths "$junit"; then
-              echo "uploaded"
-            else
-              echo "::warning title=synth upload failed::$label"
-              failures=$((failures + 1))
-            fi
-            echo "::endgroup::"
-          done < "$manifest"
-        done
-
-        if [ "$failures" -gt 0 ]; then
-          echo "::error title=synth uploads incomplete::$failures upload(s) failed"
-          exit 1
-        fi
+      with:
+        junit-paths: synth-out/*.xml
+        org-slug: ${{ inputs.org-slug }}
+        token: ${{ inputs.token }}
+        test-collection-id: ${{ inputs.test-collection-id }}
+        cli-version: ${{ inputs.cli-version }}
+        allow-missing-junit-files: false
+        use-cache: true
