@@ -99,6 +99,15 @@ jobs:
   # with it never fires pr.yaml and no PR-attributed data ever appears. It is
   # the single most likely reason for "the factory runs but no PR data shows up."
   # See CONTRIBUTING.md.
+  #
+  # TODO: the factory closes without merging, so the default branch's head never
+  # advances and every scheduled run reports the same SHA forever. Cross-upload
+  # pass-on-retry pairs are still real — a fail one hour and a pass the next are
+  # the same commit — but they all land on one commit with hundreds of runs
+  # instead of many commits each with a pair, which is not a compelling demo.
+  # Making it compelling means moving the SHA as we go: a periodic trivial commit
+  # straight to the default branch, or letting the factory merge occasionally
+  # (which the current close-never-merge design rules out). Needs a decision.
   pr-factory:
     name: pr factory
     runs-on: ubuntu-latest
