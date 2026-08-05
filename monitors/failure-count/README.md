@@ -11,20 +11,20 @@ removed rather than one.
 ## The story
 
 The count's size depends on where the run came from. Every run is exactly one of `PB`, `PR`, or `MQ`, so
-exactly one always-on group fires — the aggregate swings with the branch class while no individual
+exactly one always-fails test and one ladder fire — the aggregate swings with the branch class while no individual
 test's rate changes.
 
-| Test                        | Fails                         |
-| --------------------------- | ----------------------------- |
-| `always fails PB`           | every `PB` run                |
-| `sometimes fails PB 01…03`  | 10%, 20%, 30% of `PB` runs    |
-| `always fails PR`           | every `PR` run                |
-| `sometimes fails PR 01…03`  | 10%, 20%, 30% of `PR` runs    |
-| `always fails MQ`           | every `MQ` run                |
-| `sometimes fails MQ 01…03`  | 10%, 20%, 30% of `MQ` runs    |
-| `fails on mondays`          | every run on a Monday, UTC    |
-| `fails every other day`     | every run on alternating days |
-| `healthcheck always passes` | never                         |
+| Test                                           | Fails                         |
+| ---------------------------------------------- | ----------------------------- |
+| `always fails PB`                              | every `PB` run                |
+| `sometimes fails PB 10 percent` … `30 percent` | 10%, 20%, 30% of `PB` runs    |
+| `always fails PR`                              | every `PR` run                |
+| `sometimes fails PR 10 percent` … `30 percent` | 10%, 20%, 30% of `PR` runs    |
+| `always fails MQ`                              | every `MQ` run                |
+| `sometimes fails MQ 10 percent` … `30 percent` | 10%, 20%, 30% of `MQ` runs    |
+| `fails on mondays`                             | every run on a Monday, UTC    |
+| `fails every other day`                        | every run on alternating days |
+| `healthcheck always passes`                    | never                         |
 
 Each rung fails at its own rate, so no two are the same test twice over.
 
