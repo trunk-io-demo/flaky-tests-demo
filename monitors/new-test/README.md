@@ -3,9 +3,7 @@
 > [!NOTE]
 > <https://docs.trunk.io/flaky-tests/detection/new-test-monitor>
 
-Tests too young to be judged on the same terms as everything else. A test with three runs of history has
-no meaningful failure rate, so treating it like an established one either cries wolf or buries a
-genuinely broken new test in the noise.
+When a test is newly added, or newly appears on a particular branch pattern. For example, the presence of the label could indicate if it is newly present on `main`.
 
 ## The story
 

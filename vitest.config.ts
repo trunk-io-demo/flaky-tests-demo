@@ -5,5 +5,10 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     projects: ["monitors/*", "apps/*"],
+
+    // Set here as well as in each package, because `projects` do not inherit
+    // `test` options. Several stories return early when the branch class does
+    // not apply, which is a pass rather than an error.
+    expect: { requireAssertions: false },
   },
 });

@@ -19,6 +19,10 @@ export default defineConfig({
     // upload.
     bail: 0,
 
+    // Several stories return early when the branch class does not apply. That is
+    // a pass, not an error.
+    expect: { requireAssertions: false },
+
     reporters: [
       "default",
       [
