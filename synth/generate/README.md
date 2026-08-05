@@ -56,6 +56,13 @@ At 100% failure there is no room left for a skip or a flake, so neither appears.
 Neither path exists. The `.ts` is deliberate: these sit beside the TypeScript tests from `monitors/` and
 `apps/` in the product. Nothing resolves them, so CODEOWNERS matches nothing here.
 
+## Exit code
+
+Non-zero when the reports it wrote contain failures, zero otherwise — the same contract a test runner has.
+Nothing failed to _generate_; the exit code describes the results, not the run. That is what lets CI hand
+the outcome to the uploader and have it decide, exactly as it does for `monitors/` and `apps/`, instead of
+`synth/` being permanently green while they go red for the same condition.
+
 ## Running it
 
 ```bash

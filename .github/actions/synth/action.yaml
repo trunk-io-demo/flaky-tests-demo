@@ -39,8 +39,12 @@ runs:
     # SYNTH_* comes from the calling job's `env:`, mapped there from repository
     # variables — `vars` is not ambient in a process. Unset is fine: each one is
     # read through a bounded Var that treats blank as "use the default".
+    # `continue-on-error` because the generator exits non-zero when the reports it
+    # wrote contain failures, the same as a test step here.
     - name: Generate synthetic reports
+      id: generate
       shell: bash
+      continue-on-error: true
       run: |
         set -euo pipefail
         rm -rf synth-out
@@ -61,3 +65,8 @@ runs:
         cli-version: ${{ inputs.cli-version }}
         allow-missing-junit-files: false
         use-cache: true
+        # The uploader owns this job's exit code, as it does for monitors/ and
+        # apps/. Without this it exits zero even having just reported unquarantined
+        # failures, so synth/ would be permanently green while the other two go red
+        # for the same condition.
+        previous-step-outcome: ${{ steps.generate.outcome }}

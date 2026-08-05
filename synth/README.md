@@ -55,6 +55,9 @@ SYNTH_DURABLE_TEST_COUNT=500 \
   SYNTH_RUNS_PER_TEST=10 cargo run -p generate      # 25,000 cases across many reports
 ```
 
+**It exits non-zero when the reports contain failures**, the same as a test runner, which is what lets the
+uploader decide the job's fate in CI. Use `; echo $?` rather than chaining with `&&`.
+
 It prints what it decided and where it wrote:
 
 ```text

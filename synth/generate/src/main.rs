@@ -86,5 +86,18 @@ fn main() -> Result<()> {
         }
     }
 
+    // Exits like the test runner it stands in for: a run that produced failures
+    // exits non-zero, whether or not writing the files went fine. That is what
+    // lets the uploader decide the job's fate here exactly as it does for
+    // monitors/ and apps/ — it is handed an outcome rather than a special case.
+    if failures > 0 {
+        eprintln!(
+            "synth: {failures} of {} cases failed, so this exits non-zero the way a \
+             test run would. The uploader decides whether that matters.",
+            params.total_cases()
+        );
+        std::process::exit(1);
+    }
+
     Ok(())
 }
