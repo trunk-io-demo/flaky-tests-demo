@@ -10,8 +10,8 @@ Every package contains, at minimum:
 - a small number of tests that trip that monitor.
 
 > [!NOTE]
-> Changing anything in here? Read [`CLAUDE.md`](CLAUDE.md) first. It covers naming, the healthcheck
-> rule, why renaming a test loses its history, and keeping the index below current.
+> Changing anything here? [`CLAUDE.md`](CLAUDE.md) has the conventions, including keeping the index below
+> current.
 
 | Monitor                                    | Detects                                                          | The story here                                             |
 | ------------------------------------------ | ---------------------------------------------------------------- | ---------------------------------------------------------- |
@@ -23,12 +23,12 @@ Every package contains, at minimum:
 | [`pass-on-retry/`](pass-on-retry/)         | A test that failed and then passed on the same commit(s).        | A retry ladder, plus a reporter that keeps every attempt.  |
 | [`timeout-inflation/`](timeout-inflation/) | A test that only runs slower when it fails.                      | A real timeout race, against a fail-fast control.          |
 
-[`utils/`](utils/) is not a monitor. It holds the helpers the stories share — what CI says about where
-a run came from, UTC dates, and seeded randomness. It has no tests of its own.
+[`utils/`](utils/) is not a monitor: it holds the helpers the stories share — branch class, UTC dates, and
+seeded randomness — and has no tests of its own.
 
 ## Index of tests
 
-Every test in this directory and its subdirectories. Keep it current — see [`CLAUDE.md`](CLAUDE.md).
+Every test in this directory. Keep it current.
 
 ### [`failure-rate/`](failure-rate/) · [`canonical.test.ts`](failure-rate/canonical.test.ts)
 
@@ -41,20 +41,17 @@ Every test in this directory and its subdirectories. Keep it current — see [`C
 
 ### [`failure-count/`](failure-count/) · [`canonical.test.ts`](failure-count/canonical.test.ts)
 
-The count's _size_ depends on where the run came from. Exactly one always-fails group fires per run,
-so the branch class tells you which.
-
-| Test                                          | Behavior                                              |
-| --------------------------------------------- | ----------------------------------------------------- |
-| `healthcheck always passes`                   | Never fails.                                          |
-| `protected branch member 01` … `03`           | Fail on every `PB` run.                               |
-| `pull request member 01` … `03`               | Fail on every `PR` run.                               |
-| `merge queue member 01` … `03`                | Fail on every `MQ` run.                               |
-| `protected branch sometimes member 01` … `03` | Fail 10% of `PB` runs.                                |
-| `pull request sometimes member 01` … `03`     | Fail 10% of `PR` runs.                                |
-| `merge queue sometimes member 01` … `03`      | Fail 10% of `MQ` runs.                                |
-| `fails on mondays`                            | Fails every run on a Monday, UTC. A weekly spike.     |
-| `fails every other day`                       | Fails on alternating days, anchored to the epoch day. |
+| Test                                          | Behavior                       |
+| --------------------------------------------- | ------------------------------ |
+| `healthcheck always passes`                   | Never fails.                   |
+| `protected branch member 01` … `03`           | Every `PB` run.                |
+| `pull request member 01` … `03`               | Every `PR` run.                |
+| `merge queue member 01` … `03`                | Every `MQ` run.                |
+| `protected branch sometimes member 01` … `03` | 10% of `PB` runs.              |
+| `pull request sometimes member 01` … `03`     | 10% of `PR` runs.              |
+| `merge queue sometimes member 01` … `03`      | 10% of `MQ` runs.              |
+| `fails on mondays`                            | Every run on a Monday, UTC.    |
+| `fails every other day`                       | Every run on alternating days. |
 
 ### [`skipped-test/`](skipped-test/) · [`cascade.spec.ts`](skipped-test/cascade.spec.ts)
 
@@ -126,9 +123,3 @@ Vitest, so the healthcheck cannot be retried.
 | `healthcheck always passes`              | Never fails, never blocks.                                    |
 | `blocks on a timeout only when it fails` | ~150ms when it passes; blocks to a ~5s ceiling when it fails. |
 | `fails fast when it fails`               | The control. Same failure rate, returns immediately.          |
-
-## Related
-
-- [`CLAUDE.md`](CLAUDE.md) — conventions for changing anything in here
-- [`../README.md`](../README.md) — what this repo is, and the full monitor catalog
-- [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — running these locally, tuning them, forking

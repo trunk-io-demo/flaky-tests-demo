@@ -1,14 +1,5 @@
-//! The upload manifest.
-//!
-//! A generator writes JUnit files and a manifest describing how each one should
-//! be attributed; the CI action reads the manifest and performs the uploads.
-//! The split exists because a single `synth/` run produces many uploads with
-//! *different* attribution — a different branch, PR number, or variant each
-//! time — and a composite action cannot loop a `uses:` step.
-//!
-//! The format is JSON Lines: one self-contained upload per line, so the action
-//! can stream it in a shell loop and so a partial write is visibly partial
-//! rather than invalid.
+//! The upload manifest: one JSON line per upload, since a single run produces many
+//! uploads with different attribution and the CI action streams them.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -20,23 +11,13 @@ use serde::Serialize;
 
 use crate::attribution::{Attribution, BranchClass};
 
-/// The manifest's file name inside the output directory.
 pub const MANIFEST_FILE_NAME: &str = "uploads.jsonl";
 
-/// One upload: a JUnit file plus the environment to upload it with.
 #[derive(Debug, Clone, Serialize)]
 pub struct UploadEntry {
-    /// Path to the JUnit XML, relative to the repository root so the action can
-    /// use it verbatim.
     pub junit_path: String,
-    /// Human-readable description, logged by the action before each upload.
-    /// This is what someone reads when they are trying to work out which
-    /// upload went wrong.
     pub label: String,
-    /// The class this upload should arrive as, recorded so the action can log
-    /// the intent next to the result. Derived, never sent.
     pub branch_class: BranchClass,
-    /// Environment variables to set for this upload.
     pub env: BTreeMap<String, String>,
 }
 
@@ -55,7 +36,6 @@ impl UploadEntry {
     }
 }
 
-/// Every upload a generator run produced.
 #[derive(Debug, Clone, Default)]
 pub struct Manifest {
     entries: Vec<UploadEntry>,
@@ -82,11 +62,6 @@ impl Manifest {
         &self.entries
     }
 
-    /// Write the manifest into `dir`, returning its path.
-    ///
-    /// An empty manifest is still written. "Zero uploads today" is a legitimate
-    /// outcome — every cohort may have retired — and the action needs to be able
-    /// to tell that apart from a generator that crashed before writing.
     pub fn write(&self, dir: impl AsRef<Path>) -> Result<PathBuf> {
         let dir = dir.as_ref();
         fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
@@ -150,8 +125,6 @@ mod tests {
 
     #[test]
     fn an_empty_manifest_is_still_written() {
-        // Otherwise "every cohort retired today" is indistinguishable from
-        // "the generator crashed".
         let dir = std::env::temp_dir().join(format!("junit-gen-empty-{}", std::process::id()));
         let path = Manifest::new().write(&dir).expect("writes");
         assert!(path.exists());

@@ -1,49 +1,20 @@
-import {
-  hourBucket,
-  intFromEnv,
-  randomPercentage,
-  ratePercent,
-  stableHash,
-} from "@flaky-tests-demo/monitors-utils";
+import { hourBucket, randomPercentage } from "@flaky-tests-demo/monitors-utils";
 import { describe, expect, it } from "vitest";
 
-/**
- * A test blocking on something that is not coming does not fail fast. It waits
- * out its timeout, so its failures cluster at the ceiling while its passes are
- * unaffected — a bimodal duration distribution split by outcome:
- *
- * ```
- *   passes:   ▁▂▃▂▁                    ~150ms, tight
- *   failures:                   ▁█▁    ~5000ms, at the ceiling
- * ```
- *
- * Naive randomness cannot produce this. Drawing duration and outcome
- * independently gives failures the same distribution as passes, which is exactly
- * the thing that is not happening in a real timeout. So durations are pinned per
- * outcome and only the jitter is drawn.
- */
+// A test blocking on something that is not coming waits out its timeout, so its
+// failures cluster at the ceiling while its passes are unaffected — a bimodal
+// distribution split by outcome. Drawing duration and outcome independently would
+// give failures the same distribution as passes, which is exactly what is not
+// happening in a real timeout, so durations are pinned per outcome.
 
-const PASS_MS = intFromEnv("MONITORS_TIMEOUT_PASS_MS", 150, 10, 2_000);
-const CEILING_MS = intFromEnv(
-  "MONITORS_TIMEOUT_CEILING_MS",
-  5_000,
-  500,
-  30_000,
-);
-const CEILING_JITTER_PERCENT = ratePercent(
-  "MONITORS_TIMEOUT_JITTER_PERCENT",
-  3,
-);
-const FAILURE_RATE = ratePercent("MONITORS_TIMEOUT_FAILURE_RATE", 20);
+const PASS_MS = 150;
+const CEILING_MS = 5_000;
+const CEILING_JITTER_PERCENT = 3;
+const FAILURE_RATE = 20;
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-/**
- * A race between the work and a timer, which is how the real bug is written.
- * The duration is a consequence of the timeout rather than a number chosen to
- * look like one.
- */
 async function awaitWithTimeout<T>(
   work: Promise<T>,
   ceilingMs: number,
@@ -69,18 +40,10 @@ async function awaitWithTimeout<T>(
   }
 }
 
-/** A stable fraction in [0, 1), so the jitter is reproducible. */
-const stableFraction = (bucket: string): number =>
-  (stableHash(bucket) >>> 8) / 0x01000000;
-
-/** Zero jitter would make every failure byte-identical, which reads as
- * generated rather than as a timeout. */
 const ceilingForThisRun = (bucket: string): number => {
   const spread = (CEILING_MS * CEILING_JITTER_PERCENT) / 100;
-  return Math.max(
-    1,
-    Math.round(CEILING_MS + (stableFraction(bucket) * 2 - 1) * spread),
-  );
+  const offset = (randomPercentage("ceiling-jitter", bucket) / 50 - 1) * spread;
+  return Math.max(1, Math.round(CEILING_MS + offset));
 };
 
 describe("timeout-inflation", () => {
@@ -95,8 +58,6 @@ describe("timeout-inflation", () => {
       const responseArrives =
         randomPercentage("timeout-inflation", bucket) >= FAILURE_RATE;
 
-      // Either completes quickly or never completes at all — what a request to
-      // something that has stopped answering looks like.
       const work: Promise<string> = responseArrives
         ? sleep(PASS_MS).then(() => "response")
         : new Promise(() => {
@@ -106,13 +67,11 @@ describe("timeout-inflation", () => {
       const response = await awaitWithTimeout(work, ceilingForThisRun(bucket));
       expect(response).toBe("response");
     },
-    // Above the ceiling, or vitest kills the test first and pins the duration at
-    // its own limit rather than at the one the story is about.
+    // Above the ceiling, or vitest pins the duration at its own limit.
     CEILING_MS + 10_000,
   );
 
-  /** The control: same failure rate, returns immediately. Side by side, the
-   * inflation is obviously a property of how it fails. */
+  // Same failure rate, returns immediately: the contrast is the story.
   it("fails fast when it fails", () => {
     const bucket = hourBucket();
     if (randomPercentage("fails-fast-control", bucket) < FAILURE_RATE) {

@@ -1,23 +1,6 @@
-//! Emits the same tests under several variants, each with its own failure rate.
-//!
-//! "Only flaky on macOS" is the story every team recognizes, and it is normally
-//! expensive to demonstrate: macOS runner minutes cost roughly ten times what
-//! Linux minutes cost, and the whole point is that the test runs *often* enough
-//! for a rate to be visible.
-//!
-//! Nothing here runs on macOS. The variant is a field on the upload, so a Linux
-//! runner can fabricate the entire matrix — which is also a more honest demo of
-//! what a variant *is*: a label the product groups by, not a machine.
-//!
-//! Because variant is part of test identity, the same test emitted under three
-//! variants is three tests in the product. That is what makes a per-variant rate
-//! expressible at all.
-//!
-//! Run it:
-//!
-//! ```text
-//! SYNTH_REPO_URL=https://github.com/your-org/your-fork cargo run -p variant-rates
-//! ```
+//! "Only flaky on macOS", from a Linux runner. A variant is a field on the upload,
+//! so one runner fabricates the whole matrix. Variant is part of identity, so the
+//! same test under three variants is three tests.
 
 use anyhow::Result;
 use clap::Parser;
@@ -29,11 +12,6 @@ use junit_gen::{
 
 const STORY_ID: &str = "variant-rates";
 
-/// The tests emitted under every variant.
-///
-/// Chosen to be things that plausibly *are* platform-sensitive — paths, file
-/// watchers, clipboards, line endings — so the story reads as a real
-/// platform-specific bug rather than as an arbitrary rate difference.
 const CASES: &[(&str, &str)] = &[
     ("FileWatcher", "notices_a_rename"),
     ("FileWatcher", "debounces_rapid_writes"),
@@ -50,23 +28,15 @@ struct Args {
     #[command(flatten)]
     common: CommonArgs,
 
-    /// Failure rate for the `linux` variant. The quiet one.
     #[arg(long, env = "SYNTH_VARIANT_RATE_LINUX", default_value = "3")]
     rate_linux: u8,
 
-    /// Failure rate for the `macos` variant. The story.
     #[arg(long, env = "SYNTH_VARIANT_RATE_MACOS", default_value = "34")]
     rate_macos: u8,
 
-    /// Failure rate for the `windows` variant. Between the two, so that "only
-    /// flaky on macOS" is a claim about a distribution rather than a binary.
     #[arg(long, env = "SYNTH_VARIANT_RATE_WINDOWS", default_value = "12")]
     rate_windows: u8,
 
-    /// Variant names, comma-separated, in the same order as the rates above.
-    ///
-    /// Renaming a variant changes test identity, so the renamed variant starts
-    /// with no history rather than inheriting the old one's.
     #[arg(
         long,
         env = "SYNTH_VARIANTS",
@@ -102,9 +72,6 @@ fn main() -> Result<()> {
         );
     }
 
-    // One commit for the whole matrix. Variants of the same commit is exactly
-    // what a real matrix build produces, and it is what lets the product show
-    // three variants of one change side by side.
     let base = args.common.attribution_base(&[STORY_ID, &bucket.key()]);
 
     let out_dir = args.common.out_dir.join(STORY_ID);
@@ -121,10 +88,6 @@ fn main() -> Result<()> {
 
         let mut spec = ReportSpec::new(format!("synth-variant-rates-{variant}"), now);
 
-        // Emitted under every variant, so "this variant stopped reporting" is
-        // distinguishable from "this variant had a clean run". A variant that
-        // goes silent is a resolution, and without this you cannot tell which
-        // kind.
         let mut healthcheck_rng =
             StoryRng::derive_with(STORY_ID, bucket, &format!("{variant}#healthcheck"));
         spec.push(TestCaseSpec::new(

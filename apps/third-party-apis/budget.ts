@@ -1,43 +1,22 @@
-/**
- * Reading GitHub's unauthenticated rate-limit budget, and spending a little of it.
- *
- * ## The politeness question, answered explicitly
- *
- * The scenario this folder demonstrates is "failures that cluster in time and
- * correlate across tests", and rate limiting is the cleanest real cause of that
- * shape. The naive way to demonstrate it is to hammer an endpoint until it says
- * no. We do not do that.
- *
- * Instead:
- *
- * - `GET /rate_limit` **does not count against the limit it reports** — GitHub
- *   documents this — so the budget can be observed for free, every run.
- * - The burst that actually spends budget is small and configurable, defaulting
- *   to a handful of requests per run against an endpoint that returns a few bytes.
- * - The failures come from the budget being *shared*, not from us exhausting it.
- *   GitHub's unauthenticated limit is 60 requests per hour **per IP**, and CI
- *   runners share IPs with everything else on the platform. So the budget is
- *   routinely low or gone for reasons that have nothing to do with us, which is
- *   exactly the real-world shape worth demonstrating.
- *
- * Raising `APPS_THIRD_PARTY_BURST` is how you make this fire more often, and it is
- * paid for out of somebody else's rate limit. The README says so.
- */
+// GET /rate_limit does not count against the limit it reports, so the budget is
+// observed for free. The burst that spends it is small, sequential, and capped:
+// the failures should come from the budget being shared — 60/hour per IP, and CI
+// runners share IPs — not from us exhausting it.
 
-export const RATE_LIMIT_URL = "https://api.github.com/rate_limit";
-export const BURST_URL = "https://api.github.com/zen";
+const RATE_LIMIT_URL = "https://api.github.com/rate_limit";
+const BURST_URL = "https://api.github.com/zen";
 
 const HEADERS = {
-  // Identifying the caller is the polite minimum when calling somebody else's
-  // API on a schedule.
   "user-agent": "flaky-tests-demo (github.com/trunk-io-demo/flaky-tests-demo)",
   accept: "application/vnd.github+json",
 } as const;
 
+export const BURST = 6;
+
 export interface Budget {
   readonly limit: number;
   readonly remaining: number;
-  readonly resetsAt: Date;
+  readonly resetsAt: string;
 }
 
 export type Result<T> =
@@ -65,7 +44,6 @@ const request = async (
   }
 };
 
-/** The current unauthenticated budget for this runner's IP. Costs nothing. */
 export const fetchBudget = async (
   timeoutMs = 10_000,
 ): Promise<Result<Budget>> => {
@@ -77,11 +55,7 @@ export const fetchBudget = async (
 
   const body: unknown = await response.value.json();
   const core = (body as { resources?: { core?: unknown } }).resources?.core;
-  if (typeof core !== "object" || core === null) {
-    return { ok: false, reason: "response did not contain a core rate limit" };
-  }
-
-  const { limit, remaining, reset } = core as {
+  const { limit, remaining, reset } = (core ?? {}) as {
     limit?: unknown;
     remaining?: unknown;
     reset?: unknown;
@@ -95,7 +69,7 @@ export const fetchBudget = async (
   }
   return {
     ok: true,
-    value: { limit, remaining, resetsAt: new Date(reset * 1000) },
+    value: { limit, remaining, resetsAt: new Date(reset * 1000).toISOString() },
   };
 };
 
@@ -107,14 +81,8 @@ export interface BurstOutcome {
   readonly firstReason?: string;
 }
 
-/**
- * Make `size` small sequential requests.
- *
- * Sequential rather than parallel on purpose. A parallel burst is a spike against
- * somebody else's service, and it also makes the outcome depend on connection
- * scheduling rather than on the budget — which would blur the very signal this
- * scenario is about.
- */
+// Sequential, not parallel: a parallel burst is a spike against somebody else's
+// service, and would make the outcome depend on connection scheduling.
 export const spendBurst = async (
   size: number,
   timeoutMs = 10_000,
@@ -129,43 +97,16 @@ export const spendBurst = async (
     if (!response.ok) {
       failed++;
       firstReason ??= response.reason;
-      continue;
-    }
-    if (response.value.status === 403 || response.value.status === 429) {
+    } else if (response.value.status === 403 || response.value.status === 429) {
       rateLimited++;
       firstReason ??= `HTTP ${String(response.value.status)} (rate limited)`;
-      continue;
-    }
-    if (!response.value.ok) {
+    } else if (!response.value.ok) {
       failed++;
       firstReason ??= `HTTP ${String(response.value.status)}`;
-      continue;
+    } else {
+      succeeded++;
     }
-    succeeded++;
   }
 
   return { attempted: size, succeeded, rateLimited, failed, firstReason };
 };
-
-export const burstSize = (): number => {
-  const raw = process.env.APPS_THIRD_PARTY_BURST;
-  if (raw === undefined || raw.trim() === "") return 6;
-
-  const parsed = Number.parseInt(raw, 10);
-  if (Number.isNaN(parsed) || parsed < 1 || parsed > MAX_BURST) {
-    console.warn(
-      `APPS_THIRD_PARTY_BURST="${raw}" is not between 1 and ${String(MAX_BURST)}; using 6`,
-    );
-    return 6;
-  }
-  return parsed;
-};
-
-/**
- * A hard ceiling, not a suggestion.
- *
- * The unauthenticated budget is 60 per hour. A burst above 20 on an hourly
- * schedule would make this repo a meaningful fraction of a shared IP's budget,
- * which is a cost borne by everybody else on that runner rather than by us.
- */
-export const MAX_BURST = 20;

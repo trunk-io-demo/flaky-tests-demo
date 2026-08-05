@@ -1,62 +1,50 @@
-import { describe as group, expect, it } from "vitest";
+import { getDay, now } from "@flaky-tests-demo/monitors-utils";
+import { describe, expect, it } from "vitest";
 
-import { describe, isPaidParking, parseWindow } from "./schedule";
+// A periodic pattern no percentage-based rate can imitate. Averaged over a week
+// the story test fails about 42% of runs — a number that looks like ordinary
+// flakiness and tells you nothing. Look at *when* and the pattern is obvious.
+// The aggregate is not merely less useful here, it is actively misleading.
+//
+// All UTC: a local timezone would make the pattern depend on daylight saving.
 
-/**
- * A periodic failure pattern no percentage-based rate can imitate.
- *
- * Averaged over a week the story test below fails about 42% of runs — a number
- * that looks like ordinary flakiness and tells you nothing. Look at *when* and
- * the pattern is unmistakable. The aggregate is not merely less useful here, it
- * is actively misleading: 42% says the test is unreliable, while the run times
- * say the test is right and its assumption is wrong.
- */
+const PAID_FROM_HOUR = 8;
+const PAID_UNTIL_HOUR = 18;
+const SUNDAY = 0;
 
-const PAID_HOURS = parseWindow(process.env.APPS_PARKING_PAID_HOURS, {
-  startHour: 8,
-  endHour: 18,
-});
+const isPaidParking = (): boolean => {
+  if (getDay() === SUNDAY) return false;
+  const hour = now().hour();
+  return hour >= PAID_FROM_HOUR && hour < PAID_UNTIL_HOUR;
+};
 
-group("parking-meter", () => {
+const when = (): string =>
+  `${now().format("dddd HH:mm")} UTC (paid ${String(PAID_FROM_HOUR)}:00–` +
+  `${String(PAID_UNTIL_HOUR)}:00 UTC, Mon–Sat)`;
+
+describe("parking-meter", () => {
   it("healthcheck always passes", () => {
     expect(1).toBe(1);
   });
 
   it("parking is free right now", () => {
-    const now = new Date();
-    if (isPaidParking(now, PAID_HOURS)) {
+    if (isPaidParking()) {
       throw new Error(
-        `deliberate failure: parking is not free at ${describe(now, PAID_HOURS)}. ` +
-          `This is a schedule rather than a rate. The demo is working.`,
+        `deliberate failure: parking is not free at ${when()}. This is a schedule ` +
+          `rather than a rate. The demo is working.`,
       );
     }
-    expect(isPaidParking(now, PAID_HOURS)).toBe(false);
+    expect(isPaidParking()).toBe(false);
   });
 
-  /** The inverse, so exactly one of the pair fails on every run: the suite's
-   * total failure count is flat while its composition swings on a cycle, which
-   * makes the same point to a count-based monitor. */
+  // The inverse, so exactly one of the pair fails every run: the suite's total
+  // failure count is flat while its composition swings on a cycle.
   it("parking costs money right now", () => {
-    const now = new Date();
-    if (!isPaidParking(now, PAID_HOURS)) {
+    if (!isPaidParking()) {
       throw new Error(
-        `deliberate failure: parking is free at ${describe(now, PAID_HOURS)}. ` +
-          `This is the demo working.`,
+        `deliberate failure: parking is free at ${when()}. This is the demo working.`,
       );
     }
-    expect(isPaidParking(now, PAID_HOURS)).toBe(true);
-  });
-
-  /** The rule itself, for a reader who does not want to work out what time it is
-   * in UTC. */
-  it("the schedule is free on sundays and outside working hours", () => {
-    const sundayNoon = new Date(Date.UTC(2026, 7, 2, 12, 0, 0));
-    const mondayNoon = new Date(Date.UTC(2026, 7, 3, 12, 0, 0));
-    const mondayNight = new Date(Date.UTC(2026, 7, 3, 22, 0, 0));
-
-    expect(sundayNoon.getUTCDay()).toBe(0);
-    expect(isPaidParking(sundayNoon, PAID_HOURS)).toBe(false);
-    expect(isPaidParking(mondayNoon, PAID_HOURS)).toBe(true);
-    expect(isPaidParking(mondayNight, PAID_HOURS)).toBe(false);
+    expect(isPaidParking()).toBe(true);
   });
 });

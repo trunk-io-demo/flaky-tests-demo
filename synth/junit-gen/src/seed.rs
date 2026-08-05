@@ -1,22 +1,11 @@
-//! Derived seeds, date buckets, and fabricated commit SHAs.
-//!
-//! Determinism here is a requirement, not a nicety. A fork of this repo must
-//! produce the same stories as the original, and a story regenerated tomorrow
-//! for the same date bucket must come out byte-identical — that is what lets
-//! this repo double as a regression fixture.
+//! Derived seeds and fabricated SHAs. FNV-1a and ChaCha8 because `DefaultHasher`
+//! and `StdRng` are not stable across Rust releases, and a fork has to reproduce
+//! the original's stories exactly.
 
 use chrono::{DateTime, NaiveDate, Timelike, Utc};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
-/// FNV-1a, 64-bit.
-///
-/// `std::hash::DefaultHasher` is explicitly *not* stable across Rust releases,
-/// so it cannot be used for anything a fork has to reproduce. FNV-1a is eleven
-/// lines, has no dependencies, and its output is fixed forever.
-///
-/// Parts are joined with a byte that cannot appear in the inputs, so
-/// `["ab", "c"]` and `["a", "bc"]` do not collide.
 pub fn stable_hash(parts: &[&str]) -> u64 {
     const OFFSET_BASIS: u64 = 0xcbf2_9ce4_8422_2325;
     const PRIME: u64 = 0x0000_0100_0000_01b3;
@@ -39,34 +28,21 @@ pub fn stable_hash(parts: &[&str]) -> u64 {
     hash
 }
 
-/// The time granularity a story's randomness is pinned to.
-///
-/// Everything drawn from a story's RNG is constant within its bucket and
-/// changes between buckets. `Day` is the usual choice: an hourly schedule then
-/// re-emits the same story all day, and a missed run changes nothing about what
-/// the next run produces.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DateBucket {
-    /// One bucket per UTC day.
     Day(NaiveDate),
-    /// One bucket per UTC hour. Use only where a story genuinely needs to
-    /// differ between runs within a day.
     Hour(NaiveDate, u32),
 }
 
 impl DateBucket {
-    /// The day bucket containing `at`.
     pub fn day_of(at: DateTime<Utc>) -> Self {
         Self::Day(at.date_naive())
     }
 
-    /// The hour bucket containing `at`.
     pub fn hour_of(at: DateTime<Utc>) -> Self {
         Self::Hour(at.date_naive(), at.hour())
     }
 
-    /// The bucket's key, as it is hashed into a seed. Stable forever: changing
-    /// this format reseeds every story in the repo.
     pub fn key(&self) -> String {
         match self {
             Self::Day(date) => date.format("%Y-%m-%d").to_string(),
@@ -74,8 +50,6 @@ impl DateBucket {
         }
     }
 
-    /// The date this bucket falls on, for stories that reason about day
-    /// offsets rather than about randomness.
     pub fn date(&self) -> NaiveDate {
         match self {
             Self::Day(date) | Self::Hour(date, _) => *date,
@@ -83,10 +57,6 @@ impl DateBucket {
     }
 }
 
-/// A story's random stream: `seed = hash(story_id, date_bucket)`.
-///
-/// Use it for outcomes, durations, and message text. Never for anything that
-/// contributes to test identity — see [`crate::identity`].
 #[derive(Debug, Clone)]
 pub struct StoryRng {
     seed: u64,
@@ -94,21 +64,14 @@ pub struct StoryRng {
 }
 
 impl StoryRng {
-    /// Derive a stream from a story ID and a date bucket.
     pub fn derive(story_id: &str, bucket: DateBucket) -> Self {
         Self::from_seed(stable_hash(&[story_id, &bucket.key()]))
     }
 
-    /// Derive a stream from a story ID, a date bucket, and an extra
-    /// discriminator — a branch name, a variant, a cohort member. Two stories
-    /// that share a bucket must not share a stream, or their outcomes
-    /// correlate in a way that looks like a real common cause.
     pub fn derive_with(story_id: &str, bucket: DateBucket, discriminator: &str) -> Self {
         Self::from_seed(stable_hash(&[story_id, &bucket.key(), discriminator]))
     }
 
-    /// Seed explicitly. Used by the `--seed` override, which exists so a human
-    /// reproducing a surprising story can pin it exactly.
     pub fn from_seed(seed: u64) -> Self {
         Self {
             seed,
@@ -116,13 +79,10 @@ impl StoryRng {
         }
     }
 
-    /// The seed in use, for logging. Every generator prints this: a story that
-    /// cannot be reproduced from its log line is not reproducible.
     pub fn seed(&self) -> u64 {
         self.seed
     }
 
-    /// `true` with the given percentage chance.
     pub fn chance(&mut self, percent: u8) -> bool {
         if percent == 0 {
             return false;
@@ -133,7 +93,6 @@ impl StoryRng {
         self.rng.gen_range(0..100u8) < percent
     }
 
-    /// A value in an inclusive range.
     pub fn in_range(&mut self, low: u64, high: u64) -> u64 {
         if high <= low {
             return low;
@@ -141,27 +100,17 @@ impl StoryRng {
         self.rng.gen_range(low..=high)
     }
 
-    /// One of `choices`. Panics if empty, which is a programming error rather
-    /// than a configuration one.
     pub fn pick<'a, T>(&mut self, choices: &'a [T]) -> &'a T {
         assert!(!choices.is_empty(), "cannot pick from an empty slice");
         let index = self.rng.gen_range(0..choices.len());
         &choices[index]
     }
 
-    /// Raw access, for callers that need a distribution not covered above.
     pub fn inner(&mut self) -> &mut ChaCha8Rng {
         &mut self.rng
     }
 }
 
-/// A plausible 40-character hex commit SHA, derived from `parts`.
-///
-/// Fabricated attribution is legitimate here: the uploader's uncloned-repo mode
-/// takes the SHA as an input rather than reading it from git. What matters is
-/// that it is *stable* for a given logical commit, because pass-on-retry pairs
-/// are formed per commit — two runs meant to be the same commit must produce
-/// the same string, and two meant to be different commits must not collide.
 pub fn fabricated_sha(parts: &[&str]) -> String {
     let mut rng = ChaCha8Rng::seed_from_u64(stable_hash(parts));
     let mut bytes = [0u8; 20];
@@ -192,9 +141,6 @@ mod tests {
 
     #[test]
     fn stable_hash_is_pinned_to_known_values() {
-        // These are golden values on purpose. If a change to `stable_hash`
-        // makes this test fail, it has reseeded every story in the repo and
-        // every fork of it — which is a decision, not a refactor.
         assert_eq!(stable_hash(&[""]), 0xcbf2_9ce4_8422_2325);
         assert_eq!(stable_hash(&["cohorts"]), 13_691_230_509_077_451_169);
         assert_eq!(
@@ -257,8 +203,6 @@ mod tests {
         assert!(rng.chance(100));
 
         let hits = (0..1000).filter(|_| rng.chance(25)).count();
-        // Seeded, so this is an assertion about a fixed stream, not a flaky
-        // statistical check.
         assert!((200..300).contains(&hits), "25% of 1000 drew {hits}");
     }
 

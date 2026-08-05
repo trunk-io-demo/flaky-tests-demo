@@ -8,31 +8,10 @@ import type {
   TestResult,
 } from "@playwright/test/reporter";
 
-/**
- * A JUnit reporter that keeps every attempt.
- *
- * Playwright's built-in one collapses retries: a test that failed twice and then
- * passed becomes a single `<testcase>` with no failure element, the earlier
- * attempts surviving only as prose in a `<system-out>` CDATA block. Verified
- * against @playwright/test 1.62. Pass-on-retry is undetectable from that — if the
- * failing attempts are not in the XML as runs, there is nothing to pair.
- *
- * | Situation                         | Emitted                                   |
- * | --------------------------------- | ----------------------------------------- |
- * | Failed some attempts, then passed | `<flakyFailure>` per failed attempt       |
- * | Failed every attempt              | `<rerunFailure>` each, plus a `<failure>` |
- * | Skipped, or never started         | `<skipped/>`                              |
- * | Passed first time                 | a bare `<testcase>`                       |
- *
- * `file` and `classname` are repository-relative, because both feed test identity
- * and a package-relative path collides across packages and matches nothing in
- * CODEOWNERS.
- *
- * Deliberately duplicated per package rather than shared — see monitors/CLAUDE.md.
- */
-
-// XML 1.0 forbids most control characters, and playwright's snippets carry them
-// inside ANSI colour codes. Written as escapes so this file stays greppable.
+// Playwright's built-in JUnit reporter collapses retries into one testcase with no
+// failure element, which makes pass-on-retry undetectable. This emits the rerun
+// elements the parser reads, with repository-relative file and classname. Kept
+// byte-identical between the packages that copy it — see monitors/CLAUDE.md.
 // eslint-disable-next-line no-control-regex
 const CONTROL_CHARACTERS = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g;
 // eslint-disable-next-line no-control-regex
@@ -41,11 +20,7 @@ const ANSI_COLOUR_CODES = /\u001b\[[0-9;]*m/g;
 export default class AttemptPreservingJUnitReporter implements Reporter {
   private suite: Suite | undefined;
 
-  /**
-   * Derived from this file's own location. Not `config.rootDir`, which playwright
-   * derives from `testDir` and is therefore the package directory, and not
-   * `process.cwd()`, which depends on where the runner was invoked.
-   */
+  // config.rootDir is the package directory; cwd depends on the invocation.
   private readonly repoRoot = resolve(import.meta.dirname, "../..");
   private readonly outputFile: string;
 
@@ -60,9 +35,7 @@ export default class AttemptPreservingJUnitReporter implements Reporter {
   onEnd(): void {
     const tests = this.suite?.allTests() ?? [];
 
-    // One <testsuite> per spec file. The nesting is not optional: a <testcase>
-    // directly under <testsuites> is silently skipped by the parser, which then
-    // validates clean and reports zero test cases.
+    // A <testcase> directly under <testsuites> is silently skipped by the parser.
     const byFile = new Map<string, TestCase[]>();
     for (const test of tests) {
       const file = relative(this.repoRoot, test.location.file);
@@ -119,8 +92,6 @@ export default class AttemptPreservingJUnitReporter implements Reporter {
     if (final === undefined || final.status === "skipped") {
       children.push("      <skipped/>");
     } else if (final.status !== "passed") {
-      // Earlier attempts are reruns rather than flaky failures, which is what
-      // preserves "retried and still red is not a pair".
       for (const attempt of earlier) {
         children.push(renderAttempt("rerunFailure", attempt));
       }
@@ -160,7 +131,6 @@ const elapsedMs = (tests: TestCase[]): number =>
     0,
   );
 
-/** JUnit durations are seconds with millisecond precision. */
 const seconds = (milliseconds: number): string =>
   (milliseconds / 1000).toFixed(3);
 
@@ -178,7 +148,6 @@ function renderAttempt(tag: string, result: TestResult): string {
   return `      <${tag} ${attributes}><![CDATA[${escapeCdata(detail)}]]></${tag}>`;
 }
 
-/** Attribute values must be one line; the full text goes in the CDATA body. */
 const firstLine = (text: string): string =>
   text.split("\n", 1)[0]?.slice(0, 500) ?? "";
 
@@ -192,7 +161,6 @@ const escapeAttribute = (value: string): string =>
 
 const escapeCdata = (value: string): string =>
   value
-    // A CDATA section cannot contain its own terminator, so it is split in two.
     .replaceAll("]]>", "]]]]><![CDATA[>")
     .replaceAll(ANSI_COLOUR_CODES, "")
     .replaceAll(CONTROL_CHARACTERS, "");

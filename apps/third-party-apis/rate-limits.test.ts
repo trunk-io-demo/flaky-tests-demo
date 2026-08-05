@@ -1,33 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { burstSize, fetchBudget, MAX_BURST, spendBurst } from "./budget";
+import { BURST, fetchBudget, spendBurst } from "./budget";
 
-/**
- * ⚠️ **Depends on a third party.** Fails when GitHub's unauthenticated rate
- * limit is exhausted for this runner's IP, and that is deliberate.
- *
- * Rate limiting produces a shape nothing else here does: every test needing the
- * budget fails in the same run for the same reason, then all recover together at
- * the top of the hour. The cause is shared state outside the suite, which no
- * per-test rate models.
- *
- * Triage in one step: every failure message names which of three things happened
- * — rate limited (the story), request failed (the runner's network), or budget
- * unreadable (usually the first as well).
- *
- * On politeness, see budget.ts: the budget is read for free, and the burst that
- * spends it is small, sequential, and capped.
- */
-
-const BURST = burstSize();
+// ⚠️ Depends on a third party. Rate limiting produces a shape nothing else here
+// does: every test needing the budget fails in the same run for the same reason,
+// then all recover together at the top of the hour. The cause is shared state
+// outside the suite, which no per-test rate models.
+//
+// Every failure names its cause: rate limited (the story), request failed (the
+// runner's network), or budget unreadable (usually the first as well).
 
 describe("third-party-apis", () => {
   it("healthcheck always passes", () => {
     expect(1).toBe(1);
   });
 
-  /** Fails for the same reason as the burst below, at the same moment, which is
-   * what makes the correlation legible. */
   it("there is enough rate limit budget left to work with", async () => {
     const budget = await fetchBudget();
 
@@ -40,16 +27,16 @@ describe("third-party-apis", () => {
 
     const { limit, remaining, resetsAt } = budget.value;
     console.log(
-      `github unauthenticated budget: ${String(remaining)}/${String(limit)} remaining, ` +
-        `resets ${resetsAt.toISOString()}`,
+      `github unauthenticated budget: ${String(remaining)}/${String(limit)}, ` +
+        `resets ${resetsAt}`,
     );
 
     if (remaining < BURST) {
       throw new Error(
         `third-party dependency failure: rate limited. ${String(remaining)} of ` +
-          `${String(limit)} remaining, fewer than the burst of ${String(BURST)} this ` +
-          `scenario needs. Resets ${resetsAt.toISOString()}. The budget is per-IP and ` +
-          `shared across everything on this runner, so this is usually not our doing.`,
+          `${String(limit)} remaining, fewer than the burst of ${String(BURST)}. ` +
+          `Resets ${resetsAt}. The budget is per-IP and shared across everything on ` +
+          `this runner, so this is usually not our doing.`,
       );
     }
 
@@ -66,8 +53,7 @@ describe("third-party-apis", () => {
     if (outcome.rateLimited > 0) {
       throw new Error(
         `third-party dependency failure: rate limited part-way through a burst of ` +
-          `${String(outcome.attempted)} — ${String(outcome.succeeded)} succeeded, ` +
-          `${String(outcome.rateLimited)} refused (${outcome.firstReason ?? "unknown"}). ` +
+          `${String(outcome.attempted)} (${outcome.firstReason ?? "unknown"}). ` +
           `Correlated failures that all recover together: the monitor worked.`,
       );
     }
@@ -82,11 +68,5 @@ describe("third-party-apis", () => {
     }
 
     expect(outcome.succeeded).toBe(outcome.attempted);
-  });
-
-  /** So the cap's existence is discoverable. */
-  it("the burst size is capped", () => {
-    expect(MAX_BURST).toBeLessThanOrEqual(20);
-    expect(BURST).toBeGreaterThan(0);
   });
 });

@@ -1,56 +1,28 @@
-//! Fabricated upload attribution, and the branch-class mapping.
-//!
-//! Uploads from `synth/` need no git history, no branch, and no pull request:
-//! the uploader's uncloned-repo mode takes repository URL, head SHA, head
-//! branch, and author name as explicit inputs, alongside PR number and commit
-//! epoch. Every attribution field is fabricable.
-//!
-//! **Branch class is derived, not set.** The uploader infers it from the branch
-//! name and the PR number, so configuration here expresses a *desired class*
-//! and the constructors produce naming that yields it.
-//!
-//! The precedence is reproduced in [`BranchClass::infer`] rather than imported.
-//! The crate that owns it upstream also pulls in protobuf, vendored OpenSSL,
-//! and git bindings — minutes of build time and a protobuf compiler on the
-//! runner, to reuse one `match`. The tests below pin the behavior instead, and
-//! the mapping is documented in `CLAUDE.md` where a reader will
-//! find it.
+//! Fabricated upload attribution. Branch class is inferred by the uploader, not
+//! set, so the constructors produce naming that yields the class asked for and
+//! refuse the pairs that would warn. The precedence is reproduced here rather
+//! than imported: the crate that owns it upstream pulls in protobuf, vendored
+//! OpenSSL, and git bindings to reuse one `match`.
 
 use std::collections::BTreeMap;
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
-/// Branch-name fragments that make the uploader classify a branch as a merge
-/// event. Any of them wins over everything else, including a set PR number.
 const MERGE_QUEUE_MARKERS: &[&str] = &["trunk-merge/", "gh-readonly-queue/", "/gtmq_"];
 const MERGE_QUEUE_PREFIX: &str = "gtmq_";
 
-/// Branch prefixes that imply a pull request even with no PR number set.
 const PULL_REQUEST_PREFIXES: &[&str] = &["pull/", "remotes/pull/"];
 
-/// The class the product groups runs by.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum BranchClass {
-    /// A merge-queue run.
     Merge,
-    /// A run attributed to a pull request.
     PullRequest,
-    /// A run on a protected branch.
     ProtectedBranch,
-    /// The fallthrough.
     None,
 }
 
 impl BranchClass {
-    /// The uploader's inference, in its precedence order.
-    ///
-    /// | Target  | How it is produced                           |
-    /// | ------- | -------------------------------------------- |
-    /// | `MERGE` | branch contains a merge-queue prefix         |
-    /// | `PR`    | a PR number is set, or a `pull/` branch       |
-    /// | `PB`    | branch matches a configured protected branch |
-    /// | `NONE`  | anything else                                |
     pub fn infer(branch: &str, pr_number: Option<u64>, protected: &ProtectedBranches) -> Self {
         let merge_queue = MERGE_QUEUE_MARKERS.iter().any(|m| branch.contains(m))
             || branch.starts_with(MERGE_QUEUE_PREFIX);
@@ -67,7 +39,6 @@ impl BranchClass {
         }
     }
 
-    /// The product's short label for this class.
     pub fn label(&self) -> &'static str {
         match self {
             Self::Merge => "MERGE",
@@ -78,12 +49,6 @@ impl BranchClass {
     }
 }
 
-/// The org's configured protected branches.
-///
-/// Matching is exact, not glob: `release/*` being a protected-branch *pattern*
-/// in some other setting does not make `release/1.2.0` a protected branch here.
-/// Getting this wrong is the usual reason a run intended as `PB` arrives as
-/// `NONE`.
 #[derive(Debug, Clone, Default)]
 pub struct ProtectedBranches(Vec<String>);
 
@@ -109,15 +74,6 @@ impl ProtectedBranches {
     }
 }
 
-/// One upload's worth of fabricated attribution.
-///
-/// There is no public field-by-field constructor, and that is the point.
-/// Illegal combinations — a protected branch that also carries a PR number, a
-/// merge-queue branch with a PR number that will be silently ignored — produce
-/// validation warnings that look bad on screen mid-demo. Only the legal pairs
-/// are constructible: [`Attribution::on_merge_queue`],
-/// [`Attribution::on_pull_request`], [`Attribution::on_protected_branch`], and
-/// [`Attribution::unclassified`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Attribution {
     pub repo_url: String,
@@ -131,24 +87,15 @@ pub struct Attribution {
 }
 
 impl Attribution {
-    /// A merge-queue run. The branch is prefixed so the uploader classifies it
-    /// as `MERGE`; no PR number is set, because on a merge-queue branch it
-    /// would be ignored and warned about.
     pub fn on_merge_queue(base: AttributionBase, target_branch: &str) -> Self {
         let branch = format!("gh-readonly-queue/{target_branch}/{}", &base.head_sha[..8]);
         base.finish(branch, None)
     }
 
-    /// A pull-request run. No real pull request is required — the PR-number
-    /// override is enough to make the uploader classify the run as `PR`.
     pub fn on_pull_request(base: AttributionBase, pr_number: u64, branch: &str) -> Self {
         base.finish(branch.to_owned(), Some(pr_number))
     }
 
-    /// A protected-branch run. `branch` must be one the org has configured as
-    /// protected, or the run arrives as `NONE` instead — so this returns an
-    /// error rather than producing a story that quietly is not the one asked
-    /// for.
     pub fn on_protected_branch(
         base: AttributionBase,
         branch: &str,
@@ -163,17 +110,10 @@ impl Attribution {
         Ok(base.finish(branch.to_owned(), None))
     }
 
-    /// A run on no branch of consequence — the `NONE` fallthrough. This is the
-    /// class most real feature-branch runs land in.
     pub fn unclassified(base: AttributionBase, branch: &str) -> Self {
         base.finish(branch.to_owned(), None)
     }
 
-    /// The environment the uploader reads this attribution from.
-    ///
-    /// Keys come from the uploader's own constants rather than being retyped,
-    /// so a rename upstream surfaces as a build failure here instead of as a
-    /// field the uploader silently never sees.
     pub fn to_env(&self) -> BTreeMap<String, String> {
         let mut env = BTreeMap::new();
         env.insert(
@@ -213,7 +153,6 @@ impl Attribution {
     }
 }
 
-/// The parts of an attribution that do not decide the branch class.
 #[derive(Debug, Clone)]
 pub struct AttributionBase {
     pub repo_url: String,
@@ -242,9 +181,6 @@ impl AttributionBase {
         }
     }
 
-    /// Tag this upload with a variant. The variant is part of test identity, so
-    /// the same test uploaded under two variants is two tests in the product —
-    /// which is exactly what makes "only flaky on macOS" expressible.
     pub fn with_variant(mut self, variant: impl Into<String>) -> Self {
         self.variant = Some(variant.into());
         self
@@ -265,7 +201,6 @@ impl AttributionBase {
     }
 }
 
-/// A requested branch class the given branch name cannot produce.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnclassifiableBranch {
     pub branch: String,
@@ -318,7 +253,6 @@ mod tests {
             BranchClass::infer("some/gtmq_abc", None, &protected),
             BranchClass::Merge
         );
-        // Merge queue wins over protected, too.
         assert_eq!(
             BranchClass::infer("trunk-merge/main", None, &ProtectedBranches::new(["main"])),
             BranchClass::Merge
@@ -332,7 +266,6 @@ mod tests {
             BranchClass::infer("main", Some(7), &protected),
             BranchClass::PullRequest
         );
-        // Which is why `on_protected_branch` refuses to set one.
     }
 
     #[test]
@@ -355,7 +288,6 @@ mod tests {
             BranchClass::infer("release/1.0.0", None, &protected),
             BranchClass::ProtectedBranch
         );
-        // The trap: a pattern that looks protected but is not configured.
         assert_eq!(
             BranchClass::infer("release/1.0.1", None, &protected),
             BranchClass::None
@@ -429,8 +361,6 @@ mod tests {
 
     #[test]
     fn env_omits_absent_optional_fields_rather_than_emptying_them() {
-        // An empty TRUNK_PR_NUMBER is not the same as an unset one — the
-        // uploader would fail to parse it as an integer.
         let env = Attribution::unclassified(base(), "feature/x").to_env();
         assert!(!env.contains_key("TRUNK_PR_NUMBER"));
         assert!(!env.contains_key("TRUNK_VARIANT"));

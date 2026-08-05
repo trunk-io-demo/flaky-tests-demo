@@ -3,51 +3,30 @@
 > [!NOTE]
 > <https://docs.trunk.io/flaky-tests/detection/skipped-test-monitor>
 
-## What this monitor detects
+Tests that have stopped running without anybody deleting them. The quietest real problem a suite has: a
+skipped test looks green, appears in no failure rate and no failure count, satisfies whoever asked for
+coverage, and can sit there for a year.
 
-Tests that have stopped running without anybody deleting them.
+## The story
 
-This is the quietest real problem a test suite has. A skipped test **looks green**. It appears in no
-failure rate and no failure count, it satisfies whoever asked for coverage, and it can sit there for
-a year — usually next to a comment saying it will be re-enabled next sprint. Nothing else in a CI
-pipeline notices.
+**[`cascade.spec.ts`](cascade.spec.ts) is the canonical case.** A playwright serial group whose first
+test fails, after which five tests report as skipped without anyone having decided they should. The suite
+shows one failure and looks almost fine.
 
-## The story in this folder
+That is how the problem actually arrives. Nobody writes `test.skip` on nineteen tests — one setup step
+breaks and the runner declines to attempt the rest, so a single failure hides an arbitrary amount of
+coverage behind it. Retries are off here: a retried test that eventually passes is a pass-on-retry story,
+and it would give the cascade a second chance to not cascade.
 
-[`canonical.test.ts`](canonical.test.ts) has the three ways it happens.
+[`canonical.test.ts`](canonical.test.ts) has the two quieter ways:
 
-| Test                                       | Mechanism                                                                                                          |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `healthcheck_always_passes`                | Never fails and never skips.                                                                                       |
-| `always_skipped_never_deleted`             | `it.skip`. The body still compiles, still passes review, and has not executed since someone typed four characters. |
-| `sometimes_skipped_by_a_runtime_condition` | Skips at runtime on a configured percentage of runs.                                                               |
-| `never_skipped`                            | The control. Runs every time.                                                                                      |
+| Test                                       | Mechanism                                                   |
+| ------------------------------------------ | ----------------------------------------------------------- |
+| `always skipped never deleted`             | `it.skip`. The body still compiles and still passes review. |
+| `sometimes skipped by a runtime condition` | Skips 40% of runs. Partial history looks _maintained_.      |
+| `never skipped`                            | The control.                                                |
 
-The second one is the interesting case. A test guarded by an environment check, a feature flag, or a
-platform test is _usually_ running, so nobody notices the runs where it was not. It has **partial**
-history, which is worse than none: it looks maintained.
+## What you should see
 
-## What you should see in the product
-
-| When           | What                                                                                                                                  |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Within an hour | One test reporting as skipped every run, one reporting as skipped sometimes.                                                          |
-| Within a day   | `sometimes_skipped_by_a_runtime_condition` has around 40% of its runs skipped and 60% passing — the shape that hides in an aggregate. |
-| Day 1          | A skipped-test monitor flags both, and `never_skipped` and the healthcheck confirm the suite itself is fine.                          |
-
-## Deliberate overlap with other monitors
-
-- **[`slow-test`](../slow-test/README.md)** — a skipped test has no duration at all, which is a
-  different thing from being fast. Duration-based monitors have to exclude skips or they report a
-  suite getting faster as it stops running.
-- **[`synth/cohorts`](../../synth/cohorts/README.md)** — a retired cohort also stops producing runs,
-  but by disappearing rather than by reporting a skip. Two different absences, resolved differently.
-
-## Configuration
-
-| Variable             | Default | Effect                                                               |
-| -------------------- | ------- | -------------------------------------------------------------------- |
-| `MONITORS_SKIP_RATE` | 40      | Percentage of runs `sometimes_skipped_by_a_runtime_condition` skips. |
-
-Keep it well away from 0 and 100. At either end the test stops being the interesting case and
-becomes a duplicate of one of its neighbours.
+Five tests reporting as skipped every run from the cascade, one always, one intermittently. The
+intermittent one is the interesting shape: 40% skipped and 60% passing hides in any aggregate.

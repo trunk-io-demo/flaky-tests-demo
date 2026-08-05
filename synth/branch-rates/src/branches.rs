@@ -1,48 +1,21 @@
-//! The branch shapes this story emits, and why each one is here.
-//!
-//! The point is not "some branches fail more." It is that a viewer configuring
-//! a monitor with a branch filter needs branch names that *distinguish* their
-//! patterns. `release/*`, `release/?.?.?`, and `release/*.beta` are three
-//! different filters, and telling them apart requires branch names where they
-//! disagree:
-//!
-//! | Branch                | `release/*` | `release/?.?.?` | `release/*.beta` |
-//! | --------------------- | ----------- | --------------- | ---------------- |
-//! | `release/1.4.2`       | matches     | matches         | no               |
-//! | `release/2.0.0.beta`  | matches     | no              | matches          |
-//!
-//! So the two release branches are not decoration. Without both, two of those
-//! three filters are indistinguishable in the data.
+//! The branch shapes this story emits. Two release branches, because `release/*`,
+//! `release/?.?.?` and `release/*.beta` are three filters and one branch name
+//! cannot distinguish them.
 
 use junit_gen::{Attribution, AttributionBase, BranchClass, ProtectedBranches};
 
-/// A branch shape, its intended class, and the rate its tests fail at.
 #[derive(Debug, Clone)]
 pub struct BranchStory {
-    /// The branch name uploads are attributed to.
     pub branch: String,
-    /// Percentage of runs on this branch in which a test fails.
     pub failure_rate: u8,
-    /// How the upload should be attributed.
     pub shape: Shape,
 }
 
-/// The legal attribution shapes, one per branch class.
-///
-/// Enumerated rather than assembled from fields so that an illegal combination
-/// — a protected branch that also carries a PR number, a merge-queue branch
-/// whose PR number will be ignored and warned about — is not expressible.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Shape {
-    /// A protected branch. The name must be one the org actually protects, or
-    /// the run arrives as `NONE`.
     Protected,
-    /// A pull-request branch, with a fabricated PR number.
     PullRequest(u64),
-    /// A merge-queue run. The prefix is added for you.
     MergeQueue,
-    /// Any other branch — the `NONE` fallthrough, which is where most real
-    /// release-branch runs land unless the org protects them explicitly.
     Unclassified,
 }
 
@@ -55,8 +28,6 @@ impl BranchStory {
         }
     }
 
-    /// The class this story should arrive as, so the manifest can log the intent
-    /// beside the result.
     pub fn expected_class(&self, protected: &ProtectedBranches) -> BranchClass {
         match self.shape {
             Shape::Protected => BranchClass::ProtectedBranch,
@@ -66,7 +37,6 @@ impl BranchStory {
         }
     }
 
-    /// Build the attribution for this story.
     pub fn attribute(
         &self,
         base: AttributionBase,
@@ -80,7 +50,6 @@ impl BranchStory {
         })
     }
 
-    /// A short slug for file names and log lines.
     pub fn slug(&self) -> String {
         self.branch
             .chars()
@@ -99,21 +68,14 @@ mod tests {
 
     #[test]
     fn the_release_branches_distinguish_the_three_filters_they_exist_for() {
-        // Glob semantics, spelled out: `?` matches one character, `*` matches
-        // any run of them. These are the checks a reader would do by hand, and
-        // they are the reason both release branches are emitted.
         let semver = "release/1.4.2";
         let beta = "release/2.0.0.beta";
 
-        // release/* matches both.
         assert!(semver.starts_with("release/") && beta.starts_with("release/"));
 
-        // release/?.?.? — three single characters separated by dots — matches
-        // only the semver one.
         assert!(matches_single_char_semver(semver));
         assert!(!matches_single_char_semver(beta));
 
-        // release/*.beta matches only the beta one.
         assert!(!semver.ends_with(".beta"));
         assert!(beta.ends_with(".beta"));
     }
@@ -158,9 +120,6 @@ mod tests {
 
     #[test]
     fn a_release_branch_the_org_does_not_protect_is_none_not_pb() {
-        // The trap this story is built to make visible: `release/*` looking like
-        // a protected-branch pattern does not make `release/1.4.2` protected.
-        // Protected matching is exact.
         let story = BranchStory::new("release/1.4.2", 20, Shape::Unclassified);
         assert_eq!(story.expected_class(&protected()), BranchClass::None);
 

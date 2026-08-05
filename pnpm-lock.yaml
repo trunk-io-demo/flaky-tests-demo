@@ -34,6 +34,10 @@ importers:
         version: 3.2.7(@types/node@22.20.1)
 
   apps/github-uptime:
+    dependencies:
+      '@flaky-tests-demo/monitors-utils':
+        specifier: workspace:*
+        version: link:../../monitors/utils
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -43,6 +47,10 @@ importers:
         version: 3.2.7(@types/node@22.20.1)
 
   apps/mass-detection:
+    dependencies:
+      '@flaky-tests-demo/monitors-utils':
+        specifier: workspace:*
+        version: link:../../monitors/utils
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -52,6 +60,10 @@ importers:
         version: 3.2.7(@types/node@22.20.1)
 
   apps/parking-meter:
+    dependencies:
+      '@flaky-tests-demo/monitors-utils':
+        specifier: workspace:*
+        version: link:../../monitors/utils
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -61,6 +73,10 @@ importers:
         version: 3.2.7(@types/node@22.20.1)
 
   apps/third-party-apis:
+    dependencies:
+      '@flaky-tests-demo/monitors-utils':
+        specifier: workspace:*
+        version: link:../../monitors/utils
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -163,6 +179,10 @@ importers:
         version: 3.2.7(@types/node@22.20.1)
 
   monitors/utils:
+    dependencies:
+      dayjs:
+        specifier: ^1.11.13
+        version: 1.11.21
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -711,6 +731,9 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  dayjs@1.11.21:
+    resolution: {integrity: sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -1621,6 +1644,8 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  dayjs@1.11.21: {}
 
   debug@4.4.3:
     dependencies:

@@ -1,9 +1,7 @@
-//! Building JUnit reports.
+//! Building JUnit reports. Rendering is pure — it draws no randomness of its own.
 //!
-//! Reports are described declaratively — a list of cases, each with an identity
-//! and an outcome — and rendered in one pass. Rendering is pure: it draws no
-//! randomness of its own, so a spec and its XML are the same thing twice, and a
-//! test can assert on the spec without rendering.
+//! Reports are laid out to *end* at `finished_at`, because the uploader warns both
+//! on reports older than an hour and on cases stamped in the future.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -18,22 +16,12 @@ use quick_junit::{
 use crate::identity::TestIdentity;
 use crate::seed::StoryRng;
 
-/// What a test case did.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Outcome {
     Pass,
     Fail,
     Skip,
-    /// Failed `failures` times and then passed, with every attempt reported.
-    ///
-    /// The JUnit parser expands rerun elements into separate run rows, so a
-    /// *single* upload yields both the failure and the success that a
-    /// pass-on-retry pair requires. No two-workflow retry dance, and — because
-    /// pairs are only formed from runs within a trailing window of a few hours
-    /// — no risk of the early pairs ageing out before the late ones land.
-    PassAfterRetries {
-        failures: usize,
-    },
+    PassAfterRetries { failures: usize },
 }
 
 impl Outcome {
@@ -42,20 +30,11 @@ impl Outcome {
     }
 }
 
-/// One test case in a report.
 #[derive(Debug, Clone)]
 pub struct TestCaseSpec {
     pub identity: TestIdentity,
     pub outcome: Outcome,
-    /// Duration of the final attempt. Retried attempts get
-    /// [`TestCaseSpec::retry_duration`].
     pub duration: Duration,
-    /// Duration of each failed attempt, where that differs from `duration`.
-    ///
-    /// This exists for one story in particular: a test that did not get slower,
-    /// only got slower *when it fails*, because it is blocking on a timeout.
-    /// That shape needs failure durations pinned near a ceiling while passes
-    /// stay stable, which no single duration can express.
     pub retry_duration: Option<Duration>,
     pub message: Option<String>,
 }
@@ -86,33 +65,15 @@ impl TestCaseSpec {
     }
 }
 
-/// A suite, named for the JUnit `<testsuite>` element.
 #[derive(Debug, Clone)]
 pub struct SuiteSpec {
     pub name: String,
     pub cases: Vec<TestCaseSpec>,
 }
 
-/// A whole report — one JUnit XML file, one upload.
 #[derive(Debug, Clone)]
 pub struct ReportSpec {
     pub name: String,
-    /// When the run this report describes *finished*, which for `synth/` is
-    /// always approximately now.
-    ///
-    /// It is the finish rather than the start because the uploader validates
-    /// report timestamps from both ends, and a generator can trip either:
-    ///
-    /// - a report stamped more than an hour ago warns as **stale**, which is
-    ///   why a dated story encodes its dates in test *names* rather than by
-    ///   backdating the report;
-    /// - a case stamped later than now warns as a **future timestamp**, which is
-    ///   what happens if cases are laid out forward from a report already
-    ///   stamped at now.
-    ///
-    /// Anchoring on the finish and laying cases out backwards from it avoids
-    /// both. Neither warning fails an upload, but both are visible on screen
-    /// during a demo.
     pub finished_at: DateTime<Utc>,
     pub cases: Vec<TestCaseSpec>,
 }
@@ -138,13 +99,6 @@ impl ReportSpec {
         self.cases.is_empty()
     }
 
-    /// Group cases into suites by their identity's suite name, in first-seen
-    /// order.
-    ///
-    /// The suite name lives on the identity rather than on a separate suite
-    /// object so that the two cannot disagree about which suite a test is in —
-    /// the suite path contributes to test identity, so a disagreement would
-    /// silently fork a test's history.
     pub fn suites(&self) -> Vec<SuiteSpec> {
         let mut suites: Vec<SuiteSpec> = Vec::new();
         for case in &self.cases {
@@ -160,13 +114,6 @@ impl ReportSpec {
     }
 }
 
-/// Render a spec to a JUnit report.
-///
-/// Case timestamps advance by each case's duration, so the report reads like
-/// something a real runner produced rather than a batch that all happened at
-/// once. The whole sequence is laid out so that it *ends* at
-/// [`ReportSpec::finished_at`] — see that field for why neither end of the
-/// window is free.
 pub fn render(spec: &ReportSpec) -> Report {
     let started_at = spec.finished_at - total_duration(spec);
 
@@ -188,9 +135,6 @@ pub fn render(spec: &ReportSpec) -> Report {
             let mut case = TestCase::new(case_spec.identity.name.clone(), status);
             case.set_classname(case_spec.identity.classname.clone());
             case.set_timestamp(case_started_at.fixed_offset());
-            // A skipped test did not run, so it took no time. Reporting a
-            // duration for one would feed the slow-test and timeout-inflation
-            // monitors data about a test that never executed.
             case.set_time(match case_spec.outcome {
                 Outcome::Skip => Duration::ZERO,
                 _ => case_spec.duration,
@@ -211,14 +155,10 @@ pub fn render(spec: &ReportSpec) -> Report {
     report
 }
 
-/// How long the whole report took, including retried attempts.
-///
-/// Computed before layout so the sequence can be anchored to its finish.
 fn total_duration(spec: &ReportSpec) -> Duration {
     spec.cases.iter().map(consumed_by).sum()
 }
 
-/// Wall time one case consumed, including its retried attempts.
 fn consumed_by(spec: &TestCaseSpec) -> Duration {
     match spec.outcome {
         Outcome::Skip => Duration::ZERO,
@@ -229,8 +169,6 @@ fn consumed_by(spec: &TestCaseSpec) -> Duration {
     }
 }
 
-/// Build a case's status, returning the total wall time it consumed including
-/// any retried attempts.
 fn render_status(spec: &TestCaseSpec, started_at: DateTime<Utc>) -> (TestCaseStatus, Duration) {
     match spec.outcome {
         Outcome::Pass => (
@@ -246,9 +184,6 @@ fn render_status(spec: &TestCaseSpec, started_at: DateTime<Utc>) -> (TestCaseSta
                 message: Some(spec.message.clone().unwrap_or_else(default_message).into()),
                 ty: Some("AssertionError".into()),
                 description: None,
-                // quick-junit 0.7 models reruns as a kind plus a list; the
-                // default kind is `rerunFailure`, which is what a retried and
-                // still-failing test should serialize as.
                 reruns: NonSuccessReruns::default(),
             },
             spec.duration,
@@ -282,7 +217,6 @@ fn default_message() -> String {
     "synthetic failure: this test exists to trip a monitor".to_owned()
 }
 
-/// Serialize a report to `dir/file_name`, creating `dir` if needed.
 pub fn write_report(dir: impl AsRef<Path>, file_name: &str, report: &Report) -> Result<PathBuf> {
     let dir = dir.as_ref();
     fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
@@ -295,12 +229,6 @@ pub fn write_report(dir: impl AsRef<Path>, file_name: &str, report: &Report) -> 
     Ok(path)
 }
 
-/// Duration ranges for a story, in milliseconds.
-///
-/// Durations are not part of test identity, so they are drawn from the seeded
-/// RNG. They still need to be *plausible*: a suite where every test takes
-/// exactly 30 seconds reads as generated, and the slow-test monitor has nothing
-/// to work with.
 #[derive(Debug, Clone, Copy)]
 pub struct Durations {
     pub pass_ms: (u64, u64),
@@ -317,7 +245,6 @@ impl Default for Durations {
 }
 
 impl Durations {
-    /// Draw a duration appropriate to `outcome`.
     pub fn draw(&self, rng: &mut StoryRng, outcome: Outcome) -> Duration {
         let (low, high) = if outcome.is_failure() {
             self.fail_ms
@@ -411,9 +338,6 @@ mod tests {
         let xml = report.to_string().expect("serializes");
 
         assert!(xml.contains("<skipped"), "{xml}");
-        // Even though the spec carries a duration, a test that did not run took
-        // no time — otherwise the duration-based monitors get data about a test
-        // that never executed.
         assert_eq!(
             report.test_suites[0].test_cases[0].time,
             Some(Duration::ZERO)
@@ -426,8 +350,6 @@ mod tests {
         let spec = spec_with(&[("Alpha", "one", Outcome::PassAfterRetries { failures: 2 })]);
         let xml = render(&spec).to_string().expect("serializes");
 
-        // Both the failures and the eventual success live in one report, which
-        // is what lets a single upload form a pass-on-retry pair.
         assert_eq!(xml.matches("<flakyFailure").count(), 2, "{xml}");
         assert!(xml.contains("attempt 1"), "{xml}");
         assert!(xml.contains("attempt 2"), "{xml}");
@@ -446,8 +368,6 @@ mod tests {
         );
 
         let xml = render(&spec).to_string().expect("serializes");
-        // The failed attempt sat on a 30s ceiling; the eventual pass took
-        // 200ms. This is the shape the timeout-inflation story needs.
         assert!(xml.contains(r#"<flakyFailure timestamp="#), "{xml}");
         assert!(xml.contains(r#"time="30.000""#), "{xml}");
         assert!(xml.contains(r#"time="0.200""#), "{xml}");
@@ -455,9 +375,6 @@ mod tests {
 
     #[test]
     fn the_run_is_laid_out_to_end_at_finished_at() {
-        // Both of the uploader's timestamp warnings are avoided by this: the
-        // report is not stale because it ends at now, and no case is in the
-        // future because the sequence runs up to now rather than out from it.
         let mut spec = ReportSpec::new("synth", at());
         for name in ["one", "two", "three"] {
             spec.push(TestCaseSpec::new(
@@ -491,7 +408,6 @@ mod tests {
         );
 
         let report = render(&spec);
-        // Two 10s failures plus a 1s pass.
         assert_eq!(report.time, Some(Duration::from_secs(21)));
         assert_eq!(
             report.timestamp.expect("timestamped"),

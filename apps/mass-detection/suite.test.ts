@@ -1,23 +1,15 @@
+import { isDayOfMonth, todayIso } from "@flaky-tests-demo/monitors-utils";
 import { describe, expect, it } from "vitest";
 
-import { isEventDay, nextEventDay, triggerDayOfMonth } from "./trigger";
+// Twenty tests fail on day 13 of every month, UTC. Also in README.md, and logged
+// by a passing test below, because a whole suite failing at once is
+// indistinguishable from a real incident.
+//
+// A recurring rule rather than a date: history ages out so a fixed date rots, but
+// this story has to stay discoverable. Capped at 28 so it never skips February.
 
-/**
- * ⚠️ **Twenty tests here fail on day 13 of every month, UTC.** Also recorded in
- * README.md and CONTRIBUTING.md, because a whole suite failing at once is
- * indistinguishable from a real incident and somebody paged at 03:00 needs one
- * lookup.
- *
- * This is the only scenario exercising alert *volume* and grouping rather than
- * single detections. Twenty failures in one run for one reason is what a bad
- * deploy looks like, and a per-test rate cannot express "these are one problem".
- */
+const TRIGGER_DAY = 13;
 
-const SUITE_SIZE = 20;
-const TRIGGER_DAY = triggerDayOfMonth();
-
-/** Plausible names, so the burst reads like a subsystem failing rather than a
- * loop with an index. */
 const OPERATIONS = [
   "creates an order",
   "reads an order",
@@ -42,34 +34,27 @@ const OPERATIONS = [
 ] as const;
 
 describe("mass-detection", () => {
-  /** Passes on the event day too, so it is the only green thing in the folder
-   * that day — the fastest way to tell a mass detection from a dead suite. */
   it("healthcheck always passes", () => {
     expect(1).toBe(1);
   });
 
-  /** A test rather than only a comment, so the trigger is in the run history
-   * where somebody looking at the failing suite is already looking. */
   it("the next mass detection event is announced here", () => {
-    const next = nextEventDay(new Date(), TRIGGER_DAY);
     console.log(
-      `mass-detection fires on day ${String(TRIGGER_DAY)} of each month; ` +
-        `next occurrence ${next.toISOString().slice(0, 10)}`,
+      `mass-detection fires on day ${String(TRIGGER_DAY)} of each month, UTC`,
     );
-    expect(next.getUTCDate()).toBe(TRIGGER_DAY);
+    expect(TRIGGER_DAY).toBeLessThanOrEqual(28);
   });
 
-  for (const operation of OPERATIONS.slice(0, SUITE_SIZE)) {
+  for (const operation of OPERATIONS) {
     it(operation, () => {
-      const now = new Date();
-      if (isEventDay(now, TRIGGER_DAY)) {
+      if (isDayOfMonth(TRIGGER_DAY)) {
         throw new Error(
-          `deliberate failure: mass detection event. All ${String(SUITE_SIZE)} tests in ` +
-            `this suite fail on day ${String(TRIGGER_DAY)} of each month (today is ` +
-            `${now.toISOString().slice(0, 10)}). See apps/mass-detection/README.md.`,
+          `deliberate failure: mass detection event. All ${String(OPERATIONS.length)} ` +
+            `tests in this suite fail on day ${String(TRIGGER_DAY)} of each month ` +
+            `(today is ${todayIso()}). See apps/mass-detection/README.md.`,
         );
       }
-      expect(isEventDay(now, TRIGGER_DAY)).toBe(false);
+      expect(isDayOfMonth(TRIGGER_DAY)).toBe(false);
     });
   }
 });
