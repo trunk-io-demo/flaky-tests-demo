@@ -8,7 +8,7 @@ one monitor in a way you recognize at a glance. Land on a test, read its name an
 the monitor it exists for should be obvious.
 
 It is also a canary — the same runs that make the demo compelling tell the team owning these monitors
-whether detection latency and alert volume still look right.
+whether detection latency, classification, and quarantine behavior still look right.
 
 | Directory                        | What it is                                                                                                               |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
@@ -33,8 +33,8 @@ A single story demonstrates a monitor; a pair shows why one monitor is not enoug
 
 ## If a monitor here fires, is something wrong?
 
-Usually not. Every deliberate failure message says so explicitly. Three stories are alarming on
-purpose, each triageable in one lookup:
+Usually not. Every deliberate failure message says so explicitly. Three stories look like a real problem
+on purpose, each triageable in one lookup:
 
 | Story              | Trigger                                    | Confirm                                      |
 | ------------------ | ------------------------------------------ | -------------------------------------------- |

@@ -4,8 +4,9 @@
 > <https://docs.trunk.io/flaky-tests/detection/failure-count-monitor>
 
 How many failures happened in a window, as an absolute number rather than a proportion. A rate cannot
-tell **one** test failing half the time from **twelve** tests each failing half the time. Both are 50%.
-Only the second wakes somebody up.
+tell **one** test failing half the time from **twelve** tests each failing half the time. Both are 50%,
+but the second means twelve tests get classified flaky and quarantined — twelve tests' worth of coverage
+removed rather than one.
 
 ## The story
 

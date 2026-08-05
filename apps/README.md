@@ -9,13 +9,13 @@ accumulate. `apps/` produces the ones that cannot be fabricated convincingly.
 | Scenario                                 | Why it is compelling                                                                                    |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | [`parking-meter/`](parking-meter/)       | A periodic pattern **no percentage-based rate can imitate**, that an aggregate actively misleads about. |
-| [`mass-detection/`](mass-detection/)     | The only scenario exercising alert **volume** and grouping rather than single detections.               |
+| [`mass-detection/`](mass-detection/)     | The only scenario exercising detection **volume** and grouping rather than single detections.           |
 | [`third-party-apis/`](third-party-apis/) | Failures that cluster in time and **correlate across tests**, recovering together.                      |
 | [`github-uptime/`](github-uptime/)       | A real external dependency causing real intermittency.                                                  |
 
-## ⚠️ Three of these can look like an incident
+## ⚠️ Three of these can look like a real problem
 
-That is the point, but it must be possible to tell _"the monitor worked"_ from _"we have a problem"_.
+That is the point, but it must be possible to tell _"the monitor worked"_ from _"something is broken"_.
 Each is triageable in one lookup:
 
 | Scenario           | How to tell                                                                                                           |

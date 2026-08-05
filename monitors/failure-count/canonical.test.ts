@@ -4,46 +4,17 @@ import {
   isEveryOtherDay,
   MONDAY,
   randomPercentage,
+  testIter,
 } from "@flaky-tests-demo/monitors-utils";
 import { describe, expect, it } from "vitest";
 
-// Every run is exactly one of PB, PR, MQ, so exactly one always-on group fires.
+// Every run is exactly one of PB, PR, MQ, so exactly one always-fails group fires.
 // The count swings with the branch class while no test's own rate changes, which
 // is what a rate cannot express.
 
-const CLASS = getBranchClass();
+const branchClass = getBranchClass();
 const PARTIAL_RATE = 10;
-const GROUP_SIZE = 3;
-
-const members = (): string[] =>
-  Array.from({ length: GROUP_SIZE }, (_unused, i) =>
-    String(i + 1).padStart(2, "0"),
-  );
-
-function alwaysOn(expected: string, position: string): void {
-  if (CLASS === expected) {
-    throw new Error(
-      `deliberate failure: member ${position} fails on every ${expected} run ` +
-        `(class ${CLASS}). This is the demo working, not a broken test.`,
-    );
-  }
-  expect(CLASS).not.toBe(expected);
-}
-
-function sometimesOn(expected: string, position: string, key: string): void {
-  if (CLASS !== expected) {
-    expect(CLASS).not.toBe(expected);
-    return;
-  }
-  const draw = randomPercentage(key);
-  if (draw < PARTIAL_RATE) {
-    throw new Error(
-      `deliberate failure: member ${position} fails ${String(PARTIAL_RATE)}% of ` +
-        `${expected} runs (drew ${draw.toFixed(1)}). This is the demo working.`,
-    );
-  }
-  expect(draw).toBeGreaterThanOrEqual(PARTIAL_RATE);
-}
+const GROUP = testIter(3);
 
 describe("failure-count", () => {
   it("healthcheck always passes", () => {
@@ -51,70 +22,84 @@ describe("failure-count", () => {
   });
 
   describe("always fails on a protected branch", () => {
-    for (const position of members()) {
-      it(`protected branch member ${position}`, () => {
-        alwaysOn("PB", position);
+    for (const member of GROUP) {
+      it(`protected branch member ${member}`, () => {
+        expect(
+          branchClass,
+          "fails on every PB run — the demo working",
+        ).not.toBe("PB");
       });
     }
   });
 
   describe("always fails on a pull request", () => {
-    for (const position of members()) {
-      it(`pull request member ${position}`, () => {
-        alwaysOn("PR", position);
+    for (const member of GROUP) {
+      it(`pull request member ${member}`, () => {
+        expect(
+          branchClass,
+          "fails on every PR run — the demo working",
+        ).not.toBe("PR");
       });
     }
   });
 
   describe("always fails in the merge queue", () => {
-    for (const position of members()) {
-      it(`merge queue member ${position}`, () => {
-        alwaysOn("MQ", position);
+    for (const member of GROUP) {
+      it(`merge queue member ${member}`, () => {
+        expect(
+          branchClass,
+          "fails on every MQ run — the demo working",
+        ).not.toBe("MQ");
       });
     }
   });
 
   describe("sometimes fails on a protected branch", () => {
-    for (const position of members()) {
-      it(`protected branch sometimes member ${position}`, () => {
-        sometimesOn("PB", position, `pb-partial-${position}`);
+    for (const member of GROUP) {
+      it(`protected branch sometimes member ${member}`, () => {
+        if (branchClass !== "PB") return;
+        expect(
+          randomPercentage(`pb-partial-${member}`),
+          "fails 10% of PB runs — the demo working",
+        ).toBeGreaterThanOrEqual(PARTIAL_RATE);
       });
     }
   });
 
   describe("sometimes fails on a pull request", () => {
-    for (const position of members()) {
-      it(`pull request sometimes member ${position}`, () => {
-        sometimesOn("PR", position, `pr-partial-${position}`);
+    for (const member of GROUP) {
+      it(`pull request sometimes member ${member}`, () => {
+        if (branchClass !== "PR") return;
+        expect(
+          randomPercentage(`pr-partial-${member}`),
+          "fails 10% of PR runs — the demo working",
+        ).toBeGreaterThanOrEqual(PARTIAL_RATE);
       });
     }
   });
 
   describe("sometimes fails in the merge queue", () => {
-    for (const position of members()) {
-      it(`merge queue sometimes member ${position}`, () => {
-        sometimesOn("MQ", position, `mq-partial-${position}`);
+    for (const member of GROUP) {
+      it(`merge queue sometimes member ${member}`, () => {
+        if (branchClass !== "MQ") return;
+        expect(
+          randomPercentage(`mq-partial-${member}`),
+          "fails 10% of MQ runs — the demo working",
+        ).toBeGreaterThanOrEqual(PARTIAL_RATE);
       });
     }
   });
 
   it("fails on mondays", () => {
-    if (getDay() === MONDAY) {
-      throw new Error(
-        "deliberate failure: this test fails every Monday, UTC, on every run of " +
-          "that day. This is the demo working, not a broken test.",
-      );
-    }
-    expect(getDay()).not.toBe(MONDAY);
+    expect(getDay(), "fails every Monday, UTC — the demo working").not.toBe(
+      MONDAY,
+    );
   });
 
   it("fails every other day", () => {
-    if (isEveryOtherDay()) {
-      throw new Error(
-        "deliberate failure: this test fails on alternating days, UTC. " +
-          "This is the demo working, not a broken test.",
-      );
-    }
-    expect(isEveryOtherDay()).toBe(false);
+    expect(
+      isEveryOtherDay(),
+      "fails on alternating days, UTC — the demo working",
+    ).toBe(false);
   });
 });

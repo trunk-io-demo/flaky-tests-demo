@@ -68,5 +68,5 @@ by path from its config and a cross-package path couples two stories. Keep the c
 
 ## Deliberate failures announce themselves
 
-Every intentional failure message ends by saying so. Somebody triaging an alert at 03:00 should not have
-to open the source to find out whether it was on purpose.
+Every intentional failure message ends by saying so, so that somebody looking at a flagged test in the
+product does not have to open the source to find out whether it was on purpose.

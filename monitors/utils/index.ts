@@ -19,3 +19,5 @@ export {
 } from "./date";
 
 export { randomPercentage } from "./random";
+
+export { testIter } from "./test-iter";
