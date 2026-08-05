@@ -20,6 +20,9 @@ importers:
       eslint:
         specifier: ^9.39.0
         version: 9.39.5
+      globals:
+        specifier: ^17.9.0
+        version: 17.9.0
       prettier:
         specifier: ^3.6.2
         version: 3.9.6
@@ -85,6 +88,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.1)
 
+  integrations/playwright: {}
+
   monitors/failure-count:
     dependencies:
       '@flaky-tests-demo/monitors-utils':
@@ -126,6 +131,9 @@ importers:
 
   monitors/pass-on-retry:
     dependencies:
+      '@flaky-tests-demo/integrations-playwright':
+        specifier: workspace:*
+        version: link:../../integrations/playwright
       '@flaky-tests-demo/monitors-utils':
         specifier: workspace:*
         version: link:../utils
@@ -142,6 +150,9 @@ importers:
 
   monitors/skipped-test:
     dependencies:
+      '@flaky-tests-demo/integrations-playwright':
+        specifier: workspace:*
+        version: link:../../integrations/playwright
       '@flaky-tests-demo/monitors-utils':
         specifier: workspace:*
         version: link:../utils
@@ -869,6 +880,10 @@ packages:
 
   globals@14.0.0:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
+    engines: {node: '>=18'}
+
+  globals@17.9.0:
+    resolution: {integrity: sha512-m/MvAW61QVU5VDNF1Vj8axt016h8w7L5TU1e9zlab7XIttAT2YAlCwl75K1fOqvMM9apmD7lbCIRhpfkhmxhCg==}
     engines: {node: '>=18'}
 
   has-flag@4.0.0:
@@ -1803,6 +1818,8 @@ snapshots:
       is-glob: 4.0.3
 
   globals@14.0.0: {}
+
+  globals@17.9.0: {}
 
   has-flag@4.0.0: {}
 

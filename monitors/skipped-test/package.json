@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test; status=$?; junit-add-file-attribute test-results/playwright.junit.xml; exit $status",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
@@ -14,6 +14,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@flaky-tests-demo/monitors-utils": "workspace:*"
+    "@flaky-tests-demo/monitors-utils": "workspace:*",
+    "@flaky-tests-demo/integrations-playwright": "workspace:*"
   }
 }

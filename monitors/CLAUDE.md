@@ -67,6 +67,11 @@ The playwright packages use the built-in JUnit reporter with `includeRetries: tr
 attempt as its own run. `testDir` is the repository root so that `classname` is repository-relative, and
 `outputFile` is cwd-relative because that is what the reporter resolves against.
 
+The reporter writes no `file` attribute, which the uploader needs for code-owner correlation, so
+`test:e2e` pipes the report through `junit-add-file-attribute` from
+[`integrations/playwright`](../integrations/playwright/). Keep the `status=$?` around it: these stories
+fail on purpose and the post-step must not swallow the runner's exit code.
+
 ## Configs
 
 - Both configs root themselves at the **repository**, not the package: `file` and `classname` resolve

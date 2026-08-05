@@ -1,0 +1,10 @@
+{
+  "name": "@flaky-tests-demo/integrations-playwright",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Playwright upload wiring: post-processing its JUnit output for the uploader.",
+  "type": "module",
+  "bin": {
+    "junit-add-file-attribute": "./junit-add-file-attribute.mjs"
+  }
+}

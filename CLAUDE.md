@@ -82,6 +82,9 @@ include/exclude.
 `.github/dependabot.yml`, whenever you add a directory. Cargo **errors** on a nested package that is
 neither a member nor excluded.
 
+Tooling a story needs but is not itself a story goes in [`integrations/`](integrations/) — the playwright
+JUnit post-processor lives there rather than being copied into the packages that call it.
+
 **Adding a story requires no CI edit.** The composite actions iterate workspace members with
 `pnpm --filter`, so editing a workflow to add a story means something has drifted.
 

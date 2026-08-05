@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -12,6 +13,12 @@ export default tseslint.config(
     ],
   },
   js.configs.recommended,
+  {
+    // typescript-eslint turns no-undef off for .ts, where the type checker covers
+    // it. Plain ESM tooling still needs the globals declared.
+    files: ["**/*.mjs", "**/*.js"],
+    languageOptions: { globals: globals.node },
+  },
   ...tseslint.configs.recommended,
   {
     files: ["**/*.ts"],

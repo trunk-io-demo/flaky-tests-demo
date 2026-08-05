@@ -1,18 +1,35 @@
-# `integrations/` — deferred
+# `integrations/`
 
-Nothing lives here yet. This directory is reserved for one minimal test suite per test framework, each
-existing only to demonstrate that the framework's JUnit output uploads correctly. Conflicting dependency
-trees between frameworks is the entire point, so each suite will carry its own `package.json`.
+Per-framework upload wiring: what each test framework needs in order for its output to reach the
+product correctly.
 
-It is out of the current pass because framework breadth is not the story this repo tells — see the
-predecessor repo `trunk-io/flake-farm` for the version of this idea that leads with it.
+| Package                      | What it is                                                                                                        |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`playwright/`](playwright/) | Post-processing for playwright's JUnit output. Used by the two playwright stories in [`monitors/`](../monitors/). |
 
-Four things are already in place so landing it needs no restructuring:
+## `playwright/`
 
-- `integrations/*` is in the globs in [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) and in the npm entry
-  of [`.github/dependabot.yml`](../.github/dependabot.yml).
-- A composite action exists at `.github/actions/integrations/`, so wiring it in is one `uses:` line. It
-  currently logs a notice, so it is a visible no-op rather than a silent one.
-- If a suite here needs Rust it must be added to `members` or `exclude` in the root
-  [`Cargo.toml`](../Cargo.toml) in the same commit. Cargo treats a nested package that is neither as a
-  **hard error**.
+Playwright's built-in JUnit reporter writes `classname` but no `file` attribute, and the uploader needs
+`file` to correlate a test with its code owner. With `testDir` at the repository root the classname
+already _is_ the repo-relative path, so `junit-add-file-attribute` copies it across.
+
+It is exposed as a bin, so a package that depends on it can call it by name:
+
+```jsonc
+"test:e2e": "playwright test; status=$?; junit-add-file-attribute test-results/playwright.junit.xml; exit $status"
+```
+
+The `status` dance matters: these stories fail on purpose, and the post-step must run without swallowing
+the runner's exit code.
+
+## Still to come
+
+One minimal test suite per framework, each existing only to demonstrate that its JUnit output uploads
+correctly — conflicting dependency trees between frameworks being the entire point, so each will carry
+its own `package.json`. Framework breadth is not the story this repo leads with; see the predecessor
+repo `trunk-io/flake-farm` for the version that does.
+
+A composite action already exists at `.github/actions/integrations/`, so wiring suites into a workflow
+is one `uses:` line. If a suite needs Rust it must be added to `members` or `exclude` in the root
+[`Cargo.toml`](../Cargo.toml) in the same commit — Cargo treats a nested package that is neither as a
+**hard error**.
