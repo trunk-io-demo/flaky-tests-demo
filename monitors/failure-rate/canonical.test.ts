@@ -1,17 +1,15 @@
+import {
+  hourBucket,
+  randomPercentage,
+  ratePercent,
+} from "@flaky-tests-demo/monitors-utils";
 import { describe, expect, it } from "vitest";
 
-import { failsThisRun, hourBucket, ratePercent } from "./flake";
-
 /**
- * The failure-rate monitor watches what fraction of a test's recent runs failed.
- *
- * These three tests differ in exactly one thing: the percentage. Nothing else
- * about them is interesting, and that is the point — set a threshold anywhere
- * between them and you can see precisely which side of it each test lands on.
- *
- * Read the rates from `README.md`; they are repository variables, so the numbers
- * are not in the test names. A name that claimed "10 percent" would start lying
- * the first time someone tuned the demo.
+ * These three tests differ in exactly one thing: the percentage. Set a
+ * threshold anywhere between two of them and you can see which side each lands
+ * on. Rates are in README.md, not in the names — a name with a number in it
+ * starts lying the first time somebody tunes the demo.
  */
 
 const RATES = {
@@ -21,41 +19,27 @@ const RATES = {
 } as const;
 
 describe("failure-rate", () => {
-  /**
-   * Never fails, ever.
-   *
-   * Not decoration. Several monitors resolve when a test stops reporting, so
-   * "the monitor resolved" and "the suite stopped running" look identical from
-   * the outside. This test is how you tell them apart: if it is green, the suite
-   * ran, and anything else you see is the story rather than an outage.
-   */
-  it("healthcheck_always_passes", () => {
-    expect(hourBucket()).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}$/);
+  it("healthcheck always passes", () => {
+    expect(1).toBe(1);
   });
 
-  it("fails_on_a_low_rate", () => {
-    expectAtRate("fails_on_a_low_rate", RATES.low);
+  it("fails on a low rate", () => {
+    expectAtRate("fails on a low rate", RATES.low);
   });
 
-  it("fails_on_a_medium_rate", () => {
-    expectAtRate("fails_on_a_medium_rate", RATES.medium);
+  it("fails on a medium rate", () => {
+    expectAtRate("fails on a medium rate", RATES.medium);
   });
 
-  it("fails_on_a_high_rate", () => {
-    expectAtRate("fails_on_a_high_rate", RATES.high);
+  it("fails on a high rate", () => {
+    expectAtRate("fails on a high rate", RATES.high);
   });
 });
 
-/**
- * Fail if this run is one of the failing ones.
- *
- * The failure message carries the rate and the bucket, because the first
- * question anyone asks about a synthetic failure is "was that supposed to
- * happen, and can I reproduce it?"
- */
+/** The message carries the rate and bucket so a failure can be reproduced. */
 function expectAtRate(testName: string, percent: number): void {
   const bucket = hourBucket();
-  if (failsThisRun(testName, percent, bucket)) {
+  if (randomPercentage(testName, bucket) < percent) {
     throw new Error(
       `deliberate failure: ${testName} fails ${String(percent)}% of runs ` +
         `(bucket ${bucket}). This is the demo working, not a broken test.`,

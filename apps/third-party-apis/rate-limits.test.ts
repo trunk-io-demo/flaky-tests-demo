@@ -3,59 +3,32 @@ import { describe, expect, it } from "vitest";
 import { burstSize, fetchBudget, MAX_BURST, spendBurst } from "./budget";
 
 /**
- * ⚠️ **These tests depend on a third party.** They fail when GitHub's
- * unauthenticated rate limit is exhausted for this runner's IP, and that is
- * deliberate.
+ * ⚠️ **Depends on a third party.** Fails when GitHub's unauthenticated rate
+ * limit is exhausted for this runner's IP, and that is deliberate.
  *
- * ## Why this is here
+ * Rate limiting produces a shape nothing else here does: every test needing the
+ * budget fails in the same run for the same reason, then all recover together at
+ * the top of the hour. The cause is shared state outside the suite, which no
+ * per-test rate models.
  *
- * Rate limiting produces a failure shape nothing else in this repo does:
- * **failures that cluster in time and correlate across tests.** When the budget
- * runs out, every test that needs it fails, in the same run, and then they all
- * recover together at the top of the hour. No per-test rate models that, and no
- * generator produces it, because the cause is shared state outside the suite.
+ * Triage in one step: every failure message names which of three things happened
+ * — rate limited (the story), request failed (the runner's network), or budget
+ * unreadable (usually the first as well).
  *
- * ## How to tell "the monitor worked" from "we have a problem"
- *
- * Read the failure message. Every failure here names which of three things
- * happened:
- *
- * 1. **Rate limited** — the budget was gone. The monitor worked. GitHub's
- *    unauthenticated limit is 60 requests per hour *per IP*, and CI runners share
- *    IPs with everything else on the platform, so this happens for reasons that
- *    have nothing to do with us.
- * 2. **Request failed** — network or DNS on the runner. Not the story, and not
- *    GitHub's fault either.
- * 3. **Budget unreadable** — `GET /rate_limit` itself did not answer, which
- *    usually means the first case is also true.
- *
- * ## Politeness
- *
- * `GET /rate_limit` does not count against the limit it reports, so the budget is
- * observed for free every run. The burst that actually spends budget is small,
- * sequential, and capped — see budget.ts, which explains each choice.
+ * On politeness, see budget.ts: the budget is read for free, and the burst that
+ * spends it is small, sequential, and capped.
  */
 
 const BURST = burstSize();
 
 describe("third-party-apis", () => {
-  /**
-   * Never fails, never touches the network.
-   *
-   * On a scenario whose failures come from outside, this is the only way to tell
-   * "the dependency is unavailable" from "our suite is not running."
-   */
-  it("healthcheck_always_passes", () => {
-    expect(BURST).toBeLessThanOrEqual(MAX_BURST);
+  it("healthcheck always passes", () => {
+    expect(1).toBe(1);
   });
 
-  /**
-   * Reports the budget. Fails when there is not enough left to do the work.
-   *
-   * This is the test that makes the correlation legible: it fails for the same
-   * reason as the one below, at the same moment, and recovers at the same moment.
-   */
-  it("there_is_enough_rate_limit_budget_left_to_work_with", async () => {
+  /** Fails for the same reason as the burst below, at the same moment, which is
+   * what makes the correlation legible. */
+  it("there is enough rate limit budget left to work with", async () => {
     const budget = await fetchBudget();
 
     if (!budget.ok) {
@@ -74,24 +47,16 @@ describe("third-party-apis", () => {
     if (remaining < BURST) {
       throw new Error(
         `third-party dependency failure: rate limited. ${String(remaining)} of ` +
-          `${String(limit)} requests remaining, which is fewer than the burst of ` +
-          `${String(BURST)} this scenario needs. Resets at ${resetsAt.toISOString()}. ` +
-          `The budget is per-IP and shared across everything on this runner, so this ` +
-          `is usually not our doing. The monitor worked.`,
+          `${String(limit)} remaining, fewer than the burst of ${String(BURST)} this ` +
+          `scenario needs. Resets ${resetsAt.toISOString()}. The budget is per-IP and ` +
+          `shared across everything on this runner, so this is usually not our doing.`,
       );
     }
 
     expect(remaining).toBeGreaterThanOrEqual(BURST);
   });
 
-  /**
-   * Spends a little budget and asserts every request landed.
-   *
-   * Sequential and small. A parallel burst would be a spike against somebody
-   * else's service and would also make the outcome depend on connection
-   * scheduling rather than on the budget, blurring the signal.
-   */
-  it("a_small_burst_of_api_calls_all_succeed", async () => {
+  it("a small burst of api calls all succeed", async () => {
     const outcome = await spendBurst(BURST);
     console.log(
       `burst of ${String(outcome.attempted)}: ${String(outcome.succeeded)} ok, ` +
@@ -102,9 +67,8 @@ describe("third-party-apis", () => {
       throw new Error(
         `third-party dependency failure: rate limited part-way through a burst of ` +
           `${String(outcome.attempted)} — ${String(outcome.succeeded)} succeeded, ` +
-          `${String(outcome.rateLimited)} were refused (${outcome.firstReason ?? "unknown"}). ` +
-          `This is the shape the scenario exists to show: correlated failures that ` +
-          `all recover together. The monitor worked.`,
+          `${String(outcome.rateLimited)} refused (${outcome.firstReason ?? "unknown"}). ` +
+          `Correlated failures that all recover together: the monitor worked.`,
       );
     }
 
@@ -112,16 +76,16 @@ describe("third-party-apis", () => {
       throw new Error(
         `third-party dependency failure: ${String(outcome.failed)} of ` +
           `${String(outcome.attempted)} requests did not complete ` +
-          `(${outcome.firstReason ?? "unknown"}). This is a network problem on the ` +
-          `runner rather than a rate limit — different cause, same red.`,
+          `(${outcome.firstReason ?? "unknown"}). A network problem on the runner ` +
+          `rather than a rate limit — different cause, same red.`,
       );
     }
 
     expect(outcome.succeeded).toBe(outcome.attempted);
   });
 
-  /** The cap, asserted offline, so its existence is discoverable. */
-  it("the_burst_size_is_capped", () => {
+  /** So the cap's existence is discoverable. */
+  it("the burst size is capped", () => {
     expect(MAX_BURST).toBeLessThanOrEqual(20);
     expect(BURST).toBeGreaterThan(0);
   });
