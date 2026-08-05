@@ -33,7 +33,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.1)
 
-  app/github-uptime:
+  apps/github-uptime:
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -42,7 +42,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.1)
 
-  app/mass-detection:
+  apps/mass-detection:
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -51,7 +51,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.1)
 
-  app/parking-meter:
+  apps/parking-meter:
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -60,7 +60,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.1)
 
-  app/third-party-apis:
+  apps/third-party-apis:
     devDependencies:
       typescript:
         specifier: ^5.9.3

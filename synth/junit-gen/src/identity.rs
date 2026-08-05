@@ -152,8 +152,8 @@ mod tests {
     #[test]
     fn overriding_the_file_leaves_the_rest_alone() {
         let id = TestIdentity::in_suite("cohorts", "CheckoutFlow", "applies_promo_code")
-            .with_file("app/billing/promo.ts");
-        assert_eq!(id.file, "app/billing/promo.ts");
+            .with_file("apps/billing/promo.ts");
+        assert_eq!(id.file, "apps/billing/promo.ts");
         assert_eq!(id.classname, "synth.cohorts.CheckoutFlow");
     }
 }

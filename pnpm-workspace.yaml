@@ -7,7 +7,7 @@
 # packages yet — see docs/architecture.md.
 packages:
   - monitors/*
-  - app/*
+  - apps/*
   - integrations/*
 
 # pnpm 10 blocks postinstall scripts unless a dependency is listed here.

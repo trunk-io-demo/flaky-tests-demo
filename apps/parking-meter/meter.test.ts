@@ -21,7 +21,7 @@ import { describe, isPaidParking, parseWindow } from "./schedule";
  * one.
  */
 
-const PAID_HOURS = parseWindow(process.env.APP_PARKING_PAID_HOURS, {
+const PAID_HOURS = parseWindow(process.env.APPS_PARKING_PAID_HOURS, {
   startHour: 8,
   endHour: 18,
 });

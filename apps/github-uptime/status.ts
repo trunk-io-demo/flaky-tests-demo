@@ -111,7 +111,7 @@ export const parseThreshold = (raw: string | undefined): Indicator => {
   if (raw === "critical" || raw === "major" || raw === "minor") return raw;
   if (raw !== undefined && raw.trim() !== "") {
     console.warn(
-      `APP_UPTIME_THRESHOLD="${raw}" is not one of minor, major, critical; using major`,
+      `APPS_UPTIME_THRESHOLD="${raw}" is not one of minor, major, critical; using major`,
     );
   }
   return "major";

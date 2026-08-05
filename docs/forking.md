@@ -13,7 +13,7 @@ Provisioned by a human. This repo creates none of it and will not invent any of 
 
 - A **Trunk org**, with its URL slug and an API token.
 - A **GitHub org** with the Trunk GitHub App installed.
-- **One test collection per top-level folder** — `synth`, `monitors`, `app` — and their 8-character
+- **One test collection per top-level folder** — `synth`, `monitors`, `apps` — and their 8-character
   IDs.
 - A **GitHub App token or PAT** for the PR factory. Not the default workflow token; see below.
 
@@ -28,7 +28,7 @@ one of them fails quietly rather than loudly.
 | `TRUNK_API_TOKEN`          | secret | Every upload **skips with a log line** and the job stays green. Data simply never appears. |
 | `SYNTH_TEST_COLLECTION`    | var    | `synth/` uploads skip. Same silence.                                                       |
 | `MONITORS_TEST_COLLECTION` | var    | `monitors/` uploads skip.                                                                  |
-| `APP_TEST_COLLECTION`      | var    | `app/` uploads skip.                                                                       |
+| `APPS_TEST_COLLECTION`     | var    | `apps/` uploads skip.                                                                      |
 
 A skipped upload is deliberately not a failure — a fork PR from an outside contributor must not go red
 because our demo could not upload. The cost of that choice is that a misconfigured fork looks healthy.
@@ -55,7 +55,7 @@ pairs at all.
 - **Rates.** Every `*_FAILURE_RATE`, `*_RATE_*`, and `MONITORS_FAILURE_COUNT` is safe to move. Raising
   them makes the demo louder at no cost.
 - **`SYNTH_COHORT_BIRTH_INTERVAL_DAYS`** if 40 synthetic tests is more than you want.
-- **`APP_MASS_DETECTION_DAY_OF_MONTH`**, so your fork's monthly event does not land on the same day as
+- **`APPS_MASS_DETECTION_DAY_OF_MONTH`**, so your fork's monthly event does not land on the same day as
   everyone else's. Do not set it to today unless you want it to fire immediately.
 
 Every variable, with its default and its effect, is in [`configuration.md`](configuration.md).
@@ -89,7 +89,7 @@ In order, because each step takes longer than the one before it.
 
 | After     | Check                                                                                                                            |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| First run | The `synth`, `monitors`, and `app` jobs are green, and **no upload-skipped notices** in the logs.                                |
+| First run | The `synth`, `monitors`, and `apps` jobs are green, and **no upload-skipped notices** in the logs.                               |
 | First run | Roughly 90 test cases arrived across three collections. Fewer means a collection ID is unset.                                    |
 | ~1 hour   | A second hourly run. Two data points per test, and a pull request opened by the factory.                                         |
 | ~2 hours  | The factory has closed its first pull request without merging it, and PR-attributed runs exist. If they do not, it is the token. |

@@ -33,7 +33,7 @@ import { fetchStatus, isDegraded, parseThreshold, STATUS_URL } from "./status";
  * version of this story that needs it more often.
  */
 
-const THRESHOLD = parseThreshold(process.env.APP_UPTIME_THRESHOLD);
+const THRESHOLD = parseThreshold(process.env.APPS_UPTIME_THRESHOLD);
 
 describe("github-uptime", () => {
   /**

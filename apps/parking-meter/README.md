@@ -47,9 +47,9 @@ Nothing is mocked. The tests read the real clock, so their history is a genuine 
 
 ## Configuration
 
-| Variable                 | Default | Effect                                        |
-| ------------------------ | ------- | --------------------------------------------- |
-| `APP_PARKING_PAID_HOURS` | `8-18`  | The paid window, as `START-END` hours in UTC. |
+| Variable                  | Default | Effect                                        |
+| ------------------------- | ------- | --------------------------------------------- |
+| `APPS_PARKING_PAID_HOURS` | `8-18`  | The paid window, as `START-END` hours in UTC. |
 
 Everything is UTC, deliberately. A local timezone would make the pattern depend on where the runner
 is and on daylight saving, which would turn a clean periodic signal into an almost-periodic one — the
@@ -60,7 +60,7 @@ the total count anything other than exactly one per run.
 
 ## Links
 
-- Up: [`app/README.md`](../README.md)
+- Up: [`apps/README.md`](../README.md)
 - Up: [`docs/monitors.md`](../../docs/monitors.md)
 - Sideways: [`monitors/failure-rate`](../../monitors/failure-rate/README.md) — a rate that genuinely
   _is_ a rate, for contrast

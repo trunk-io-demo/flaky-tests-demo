@@ -16,13 +16,13 @@ and alert volume still look right.
 | Directory                        | What it is                                                                                                                                                     |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`monitors/`](monitors/)         | Seven packages, one per monitor. Each has a healthcheck that always passes plus tests that trip its monitor by obvious means. **Start here.**                  |
-| [`app/`](app/)                   | Four scenarios of real tests against surfaces that genuinely misbehave — a time-of-day schedule, a monthly event, a shared rate limit, GitHub's actual uptime. |
+| [`apps/`](apps/)                 | Four scenarios of real tests against surfaces that genuinely misbehave — a time-of-day schedule, a monthly event, a shared rate limit, GitHub's actual uptime. |
 | [`synth/`](synth/)               | Synthetic JUnit. Nothing executes; three Rust generators fabricate the run history that would otherwise take weeks of wall clock to accumulate.                |
 | [`integrations/`](integrations/) | Deferred. Reserved for per-framework upload wiring.                                                                                                            |
 | [`docs/`](docs/)                 | The real documentation.                                                                                                                                        |
 
 The layout is organized by **purpose, not by language**. There is no `typescript/` or `rust/`
-level: `monitors/` and `app/` are TypeScript, `synth/` is Rust, and that is a commitment rather
+level: `monitors/` and `apps/` are TypeScript, `synth/` is Rust, and that is a commitment rather
 than a default. See [`docs/architecture.md`](docs/architecture.md).
 
 ## Where to go next

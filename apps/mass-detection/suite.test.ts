@@ -92,7 +92,7 @@ describe("mass-detection", () => {
           `deliberate failure: mass detection event. All ${String(SUITE_SIZE)} tests in ` +
             `this suite fail on day ${String(TRIGGER_DAY)} of each month (today is ` +
             `${now.toISOString().slice(0, 10)}). This is the demo working — see ` +
-            `app/mass-detection/README.md and docs/operations.md.`,
+            `apps/mass-detection/README.md and docs/operations.md.`,
         );
       }
       expect(isEventDay(now, TRIGGER_DAY)).toBe(false);

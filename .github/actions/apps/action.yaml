@@ -1,6 +1,6 @@
-name: Run the app stories
+name: Run the apps stories
 description: >
-  Runs every package under app/ and uploads its results. Runner-agnostic: it
+  Runs every package under apps/ and uploads its results. Runner-agnostic: it
   reads the variant it is handed rather than deciding one, so the same action is
   callable from the scheduled workflow and from pull requests.
 
@@ -20,7 +20,7 @@ inputs:
     required: false
     default: ""
   test-collection-id:
-    description: Collection ID for app/. Empty skips the upload.
+    description: Collection ID for apps/. Empty skips the upload.
     required: false
     default: ""
   cli-version:
@@ -53,7 +53,7 @@ runs:
       shell: bash
       run: |
         set +e
-        pnpm --filter "./app/**" --no-bail --if-present run test
+        pnpm --filter "./apps/**" --no-bail --if-present run test
         code=$?
         set -e
         if [ "$code" -eq 0 ]; then echo "vitest: all scenarios passed"; else echo "vitest: exited $code — expected, these scenarios fail on purpose or on someone else's outage"; fi
@@ -62,7 +62,7 @@ runs:
       shell: bash
       run: |
         set +e
-        pnpm --filter "./app/**" --no-bail --if-present run test:e2e
+        pnpm --filter "./apps/**" --no-bail --if-present run test:e2e
         code=$?
         set -e
         if [ "$code" -eq 0 ]; then echo "playwright: all scenarios passed"; else echo "playwright: exited $code — expected"; fi
@@ -72,7 +72,7 @@ runs:
       shell: bash
       run: |
         shopt -s nullglob
-        files=(app/*/test-results/*.xml)
+        files=(apps/*/test-results/*.xml)
         echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
         printf 'produced %d result file(s)\n' "${#files[@]}"
         for file in "${files[@]}"; do echo "  $file"; done
@@ -84,9 +84,9 @@ runs:
         HAS_TOKEN: ${{ inputs.token != '' }}
       run: |
         if [ "$HAS_TOKEN" != "true" ]; then
-          echo "::notice title=app upload skipped::No Trunk API token in this context. Expected on pull requests from forks."
+          echo "::notice title=apps upload skipped::No Trunk API token in this context. Expected on pull requests from forks."
         else
-          echo "::notice title=app upload skipped::APP_TEST_COLLECTION is unset. Set it rather than letting results land in the org default."
+          echo "::notice title=apps upload skipped::APPS_TEST_COLLECTION is unset. Set it rather than letting results land in the org default."
         fi
 
     - name: Upload results
@@ -97,7 +97,7 @@ runs:
         # Off deliberately — see .github/actions/monitors/action.yaml for why.
         TRUNK_DISABLE_QUARANTINING: "true"
       with:
-        junit-paths: app/*/test-results/*.xml
+        junit-paths: apps/*/test-results/*.xml
         org-slug: ${{ inputs.org-slug }}
         token: ${{ inputs.token }}
         test-collection-id: ${{ inputs.test-collection-id }}

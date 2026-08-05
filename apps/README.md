@@ -1,10 +1,10 @@
-# `app/` — where real execution earns its keep
+# `apps/` — where real execution earns its keep
 
 Real tests, running for real, against surfaces that genuinely misbehave. Nothing here is mocked and
 nothing is generated: each scenario's history is a real time series produced by real conditions.
 
 That is the difference between this directory and [`synth/`](../synth/). `synth/` fabricates arcs that
-would take weeks of wall clock to accumulate. `app/` produces the ones that cannot be fabricated
+would take weeks of wall clock to accumulate. `apps/` produces the ones that cannot be fabricated
 convincingly — a periodic schedule, an external outage, a shared rate limit.
 
 | Scenario                                 | Behavior                                                | Why it is compelling                                                                                                         |

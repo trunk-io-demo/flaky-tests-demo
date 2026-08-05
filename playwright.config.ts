@@ -11,7 +11,7 @@ import { defineConfig } from "@playwright/test";
  */
 export default defineConfig({
   testDir: ".",
-  testMatch: ["monitors/*/**/*.spec.ts", "app/*/**/*.spec.ts"],
+  testMatch: ["monitors/*/**/*.spec.ts", "apps/*/**/*.spec.ts"],
   reporter: [["list"]],
   // No browsers. Every playwright story here exercises the runner's retry and
   // reporting behavior, not a page, so CI never needs `playwright install`.

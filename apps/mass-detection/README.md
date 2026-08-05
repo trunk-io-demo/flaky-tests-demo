@@ -3,7 +3,7 @@
 ## ⚠️ Read this first: the trigger
 
 **Twenty tests in this folder fail on day 13 of every month, UTC.** By default —
-`APP_MASS_DETECTION_DAY_OF_MONTH` changes it.
+`APPS_MASS_DETECTION_DAY_OF_MONTH` changes it.
 
 This is written here, in [`docs/operations.md`](../../docs/operations.md), and in a passing test named
 `the_next_mass_detection_event_is_announced_here` that logs the next occurrence. Three places, because
@@ -63,9 +63,9 @@ configuration, and it is the finding this scenario exists to produce.
 
 ## Configuration
 
-| Variable                          | Default | Effect                                           |
-| --------------------------------- | ------- | ------------------------------------------------ |
-| `APP_MASS_DETECTION_DAY_OF_MONTH` | 13      | Day of each month the event fires. Capped at 28. |
+| Variable                           | Default | Effect                                           |
+| ---------------------------------- | ------- | ------------------------------------------------ |
+| `APPS_MASS_DETECTION_DAY_OF_MONTH` | 13      | Day of each month the event fires. Capped at 28. |
 
 The suite size is fixed at twenty in code. It is the volume being demonstrated, so it is not something
 a fork should tune without deciding it wants a different demonstration.
@@ -75,7 +75,7 @@ start failing on the next run. That is not a bug, but it will page somebody.
 
 ## Links
 
-- Up: [`app/README.md`](../README.md)
+- Up: [`apps/README.md`](../README.md)
 - Up: [`docs/monitors.md`](../../docs/monitors.md) — the whole catalog
 - Up: [`docs/operations.md`](../../docs/operations.md) — where this trigger is also recorded
 - Sideways: [`monitors/failure-count`](../../monitors/failure-count/README.md) — a count that is

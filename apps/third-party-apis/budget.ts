@@ -20,7 +20,7 @@
  *   routinely low or gone for reasons that have nothing to do with us, which is
  *   exactly the real-world shape worth demonstrating.
  *
- * Raising `APP_THIRD_PARTY_BURST` is how you make this fire more often, and it is
+ * Raising `APPS_THIRD_PARTY_BURST` is how you make this fire more often, and it is
  * paid for out of somebody else's rate limit. The README says so.
  */
 
@@ -148,13 +148,13 @@ export const spendBurst = async (
 };
 
 export const burstSize = (): number => {
-  const raw = process.env.APP_THIRD_PARTY_BURST;
+  const raw = process.env.APPS_THIRD_PARTY_BURST;
   if (raw === undefined || raw.trim() === "") return 6;
 
   const parsed = Number.parseInt(raw, 10);
   if (Number.isNaN(parsed) || parsed < 1 || parsed > MAX_BURST) {
     console.warn(
-      `APP_THIRD_PARTY_BURST="${raw}" is not between 1 and ${String(MAX_BURST)}; using 6`,
+      `APPS_THIRD_PARTY_BURST="${raw}" is not between 1 and ${String(MAX_BURST)}; using 6`,
     );
     return 6;
   }

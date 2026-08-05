@@ -25,7 +25,7 @@ retained or discarded — independently.
 | -------------------------- | ---- | ------------------------------ |
 | `SYNTH_TEST_COLLECTION`    | var  | Collection ID for `synth/`.    |
 | `MONITORS_TEST_COLLECTION` | var  | Collection ID for `monitors/`. |
-| `APP_TEST_COLLECTION`      | var  | Collection ID for `app/`.      |
+| `APPS_TEST_COLLECTION`     | var  | Collection ID for `apps/`.     |
 
 A collection ID is an 8-character alphanumeric string. If one is unset, that folder's upload is
 skipped with a log line rather than uploaded to the org default.
@@ -89,14 +89,14 @@ A rate outside 0–100, or one that is not a number, logs a warning and falls ba
 rather than failing the suite. A typo should show up as the demo being quieter than expected, not as
 a red run that looks like a real breakage.
 
-### `app/`
+### `apps/`
 
-| Key                               | Kind | Default | Effect                                                                                                                                                                 |
-| --------------------------------- | ---- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `APP_PARKING_PAID_HOURS`          | var  | `8-18`  | The paid-parking window, as `START-END` hours **UTC**. A local timezone would make the pattern depend on the runner and on daylight saving.                            |
-| `APP_MASS_DETECTION_DAY_OF_MONTH` | var  | 13      | Day of each month twenty tests fail together. Capped at 28, because 29–31 do not exist in every month. **Setting this to today fires the event on the next run.**      |
-| `APP_THIRD_PARTY_BURST`           | var  | 6       | Requests per run that spend GitHub's shared unauthenticated budget. Capped at 20 in code. At the default this repo uses about 10% of a 60/hour budget it does not own. |
-| `APP_UPTIME_THRESHOLD`            | var  | `major` | Minimum GitHub status severity that fails: `minor`, `major`, `critical`. `minor` fires considerably more often.                                                        |
+| Key                                | Kind | Default | Effect                                                                                                                                                                 |
+| ---------------------------------- | ---- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APPS_PARKING_PAID_HOURS`          | var  | `8-18`  | The paid-parking window, as `START-END` hours **UTC**. A local timezone would make the pattern depend on the runner and on daylight saving.                            |
+| `APPS_MASS_DETECTION_DAY_OF_MONTH` | var  | 13      | Day of each month twenty tests fail together. Capped at 28, because 29–31 do not exist in every month. **Setting this to today fires the event on the next run.**      |
+| `APPS_THIRD_PARTY_BURST`           | var  | 6       | Requests per run that spend GitHub's shared unauthenticated budget. Capped at 20 in code. At the default this repo uses about 10% of a 60/hour budget it does not own. |
+| `APPS_UPTIME_THRESHOLD`            | var  | `major` | Minimum GitHub status severity that fails: `minor`, `major`, `critical`. `minor` fires considerably more often.                                                        |
 
 ## The PR factory
 

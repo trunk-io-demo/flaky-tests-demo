@@ -55,16 +55,16 @@ most days and everything on a few.
 
 ## Configuration
 
-| Variable               | Default | Effect                                                        |
-| ---------------------- | ------- | ------------------------------------------------------------- |
-| `APP_UPTIME_THRESHOLD` | `major` | Minimum severity that fails: `minor`, `major`, or `critical`. |
+| Variable                | Default | Effect                                                        |
+| ----------------------- | ------- | ------------------------------------------------------------- |
+| `APPS_UPTIME_THRESHOLD` | `major` | Minimum severity that fails: `minor`, `major`, or `critical`. |
 
 `minor` makes this fire considerably more often — Statuspage reports minor degradations fairly
 routinely — which is the honest way to make the scenario more active without polling harder.
 
 ## Links
 
-- Up: [`app/README.md`](../README.md)
+- Up: [`apps/README.md`](../README.md)
 - Up: [`docs/monitors.md`](../../docs/monitors.md)
 - Sideways: [`third-party-apis`](../third-party-apis/README.md) — the other scenario that fails on
   somebody else's behalf

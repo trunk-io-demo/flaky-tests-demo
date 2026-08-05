@@ -40,7 +40,7 @@ that.
 - **The failures come from the budget being shared, not from us exhausting it.** That is both the polite
   design and the more realistic one.
 
-Raising `APP_THIRD_PARTY_BURST` is how you make this fire more often, and it is paid for out of
+Raising `APPS_THIRD_PARTY_BURST` is how you make this fire more often, and it is paid for out of
 everybody else's budget on that runner. The cap exists because that cost is real.
 
 ## The story in this folder
@@ -66,16 +66,16 @@ moment, and recover at the same moment.
 
 ## Configuration
 
-| Variable                | Default | Effect                                                    |
-| ----------------------- | ------- | --------------------------------------------------------- |
-| `APP_THIRD_PARTY_BURST` | 6       | Requests per run that spend budget. Capped at 20 in code. |
+| Variable                 | Default | Effect                                                    |
+| ------------------------ | ------- | --------------------------------------------------------- |
+| `APPS_THIRD_PARTY_BURST` | 6       | Requests per run that spend budget. Capped at 20 in code. |
 
 At the default this repo uses about 6 of 60 requests per hour on a shared IP — around 10% of a budget
 it does not own. That is the number to have in mind before raising it.
 
 ## Links
 
-- Up: [`app/README.md`](../README.md)
+- Up: [`apps/README.md`](../README.md)
 - Up: [`docs/monitors.md`](../../docs/monitors.md)
 - Sideways: [`github-uptime`](../github-uptime/README.md) — the other scenario that fails on somebody
   else's behalf

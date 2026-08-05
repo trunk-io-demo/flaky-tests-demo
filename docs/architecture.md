@@ -13,25 +13,25 @@ flaky-tests-demo/
 ├── .github/
 │   ├── workflows/
 │   │   ├── hourly.yaml         # the schedule; owns runs-on + the variant matrix
-│   │   └── pr.yaml             # on pull_request — monitors + app only
+│   │   └── pr.yaml             # on pull_request — monitors + apps only
 │   ├── actions/                # one composite action per top-level folder
 │   │   ├── synth/
 │   │   ├── monitors/
-│   │   ├── app/
+│   │   ├── apps/
 │   │   └── integrations/
 │   └── dependabot.yml
 ├── docs/
 ├── package.json                # root: shared devDeps + aggregate scripts only
-├── pnpm-workspace.yaml         # monitors/*, app/*, integrations/*
+├── pnpm-workspace.yaml         # monitors/*, apps/*, integrations/*
 ├── pnpm-lock.yaml              # ONE lockfile for every member
 ├── tsconfig.base.json          # each package extends this
-├── vitest.config.ts            # aggregate; projects: monitors/*, app/*
+├── vitest.config.ts            # aggregate; projects: monitors/*, apps/*
 ├── playwright.config.ts        # aggregate
 ├── Cargo.toml                  # workspace; members = ["synth/*"]
 ├── Cargo.lock                  # ONE lockfile for every member
 ├── synth/                      # synthetic JUnit; nothing executes. Rust.
 ├── monitors/                   # one package per monitor type. TypeScript.
-├── app/                        # one package per scenario. TypeScript.
+├── apps/                        # one package per scenario. TypeScript.
 └── integrations/               # deferred
 ```
 
@@ -42,7 +42,7 @@ because each one has already been the failure mode somewhere.
 
 ### No language level
 
-There is no `typescript/` or `rust/` directory. `monitors/` and `app/` are TypeScript, full stop;
+There is no `typescript/` or `rust/` directory. `monitors/` and `apps/` are TypeScript, full stop;
 `synth/` is Rust because it drives a JUnit generation crate. Language is implied by purpose.
 
 This is a commitment, not a default — it is what lets the level disappear. If a monitor story
@@ -61,7 +61,7 @@ work at all.
 
 ### Manifests are per package; lockfiles are not
 
-One `package.json` per monitor and per app scenario, one `Cargo.toml` per `synth/` subdirectory —
+One `package.json` per monitor and per `apps/` scenario, one `Cargo.toml` per `synth/` subdirectory —
 and exactly one `pnpm-lock.yaml` and one `Cargo.lock`, both at the root. A single root
 `pnpm install` resolves every member.
 
@@ -140,7 +140,7 @@ intentional retirement.
 ## Uploads
 
 Test results reach the product through `trunk-io/analytics-uploader`, which is the action a
-customer would use, invoked the way a customer would invoke it. `monitors/` and `app/` use it
+customer would use, invoked the way a customer would invoke it. `monitors/` and `apps/` use it
 directly.
 
 `synth/` is the exception: it performs many uploads per run, each with different fabricated

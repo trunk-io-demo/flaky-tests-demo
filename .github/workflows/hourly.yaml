@@ -54,8 +54,8 @@ jobs:
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.MONITORS_TEST_COLLECTION }}
 
-  app:
-    name: app (${{ matrix.variant }})
+  apps:
+    name: apps (${{ matrix.variant }})
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -67,13 +67,13 @@ jobs:
             variant: linux-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/app
+      - uses: ./.github/actions/apps
         with:
           variant: ${{ matrix.variant }}
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
           token: ${{ secrets.TRUNK_API_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
-          test-collection-id: ${{ vars.APP_TEST_COLLECTION }}
+          test-collection-id: ${{ vars.APPS_TEST_COLLECTION }}
 
   # Not in the matrix. synth/ fabricates its variants — that is the point of
   # synth/variant-rates — so running it twice would duplicate every report under

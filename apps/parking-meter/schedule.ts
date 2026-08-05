@@ -38,7 +38,7 @@ export const parseWindow = (
 
   if (!valid) {
     console.warn(
-      `APP_PARKING_PAID_HOURS="${raw}" is not a "START-END" hour range; using ` +
+      `APPS_PARKING_PAID_HOURS="${raw}" is not a "START-END" hour range; using ` +
         `${String(fallback.startHour)}-${String(fallback.endHour)}`,
     );
     return fallback;

@@ -1,5 +1,5 @@
 {
-  "name": "@flaky-tests-demo/app-mass-detection",
+  "name": "@flaky-tests-demo/apps-parking-meter",
   "version": "0.0.0",
   "private": true,
   "type": "module",

@@ -22,13 +22,13 @@
 
 /** The day of the month on which the suite becomes flaky. */
 export const triggerDayOfMonth = (): number => {
-  const raw = process.env.APP_MASS_DETECTION_DAY_OF_MONTH;
+  const raw = process.env.APPS_MASS_DETECTION_DAY_OF_MONTH;
   if (raw === undefined || raw.trim() === "") return 13;
 
   const parsed = Number.parseInt(raw, 10);
   if (Number.isNaN(parsed) || parsed < 1 || parsed > 28) {
     console.warn(
-      `APP_MASS_DETECTION_DAY_OF_MONTH="${raw}" is not a day between 1 and 28; using 13`,
+      `APPS_MASS_DETECTION_DAY_OF_MONTH="${raw}" is not a day between 1 and 28; using 13`,
     );
     return 13;
   }
