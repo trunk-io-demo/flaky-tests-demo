@@ -1,50 +1,169 @@
+import {
+  getBranch,
+  getBranchClass,
+  getDay,
+  getPrNumber,
+  isEveryOtherDay,
+  MONDAY,
+  randomPercentage,
+  ratePercent,
+} from "@flaky-tests-demo/monitors-utils";
 import { describe, expect, it } from "vitest";
 
-import { hourBucket, intFromEnv } from "./flake";
-
 /**
- * The failure-count monitor watches how many failures happened in a window,
- * as an absolute number rather than as a proportion.
+ * The failure-count monitor counts failures in a window as an absolute number
+ * rather than a proportion. A rate cannot tell one test failing half the time
+ * from twelve tests each failing half the time; only the second wakes somebody
+ * up.
  *
- * That distinction is the whole reason this folder is separate from
- * `failure-rate`. A rate cannot see the difference between one test failing
- * half the time and twelve tests each failing half the time; a count can, and
- * the second one is what wakes somebody up.
+ * So this folder produces counts whose *size depends on where the run came from*
+ * — one branch class at a time. On a scheduled run against the protected branch,
+ * the protected group fails and the others do not. On a pull request, the PR
+ * group fails instead. The total count therefore swings by class while each
+ * individual test's rate stays flat, which is precisely the thing a rate cannot
+ * express.
  *
- * So this suite is a *burst*: a fixed set of members, of which the first
- * several fail on every single run. The count is deterministic — no draws, no
- * rate — which makes it the cleanest possible input to a threshold.
+ * The two date-driven tests add a count that moves on a calendar instead.
  */
 
-const SUITE_SIZE = 12;
-const FAILING = intFromEnv("MONITORS_FAILURE_COUNT", 4, 0, SUITE_SIZE);
+const BRANCH = getBranch();
+const BRANCH_CLASS = getBranchClass();
+const PR_NUMBER = getPrNumber();
+
+/** The rate for the partial groups. Their whole point is being well under 100. */
+const PARTIAL_RATE = ratePercent("MONITORS_FAILURE_COUNT_RATE", 10);
+
+/** How many tests in each group. The count is what the monitor measures. */
+const GROUP_SIZE = 3;
+
+const where = (): string =>
+  `branch ${BRANCH}, class ${BRANCH_CLASS}` +
+  (PR_NUMBER === undefined ? "" : `, PR #${String(PR_NUMBER)}`);
+
+/** Fails whenever the run came from `expected`. */
+function alwaysOn(expected: string, position: string): void {
+  if (BRANCH_CLASS === expected) {
+    throw new Error(
+      `deliberate failure: this test fails on every ${expected} run (${where()}). ` +
+        `${String(GROUP_SIZE)} tests fail together here, so the count moves with the ` +
+        `branch class while each test's rate stays flat. Member ${position}. ` +
+        `This is the demo working, not a broken test.`,
+    );
+  }
+  expect(BRANCH_CLASS).not.toBe(expected);
+}
+
+/** Fails on `expected` runs, at a rate, so the count is a fraction of the group. */
+function sometimesOn(expected: string, position: string, key: string): void {
+  if (BRANCH_CLASS !== expected) {
+    expect(BRANCH_CLASS).not.toBe(expected);
+    return;
+  }
+  const draw = randomPercentage(key);
+  if (draw < PARTIAL_RATE) {
+    throw new Error(
+      `deliberate failure: fails ${String(PARTIAL_RATE)}% of ${expected} runs ` +
+        `(${where()}, drew ${draw.toFixed(1)}). Member ${position}. ` +
+        `This is the demo working, not a broken test.`,
+    );
+  }
+  expect(draw).toBeGreaterThanOrEqual(PARTIAL_RATE);
+}
 
 describe("failure-count", () => {
-  /** Never fails. See ../README.md for why every package has one. */
-  it("healthcheck_always_passes", () => {
-    expect(hourBucket()).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}$/);
+  it("healthcheck always passes", () => {
+    expect(1).toBe(1);
   });
 
   /**
-   * Members are named by position rather than by outcome.
-   *
-   * `always_fails_03` would be a lie the moment someone lowered
-   * `MONITORS_FAILURE_COUNT` to two — the test would still be called
-   * always_fails and would sit there passing. The count is configuration, so
-   * the names stay neutral and the README carries the number.
+   * Always-on groups. Exactly one of the three fires per run, so the count is
+   * unambiguous: three failures, and the branch class says which group.
    */
-  for (let index = 1; index <= SUITE_SIZE; index++) {
-    const position = String(index).padStart(2, "0");
+  describe("always fails on a protected branch", () => {
+    for (const position of members()) {
+      it(`protected branch member ${position}`, () => {
+        alwaysOn("PB", position);
+      });
+    }
+  });
 
-    it(`burst_member_${position}`, () => {
-      if (index <= FAILING) {
-        throw new Error(
-          `deliberate failure: burst member ${position} of ${String(SUITE_SIZE)} is one of the ` +
-            `first ${String(FAILING)}, which fail on every run (bucket ${hourBucket()}). ` +
-            `This is the demo working, not a broken test.`,
-        );
-      }
-      expect(index).toBeGreaterThan(FAILING);
-    });
-  }
+  describe("always fails on a pull request", () => {
+    for (const position of members()) {
+      it(`pull request member ${position}`, () => {
+        alwaysOn("PR", position);
+      });
+    }
+  });
+
+  describe("always fails in the merge queue", () => {
+    for (const position of members()) {
+      it(`merge queue member ${position}`, () => {
+        alwaysOn("MQ", position);
+      });
+    }
+  });
+
+  /**
+   * The same three conditions at 10%. Over a day these contribute a small,
+   * noisy count on top of the always-on group — the shape that makes a
+   * threshold worth tuning rather than obvious.
+   */
+  describe("sometimes fails on a protected branch", () => {
+    for (const position of members()) {
+      it(`protected branch sometimes member ${position}`, () => {
+        sometimesOn("PB", position, `pb-partial-${position}`);
+      });
+    }
+  });
+
+  describe("sometimes fails on a pull request", () => {
+    for (const position of members()) {
+      it(`pull request sometimes member ${position}`, () => {
+        sometimesOn("PR", position, `pr-partial-${position}`);
+      });
+    }
+  });
+
+  describe("sometimes fails in the merge queue", () => {
+    for (const position of members()) {
+      it(`merge queue sometimes member ${position}`, () => {
+        sometimesOn("MQ", position, `mq-partial-${position}`);
+      });
+    }
+  });
+
+  /**
+   * A count on a calendar rather than on a branch. Every run all day fails, then
+   * nothing for six days — a weekly spike no rate threshold describes well.
+   */
+  it("fails on mondays", () => {
+    if (getDay() === MONDAY) {
+      throw new Error(
+        "deliberate failure: this test fails every Monday, UTC, on every run of " +
+          "that day. This is the demo working, not a broken test.",
+      );
+    }
+    expect(getDay()).not.toBe(MONDAY);
+  });
+
+  /**
+   * Alternating days, anchored to the epoch day so it never doubles up across a
+   * month boundary the way day-of-month parity would.
+   */
+  it("fails every other day", () => {
+    if (isEveryOtherDay()) {
+      throw new Error(
+        "deliberate failure: this test fails on alternating days, UTC. " +
+          "This is the demo working, not a broken test.",
+      );
+    }
+    expect(isEveryOtherDay()).toBe(false);
+  });
 });
+
+/** `01`, `02`, `03` — positions, not outcomes, so tuning cannot make them lie. */
+function members(): string[] {
+  return Array.from({ length: GROUP_SIZE }, (_unused, index) =>
+    String(index + 1).padStart(2, "0"),
+  );
+}
