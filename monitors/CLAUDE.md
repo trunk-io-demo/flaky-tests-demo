@@ -8,6 +8,11 @@ Every test here is listed in [`README.md`](README.md). When you add, rename, or 
 index and the table in the package's own README. A test that exists but is not indexed is invisible; one
 that is indexed but does not exist sends a reviewer looking for a story that is not there.
 
+## No two tests with the same failure pattern
+
+See [`../CLAUDE.md`](../CLAUDE.md). Where a group is needed, vary it: `sometimes fails PB 01` … `03`
+fail at 10%, 20%, and 30%, not all at one rate.
+
 ## Naming
 
 - **Lowercase words separated by spaces.** `it("healthcheck always passes")`, not

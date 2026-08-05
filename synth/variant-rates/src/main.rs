@@ -1,6 +1,7 @@
 //! "Only flaky on macOS", from a Linux runner. A variant is a field on the upload,
 //! so one runner fabricates the whole matrix. Variant is part of identity, so the
-//! same test under three variants is three tests.
+//! same test under three variants is three tests. Each case carries a weight so
+//! the four are not four identical tests.
 
 use anyhow::Result;
 use clap::Parser;
@@ -12,11 +13,11 @@ use junit_gen::{
 
 const STORY_ID: &str = "variant-rates";
 
-const CASES: &[(&str, &str)] = &[
-    ("FileWatcher", "notices_a_rename"),
-    ("FileWatcher", "debounces_rapid_writes"),
-    ("Clipboard", "round_trips_unicode"),
-    ("PathHandling", "normalizes_separators"),
+const CASES: &[(&str, &str, u32)] = &[
+    ("FileWatcher", "notices_a_rename", 50),
+    ("FileWatcher", "debounces_rapid_writes", 100),
+    ("Clipboard", "round_trips_unicode", 150),
+    ("PathHandling", "normalizes_separators", 200),
 ];
 
 #[derive(Debug, Parser)]
@@ -44,6 +45,11 @@ struct Args {
         default_value = "linux,macos,windows"
     )]
     variants: Vec<String>,
+}
+
+fn weighted_rate(variant_rate: u8, weight_percent: u32) -> u8 {
+    let scaled = u32::from(variant_rate) * weight_percent / 100;
+    scaled.clamp(1, 100) as u8
 }
 
 fn main() -> Result<()> {
@@ -97,10 +103,11 @@ fn main() -> Result<()> {
         ));
 
         let mut failures = 0;
-        for (suite, name) in CASES {
+        for (suite, name, weight) in CASES {
             let mut rng =
                 StoryRng::derive_with(STORY_ID, bucket, &format!("{variant}#{suite}#{name}"));
-            let outcome = if rng.chance(rate) {
+            let weighted = weighted_rate(rate, *weight);
+            let outcome = if rng.chance(weighted) {
                 failures += 1;
                 Outcome::Fail
             } else {
@@ -114,7 +121,8 @@ fn main() -> Result<()> {
             );
             if outcome == Outcome::Fail {
                 case = case.with_message(format!(
-                    "synthetic failure on the {variant} variant at a configured rate of {rate}%"
+                    "synthetic failure on the {variant} variant at {weighted}% \
+                     ({weight}% of the variant's {rate}% rate)"
                 ));
             }
             spec.push(case);

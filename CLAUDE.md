@@ -3,9 +3,8 @@
 Scoped conventions live next to the code — [`monitors/CLAUDE.md`](monitors/CLAUDE.md) covers the
 monitor stories. This file is the repo-wide set.
 
-**The unit of work is a story:** a test, or a stream of synthetic results, whose job is to trip exactly
-one monitor in a way a reader recognizes without reading the implementation. A change that makes a
-story harder to recognize is a regression even if the tests still pass.
+**The unit of work is a story:** a test, or a stream of synthetic results, whose job is to trip at least
+one monitor in a way a reader recognizes without reading the implementation. The purpose of these tests is not to pass, but to exhibit a particular failure pattern.
 
 ## Code comments: at most ten lines per file
 
@@ -15,6 +14,15 @@ non-obvious behavior of a tool is being worked around.
 
 Everything else belongs in the directory's `README.md`. A file that needs thirty lines of preamble is
 telling you the explanation is documentation.
+
+## No two tests with the same failure pattern
+
+Two tests that fail on identical conditions are two rows of identical data: they cannot be told apart in
+the product, and the second demonstrates nothing the first did not.
+
+Where a story needs several tests — a burst, a cohort, a cascade — give each member a slightly different
+pattern. A rate ladder (10%, 20%, 30%), a different age, a different duration. The story survives, and
+each test earns its own row.
 
 ## Documentation
 
@@ -84,18 +92,13 @@ Trunk drives both, with `trunk-fmt-pre-commit` and `trunk-check-pre-push` enable
 ```bash
 trunk fmt
 trunk check --all
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
 ```
-
-Two omissions in `.trunk/trunk.yaml`, with reasons recorded there: `oxlint`/`oxfmt` fight prettier over
-the same files, and the plugin pins `clippy`/`rustfmt` to a Rust that cannot build this workspace —
-cargo owns Rust.
 
 ## Uploads
 
-Results reach the product through `trunk-io/analytics-uploader`. `monitors/` and `apps/` use the action;
-`synth/` drives the same CLI directly, since one run performs many uploads and each needs its own
-attribution. That attribution is passed with `env K=V` rather than exported, so a variant or PR number
-set for one upload cannot leak into the next and silently retag a test.
+Results reach the product through `@trunk-io/analytics-uploader`.
 
 **The test process's exit code is deliberately not forwarded**, so a deliberate failure cannot turn a job
 red and a job's status reports upload health only. Quarantining itself is left to the org's configuration

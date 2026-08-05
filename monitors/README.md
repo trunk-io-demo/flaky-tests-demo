@@ -41,32 +41,32 @@ Every test in this directory. Keep it current.
 
 ### [`failure-count/`](failure-count/) · [`canonical.test.ts`](failure-count/canonical.test.ts)
 
-| Test                                          | Behavior                       |
-| --------------------------------------------- | ------------------------------ |
-| `healthcheck always passes`                   | Never fails.                   |
-| `protected branch member 01` … `03`           | Every `PB` run.                |
-| `pull request member 01` … `03`               | Every `PR` run.                |
-| `merge queue member 01` … `03`                | Every `MQ` run.                |
-| `protected branch sometimes member 01` … `03` | 10% of `PB` runs.              |
-| `pull request sometimes member 01` … `03`     | 10% of `PR` runs.              |
-| `merge queue sometimes member 01` … `03`      | 10% of `MQ` runs.              |
-| `fails on mondays`                            | Every run on a Monday, UTC.    |
-| `fails every other day`                       | Every run on alternating days. |
+| Test                        | Behavior                       |
+| --------------------------- | ------------------------------ |
+| `healthcheck always passes` | Never fails.                   |
+| `always fails PB`           | Every `PB` run.                |
+| `sometimes fails PB 01…03`  | 10%, 20%, 30% of `PB` runs.    |
+| `always fails PR`           | Every `PR` run.                |
+| `sometimes fails PR 01…03`  | 10%, 20%, 30% of `PR` runs.    |
+| `always fails MQ`           | Every `MQ` run.                |
+| `sometimes fails MQ 01…03`  | 10%, 20%, 30% of `MQ` runs.    |
+| `fails on mondays`          | Every run on a Monday, UTC.    |
+| `fails every other day`     | Every run on alternating days. |
 
 ### [`skipped-test/`](skipped-test/) · [`cascade.spec.ts`](skipped-test/cascade.spec.ts)
 
-Playwright, serial. **The canonical case:** the first test fails and the runner declines to attempt
-the rest, so one failure hides five tests' worth of coverage behind it.
+Playwright, serial. **The canonical case:** the setup fails and the runner declines to attempt the rest,
+so one failure hides five tests' worth of coverage behind it.
 
 | Test                                             | Behavior                              |
 | ------------------------------------------------ | ------------------------------------- |
 | `healthcheck always passes`                      | Never fails. Runs before the cascade. |
-| `the setup step that everything else depends on` | The only real failure.                |
-| `reads the seeded fixture`                       | Skipped — the serial group stopped.   |
-| `updates the seeded fixture`                     | Skipped.                              |
-| `reindexes after the update`                     | Skipped.                              |
-| `reconciles the audit log`                       | Skipped.                              |
-| `tears the fixture down`                         | Skipped.                              |
+| `the setup step that everything else depends on` | Fails 60% of runs.                    |
+| `reads the seeded fixture`                       | Skipped when it does; else fails 2%.  |
+| `updates the seeded fixture`                     | Skipped, else 4%.                     |
+| `reindexes after the update`                     | Skipped, else 6%.                     |
+| `reconciles the audit log`                       | Skipped, else 8%.                     |
+| `tears the fixture down`                         | Skipped, else 10%.                    |
 
 ### [`skipped-test/`](skipped-test/) · [`canonical.test.ts`](skipped-test/canonical.test.ts)
 
@@ -81,11 +81,11 @@ The two quieter ways it happens.
 
 ### [`new-test/`](new-test/) · [`canonical.test.ts`](new-test/canonical.test.ts)
 
-| Test                                | Behavior                                                           |
-| ----------------------------------- | ------------------------------------------------------------------ |
-| `healthcheck always passes`         | Never fails.                                                       |
-| `has been here since the beginning` | The control: emphatically not new.                                 |
-| `first appeared on <date>` × 21     | One per day of a rolling window. All pass; the story is their age. |
+| Test                                | Behavior                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------ |
+| `healthcheck always passes`         | Never fails.                                                             |
+| `has been here since the beginning` | The control: emphatically not new.                                       |
+| `first appeared on <date>` × 21     | One per day of a rolling window, failing at a rate that decays with age. |
 
 ### [`slow-test/`](slow-test/) · [`canonical.test.ts`](slow-test/canonical.test.ts)
 

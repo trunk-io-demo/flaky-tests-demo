@@ -1,6 +1,7 @@
 //! The same tests on several branches, each with its own failure rate. Identical
 //! identities across branches, so the only variable is what a branch filter
-//! selects on.
+//! selects on. Each case carries a weight so the four are not four identical
+//! tests: they run at 50%, 100%, 150% and 200% of the branch's rate.
 
 mod branches;
 
@@ -17,11 +18,11 @@ use crate::branches::{BranchStory, Shape};
 
 const STORY_ID: &str = "branch-rates";
 
-const CASES: &[(&str, &str)] = &[
-    ("Checkout", "charges_the_card"),
-    ("Checkout", "applies_sales_tax"),
-    ("Checkout", "emails_the_receipt"),
-    ("Inventory", "decrements_stock"),
+const CASES: &[(&str, &str, u32)] = &[
+    ("Checkout", "charges_the_card", 50),
+    ("Checkout", "applies_sales_tax", 100),
+    ("Checkout", "emails_the_receipt", 150),
+    ("Inventory", "decrements_stock", 200),
 ];
 
 #[derive(Debug, Parser)]
@@ -132,13 +133,14 @@ fn main() -> Result<()> {
         ));
 
         let mut failures = 0;
-        for (suite, name) in CASES {
+        for (suite, name, weight) in CASES {
             let mut rng = StoryRng::derive_with(
                 STORY_ID,
                 bucket,
                 &format!("{}#{class_slug}#{suite}#{name}", story.branch),
             );
-            let outcome = if rng.chance(story.failure_rate) {
+            let weighted = weighted_rate(story.failure_rate, *weight);
+            let outcome = if rng.chance(weighted) {
                 failures += 1;
                 Outcome::Fail
             } else {
@@ -152,8 +154,8 @@ fn main() -> Result<()> {
             );
             if outcome == Outcome::Fail {
                 case = case.with_message(format!(
-                    "synthetic failure on {} at a configured rate of {}%",
-                    story.branch, story.failure_rate
+                    "synthetic failure on {} at {}% ({}% of the branch's {}% rate)",
+                    story.branch, weighted, weight, story.failure_rate
                 ));
             }
             spec.push(case);
@@ -192,6 +194,11 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn weighted_rate(branch_rate: u8, weight_percent: u32) -> u8 {
+    let scaled = u32::from(branch_rate) * weight_percent / 100;
+    scaled.clamp(1, 100) as u8
 }
 
 fn daily_pr_number(date: NaiveDate) -> u64 {

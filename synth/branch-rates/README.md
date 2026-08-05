@@ -13,6 +13,9 @@ filter selects on. Point a monitor at `main` and the test looks quiet; point the
 | `release/2.0.0.beta`       | `NONE`     | 38%  | Matches `release/*` **and** `release/*.beta`.        |
 | `feature/promo-codes`      | `PR`       | 55%  | Unreviewed work, with a fabricated PR number.        |
 
+Each case runs at a weight of the branch's rate — 50%, 100%, 150%, 200% — so the four are not four
+identical tests.
+
 ## Why two release branches
 
 `release/*`, `release/?.?.?`, and `release/*.beta` are three different filters, and with one release branch

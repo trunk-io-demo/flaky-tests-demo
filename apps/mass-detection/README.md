@@ -22,8 +22,10 @@ makes a subsystem's whole suite fail together, in the same run, for the same rea
 ## The story
 
 Twenty tests named after order-processing operations — `charges a card`, `reserves inventory` — so the
-burst reads like a real subsystem failing rather than a loop with an index. They pass every day except
-one.
+burst reads like a real subsystem failing rather than a loop with an index.
+
+Each also carries its own small everyday rate, 1% through 20%, so the twenty are distinguishable on
+ordinary days rather than twenty identical rows. On the event day they fail together regardless.
 
 `healthcheck always passes` passes on the event day too, which makes it the only green thing in the
 folder that day and the fastest way to tell a mass detection from a dead suite.
@@ -38,7 +40,7 @@ check against a timestamp in the product. Capped at 28 so it never skips Februar
 
 ## What you should see
 
-22 green tests on ordinary days. On the event day, 20 failures in a single run, repeated hourly for 24
+On ordinary days, a handful of failures spread across the twenty at their own rates. On the event day, 20 failures in a single run, repeated hourly for 24
 hours, then all resolving at once. **What your monitor configuration does with 20 simultaneous
 detections is the thing being tested** — how they group, and how much coverage quarantining takes with
 them.
