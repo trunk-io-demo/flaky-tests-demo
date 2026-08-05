@@ -44,6 +44,18 @@ move hourly. So a test that fails one hour and passes the next has failed and pa
 The rates are deliberately low. At 1% the test looks healthy by any failure-rate measure, and the pair
 is the only thing that says otherwise. That is the case this monitor exists for.
 
+### Why the ladder is not also a vitest story
+
+The last test is there to show why. Vitest does have retries — `{ retry: 2 }` — and it uses them: the
+terminal prints `(retry x2)`. But its JUnit reporter keeps only the final result, so that test arrives as
+a bare `<testcase>` with no children, **indistinguishable from the healthcheck next to it**. The two
+failures never reach the product and no pair can form.
+
+Worth knowing in the other direction too: a vitest test that fails _every_ attempt emits one `<failure>`
+per attempt as siblings inside one `<testcase>`, rather than reruns — so that shape does not pair either.
+
+Playwright's reporter takes `includeRetries`, so the ladder lives there.
+
 ## What you should see
 
 Within the hour, three pairs from the ladder in a single upload. The cross-upload pairs take longer,

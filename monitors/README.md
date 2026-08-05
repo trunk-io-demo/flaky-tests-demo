@@ -112,11 +112,12 @@ Playwright, three retries. Pairs form **within one upload**.
 
 Vitest, no retries. Pairs form **across uploads**, since scheduled runs share a head commit.
 
-| Test                                       | Behavior           |
-| ------------------------------------------ | ------------------ |
-| `healthcheck always passes`                | Never fails.       |
-| `fails 1 percent, pairing across uploads`  | Fails 1% of runs.  |
-| `fails 10 percent, pairing across uploads` | Fails 10% of runs. |
+| Test                                                   | Behavior                                       |
+| ------------------------------------------------------ | ---------------------------------------------- |
+| `healthcheck always passes`                            | Never fails.                                   |
+| `fails 1 percent, pairing across uploads`              | Fails 1% of runs.                              |
+| `fails 10 percent, pairing across uploads`             | Fails 10% of runs.                             |
+| `retried twice by vitest and reported as a plain pass` | Shows that vitest's reporter discards retries. |
 
 ### [`timeout-inflation/`](timeout-inflation/) · [`canonical.test.ts`](timeout-inflation/canonical.test.ts)
 
