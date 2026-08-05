@@ -23,8 +23,8 @@ Every package contains, at minimum:
 | [`pass-on-retry/`](pass-on-retry/)         | A test that failed and then passed on the same commit(s).        | A retry ladder, plus a reporter that keeps every attempt.  |
 | [`timeout-inflation/`](timeout-inflation/) | A test that only runs slower when it fails.                      | A real timeout race, against a fail-fast control.          |
 
-[`utils/`](utils/) is not a monitor: it holds the helpers the stories share — branch class, UTC dates, and
-seeded randomness — and has no tests of its own.
+[`utils/`](utils/) is not a monitor: it holds the helpers the stories share — branch class, UTC dates,
+seeded randomness, and the runner's OS — and has no tests of its own.
 
 ## Index of tests
 
