@@ -1,38 +1,57 @@
-import { randomPercentage } from "@flaky-tests-demo/monitors-utils";
+import {
+  getBranchClass,
+  getDay,
+  now,
+  randomPercentage,
+  testIter,
+} from "@flaky-tests-demo/monitors-utils";
 import { describe, expect, it } from "vitest";
 
-// Three tests differing in exactly one thing: the percentage. Set a threshold
-// anywhere between two of them and you can see which side each lands on.
-// randomPercentage is seeded on the name and the current UTC hour, so a run
-// differs from the last one and still reproduces exactly in a fork.
+// A ladder from 10% to 100% in steps of ten, so a threshold set anywhere lands
+// between two named tests and you can read off which side each falls on.
+//
+// The last three add a second variable: two whose rate halves outside pull
+// requests, and one whose rate climbs through the week. Rates are in the names
+// because they are constants in this file — nothing outside it can make them lie.
 
-const LOW = 8;
-const MEDIUM = 30;
-const HIGH = 65;
+const branchClass = getBranchClass();
+const STEPPED_PR_RATES = [40, 80];
+const RATE_BY_WEEKDAY = [10, 20, 30, 40, 50, 60, 70]; // Sunday first.
 
 describe("failure-rate", () => {
   it("healthcheck always passes", () => {
     expect(1).toBe(1);
   });
 
-  it("fails on a low rate", () => {
-    expect(
-      randomPercentage("fails on a low rate"),
-      `fails ${String(LOW)}% of runs — the demo working`,
-    ).toBeGreaterThanOrEqual(LOW);
-  });
+  for (const member of testIter(10)) {
+    const rate = Number(member) * 10;
 
-  it("fails on a medium rate", () => {
-    expect(
-      randomPercentage("fails on a medium rate"),
-      `fails ${String(MEDIUM)}% of runs — the demo working`,
-    ).toBeGreaterThanOrEqual(MEDIUM);
-  });
+    it(`fails ${String(rate)} percent`, () => {
+      expect(
+        randomPercentage(`rate-${member}`),
+        `fails ${String(rate)}% of runs — the demo working`,
+      ).toBeGreaterThanOrEqual(rate);
+    });
+  }
 
-  it("fails on a high rate", () => {
+  for (const prRate of STEPPED_PR_RATES) {
+    const elsewhere = prRate / 2;
+    const rate = branchClass === "PR" ? prRate : elsewhere;
+
+    it(`fails ${String(prRate)} percent on prs and ${String(elsewhere)} percent elsewhere`, () => {
+      expect(
+        randomPercentage(`stepped-${String(prRate)}`),
+        `fails ${String(rate)}% of ${branchClass} runs — the demo working`,
+      ).toBeGreaterThanOrEqual(rate);
+    });
+  }
+
+  it("fails at a rate that climbs through the week", () => {
+    const rate = RATE_BY_WEEKDAY[getDay()] ?? 10;
+
     expect(
-      randomPercentage("fails on a high rate"),
-      `fails ${String(HIGH)}% of runs — the demo working`,
-    ).toBeGreaterThanOrEqual(HIGH);
+      randomPercentage("weekday"),
+      `fails ${String(rate)}% of runs on a ${now().format("dddd")} — the demo working`,
+    ).toBeGreaterThanOrEqual(rate);
   });
 });

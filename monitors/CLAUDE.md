@@ -17,8 +17,10 @@ fail at 10%, 20%, and 30%, not all at one rate.
 
 - **Lowercase words separated by spaces.** `it("healthcheck always passes")`, not
   `healthcheck_always_passes`. Kebab only inside a token that is genuinely one — a date, a monitor name.
-- **No numbers that could change.** `fails on a low rate`, not `fails 10 percent of runs`. The attempt
-  counts in `pass-on-retry` are the exception: those are properties of the code.
+- **State the number when the number is in the file.** `fails 30 percent`, `sometimes fails PB 20
+percent`, `passes on the third attempt` — rates and counts are constants here, so nothing outside the
+  file can make a name lie. A name must never claim something defined elsewhere: if a value ever moves
+  back out to configuration, the number comes out of the name with it.
 - **Describe the mechanism, not the outcome**, wherever tuning could change the outcome.
   `protected branch member 01` rather than `always fails 01`.
 

@@ -26,7 +26,7 @@ test's rate changes.
 | `fails every other day`     | every run on alternating days |
 | `healthcheck always passes` | never                         |
 
-Member N fails 10N% of its class's runs, so no two are the same test twice over.
+Each rung fails at its own rate, so no two are the same test twice over.
 
 So a scheduled run on `main` produces 1–4 failures and a pull request 1–4, from the same file, both
 stepping up on Mondays and alternating days. The always-fails tests are deterministic, which makes them a

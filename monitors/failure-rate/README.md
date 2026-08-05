@@ -8,24 +8,32 @@ likely to be too noisy or too quiet depending on where the threshold lands.
 
 ## The story
 
-Three tests differing in exactly one thing — the percentage. Set a threshold anywhere between two of
-them and you can see which side each lands on.
+A ladder in steps of ten, so a threshold set anywhere lands between two named tests and you can read off
+which side each falls on.
 
-| Test                        | Fails |
-| --------------------------- | ----- |
-| `healthcheck always passes` | never |
-| `fails on a low rate`       | 8%    |
-| `fails on a medium rate`    | 30%   |
-| `fails on a high rate`      | 65%   |
+| Test                                               | Fails                                   |
+| -------------------------------------------------- | --------------------------------------- |
+| `healthcheck always passes`                        | never                                   |
+| `fails 10 percent` … `fails 100 percent`           | 10%, 20%, … 100% of runs                |
+| `fails 40 percent on prs and 20 percent elsewhere` | 40% on `PR` runs, 20% on `PB` and `MQ`  |
+| `fails 80 percent on prs and 40 percent elsewhere` | 80% on `PR` runs, 40% on `PB` and `MQ`  |
+| `fails at a rate that climbs through the week`     | 10% on Sunday rising to 70% on Saturday |
 
-The rates are constants in the test file, not repository variables, so the names carry no numbers — a
-name with the number in it would start lying the first time somebody tuned it.
+The rates are in the names because they are constants in the test file — nothing outside it can make
+them lie.
+
+The last three add a second variable to the ladder's one. The stepped pair is what a branch-filtered
+threshold reads differently depending on scope: the same test is twice as noisy on pull requests as on
+the protected branch. The weekday one is a rate that is genuinely not stationary, which is the case an
+average over the last N runs describes worst.
 
 Outcomes are seeded on the test name and the current UTC hour, so a run differs from the last one and
-still reproduces exactly in a fork. Every failure message prints its rate and bucket.
+still reproduces exactly in a fork. Every failure message prints the rate it used.
 
 ## What you should see
 
-A single run says nothing: 8% and 30% are indistinguishable in one sample. After a day of hourly runs
-the three separate cleanly, and a monitor with a threshold between two of them fires on the ones above
-and stays silent on the ones below.
+A single run says nothing — 10% and 20% are indistinguishable in one sample. After a day of hourly runs
+the ladder separates cleanly, and a threshold anywhere in it fires on the rungs above and stays silent on
+the ones below. `fails 100 percent` fails every run, and is the one rung that needs no history at all.
+
+Over a week, the weekday test's rate is visibly a function of the day rather than a constant.

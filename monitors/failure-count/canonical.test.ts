@@ -30,7 +30,7 @@ describe("failure-count", () => {
   });
 
   for (const member of MEMBERS) {
-    it(`sometimes fails PB ${member}`, () => {
+    it(`sometimes fails PB ${String(rateFor(member))} percent`, () => {
       if (branchClass !== "PB") return;
       expect(
         randomPercentage(`pb-${member}`),
@@ -46,7 +46,7 @@ describe("failure-count", () => {
   });
 
   for (const member of MEMBERS) {
-    it(`sometimes fails PR ${member}`, () => {
+    it(`sometimes fails PR ${String(rateFor(member))} percent`, () => {
       if (branchClass !== "PR") return;
       expect(
         randomPercentage(`pr-${member}`),
@@ -62,7 +62,7 @@ describe("failure-count", () => {
   });
 
   for (const member of MEMBERS) {
-    it(`sometimes fails MQ ${member}`, () => {
+    it(`sometimes fails MQ ${String(rateFor(member))} percent`, () => {
       if (branchClass !== "MQ") return;
       expect(
         randomPercentage(`mq-${member}`),

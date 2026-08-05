@@ -13,15 +13,15 @@ Every package contains, at minimum:
 > Changing anything here? [`CLAUDE.md`](CLAUDE.md) has the conventions, including keeping the index below
 > current.
 
-| Monitor                                    | Detects                                                          | The story here                                             |
-| ------------------------------------------ | ---------------------------------------------------------------- | ---------------------------------------------------------- |
-| [`failure-rate/`](failure-rate/)           | What percentage of recent runs failed on a given branch pattern. | Three tests differing only in their percentage.            |
-| [`failure-count/`](failure-count/)         | How many failures in a window.                                   | A burst: four of twelve fail every run, deterministically. |
-| [`skipped-test/`](skipped-test/)           | Tests that stopped running without being deleted.                | A serial cascade, plus two quieter ways it happens.        |
-| [`new-test/`](new-test/)                   | Highlight new tests or flag when they're new on a given branch.  | One genuinely new test per day, on a rolling window.       |
-| [`slow-test/`](slow-test/)                 | Track tests whose quintile duration is above a threshold.        | A gradual ramp, a bimodal spike, and a flat control.       |
-| [`pass-on-retry/`](pass-on-retry/)         | A test that failed and then passed on the same commit(s).        | A retry ladder, plus a reporter that keeps every attempt.  |
-| [`timeout-inflation/`](timeout-inflation/) | A test that only runs slower when it fails.                      | A real timeout race, against a fail-fast control.          |
+| Monitor                                    | Detects                                                          | The story here                                                       |
+| ------------------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [`failure-rate/`](failure-rate/)           | What percentage of recent runs failed on a given branch pattern. | A ladder from 10% to 100%, plus branch- and weekday-dependent rates. |
+| [`failure-count/`](failure-count/)         | How many failures in a window.                                   | A burst: four of twelve fail every run, deterministically.           |
+| [`skipped-test/`](skipped-test/)           | Tests that stopped running without being deleted.                | A serial cascade, plus two quieter ways it happens.                  |
+| [`new-test/`](new-test/)                   | Highlight new tests or flag when they're new on a given branch.  | One genuinely new test per day, on a rolling window.                 |
+| [`slow-test/`](slow-test/)                 | Track tests whose quintile duration is above a threshold.        | A gradual ramp, a bimodal spike, and a flat control.                 |
+| [`pass-on-retry/`](pass-on-retry/)         | A test that failed and then passed on the same commit(s).        | A retry ladder, plus a reporter that keeps every attempt.            |
+| [`timeout-inflation/`](timeout-inflation/) | A test that only runs slower when it fails.                      | A real timeout race, against a fail-fast control.                    |
 
 [`utils/`](utils/) is not a monitor: it holds the helpers the stories share — branch class, UTC dates,
 seeded randomness, and the runner's OS — and has no tests of its own.
@@ -32,26 +32,27 @@ Every test in this directory. Keep it current.
 
 ### [`failure-rate/`](failure-rate/) · [`canonical.test.ts`](failure-rate/canonical.test.ts)
 
-| Test                        | Behavior                      |
-| --------------------------- | ----------------------------- |
-| `healthcheck always passes` | Never fails.                  |
-| `fails on a low rate`       | Fails 8% of runs by default.  |
-| `fails on a medium rate`    | Fails 30% of runs by default. |
-| `fails on a high rate`      | Fails 65% of runs by default. |
+| Test                                               | Behavior                           |
+| -------------------------------------------------- | ---------------------------------- |
+| `healthcheck always passes`                        | Never fails.                       |
+| `fails 10 percent` … `fails 100 percent`           | A ladder in steps of ten.          |
+| `fails 40 percent on prs and 20 percent elsewhere` | Halves outside pull requests.      |
+| `fails 80 percent on prs and 40 percent elsewhere` | Halves outside pull requests.      |
+| `fails at a rate that climbs through the week`     | 10% Sunday rising to 70% Saturday. |
 
 ### [`failure-count/`](failure-count/) · [`canonical.test.ts`](failure-count/canonical.test.ts)
 
-| Test                        | Behavior                       |
-| --------------------------- | ------------------------------ |
-| `healthcheck always passes` | Never fails.                   |
-| `always fails PB`           | Every `PB` run.                |
-| `sometimes fails PB 01…03`  | 10%, 20%, 30% of `PB` runs.    |
-| `always fails PR`           | Every `PR` run.                |
-| `sometimes fails PR 01…03`  | 10%, 20%, 30% of `PR` runs.    |
-| `always fails MQ`           | Every `MQ` run.                |
-| `sometimes fails MQ 01…03`  | 10%, 20%, 30% of `MQ` runs.    |
-| `fails on mondays`          | Every run on a Monday, UTC.    |
-| `fails every other day`     | Every run on alternating days. |
+| Test                                  | Behavior                       |
+| ------------------------------------- | ------------------------------ |
+| `healthcheck always passes`           | Never fails.                   |
+| `always fails PB`                     | Every `PB` run.                |
+| `sometimes fails PB 10/20/30 percent` | 10%, 20%, 30% of `PB` runs.    |
+| `always fails PR`                     | Every `PR` run.                |
+| `sometimes fails PR 10/20/30 percent` | 10%, 20%, 30% of `PR` runs.    |
+| `always fails MQ`                     | Every `MQ` run.                |
+| `sometimes fails MQ 10/20/30 percent` | 10%, 20%, 30% of `MQ` runs.    |
+| `fails on mondays`                    | Every run on a Monday, UTC.    |
+| `fails every other day`               | Every run on alternating days. |
 
 ### [`skipped-test/`](skipped-test/) · [`cascade.spec.ts`](skipped-test/cascade.spec.ts)
 
