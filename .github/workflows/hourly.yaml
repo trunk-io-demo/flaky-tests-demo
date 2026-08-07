@@ -80,3 +80,23 @@ jobs:
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.SYNTH_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
+
+  # A 500-test population failing every run at once, which is the shape infra-failure protection exists to catch.
+  synth-infra-failure:
+    name: synth (infra failure)
+    runs-on: ubuntu-latest
+    env:
+      SYNTH_FAILURE_RATE: 100
+      SYNTH_DURABLE_TEST_COUNT: 500
+      SYNTH_FLAKE_RATE: ${{ vars.SYNTH_FLAKE_RATE }}
+      SYNTH_RUNS_PER_TEST: ${{ vars.SYNTH_RUNS_PER_TEST }}
+      SYNTH_CHURN_TEST_COUNT: ${{ vars.SYNTH_CHURN_TEST_COUNT }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/synth
+        with:
+          org-slug: ${{ vars.TRUNK_ORG_SLUG }}
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+          api-address: ${{ vars.TRUNK_API_ADDRESS }}
+          test-collection-id: ${{ vars.SYNTH_TEST_COLLECTION }}
+          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
