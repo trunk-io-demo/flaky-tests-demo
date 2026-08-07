@@ -15,16 +15,16 @@ not a distribution anyone writes down.
 
 ## The tests
 
-| File                                                     | Test                                                     | Goes red when                                              |
-| -------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------- |
-| [`status-page.test.ts`](__tests__/status-page.test.ts)   | `github reports no incident at or above major right now` | The status page says `major` or `critical`.                |
-|                                                          | `github opened no incident in the last 24 hours`         | Any incident overlapped the last 24 hours.                 |
-| [`issue-volume.test.ts`](__tests__/issue-volume.test.ts) | `actions/runner opened fewer than 6 issues this week`    | The weekly issue count reaches that repository's median.   |
-|                                                          | `github/gh-stack opened fewer than 15 issues this week`  | Same, at its own median.                                   |
-|                                                          | `github/docs opened fewer than 22 issues this week`      | Same again.                                                |
-| [`reachability.test.ts`](__tests__/reachability.test.ts) | `github.com answers`                                     | DNS or the network on the runner.                          |
-|                                                          | `the latest analytics-cli release downloads`             | The release is missing, or the download does not complete. |
-| [`healthcheck.test.ts`](__tests__/healthcheck.test.ts)   | `healthcheck always passes`                              | Never.                                                     |
+| File                                                     | Test                                                     | Goes red when                                                  |
+| -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------- |
+| [`status-page.test.ts`](__tests__/status-page.test.ts)   | `github reports no incident at or above major right now` | The status page says `major` or `critical`.                    |
+|                                                          | `github opened no incident in the last 24 hours`         | Any incident overlapped the last 24 hours.                     |
+| [`issue-volume.test.ts`](__tests__/issue-volume.test.ts) | `actions/runner opened fewer than 4 issues this week`    | The weekly issue count reaches 1.25× that repository's median. |
+|                                                          | `github/gh-stack opened fewer than 10 issues this week`  | Same, at its own median.                                       |
+|                                                          | `github/docs opened fewer than 29 issues this week`      | Same again.                                                    |
+| [`reachability.test.ts`](__tests__/reachability.test.ts) | `github.com answers`                                     | DNS or the network on the runner.                              |
+|                                                          | `the latest analytics-cli release downloads`             | The release is missing, or the download does not complete.     |
+| [`healthcheck.test.ts`](__tests__/healthcheck.test.ts)   | `healthcheck always passes`                              | Never.                                                         |
 
 Split by concern rather than kept in one file: each reads a different source, and vitest's
 `classnameTemplate: "{filename}"` means the split shows up in the product as separate classes.
@@ -35,11 +35,16 @@ Split by concern rather than kept in one file: each reads a different source, an
 `no incident in the last 24 hours` stays red after the status page has gone green again, so the two status
 tests recover at different times — deliberately.
 
-**Issue volume is a block, not a coin flip.** Each threshold is that repository's median weekly issue
-count over six or seven measured weeks, so about half of _weeks_ land above it — but the count barely moves
-inside a week. Hourly runs therefore see days of red, then days of green. That is a slow square wave rather
-than a per-run rate, and it is the closest thing here to how a real regression reads: a long block of
-failures that ends when something outside the suite changes.
+**Issue volume is a block, not a coin flip.** Each threshold is **1.25×** that repository's median weekly
+issue count over six or seven measured weeks, so a merely median week stays green and only a busier one
+lands above — but the count barely moves inside a week. Hourly runs therefore see days of red, then days of
+green. That is a slow square wave rather than a per-run rate, and it is the closest thing here to how a real
+regression reads: a long block of failures that ends when something outside the suite changes.
+
+The 25% of headroom is why the red blocks are rarer than the green ones. At the bare median about half of
+weeks tripped, which reads as a threshold set at the middle of normal; a quarter above it says the week was
+genuinely busy. The threshold is rounded up — counts are integers, so `< ceil(1.25 × median)` is exactly
+`< 1.25 × median` and the test name stays a whole number.
 
 Worth knowing: **the three issue tests are not independent.** A busy week on GitHub is busy across all
 three repositories, so they tend to fail together — a correlated failure across distinct tests, which is
@@ -47,8 +52,9 @@ what separates a failure count from a failure rate.
 
 ## Maintaining the medians
 
-They came from six or seven weekly samples each, and they drift — `github/docs` ranged from 19 to 42 over
-that span. When one sits permanently on one side, re-measure rather than reading it as a signal:
+The medians came from six or seven weekly samples each — 3, 8 and 23 — and the tests compare against
+1.25× them: 4, 10 and 29. They drift; `github/docs` ranged from 19 to 42 over that span. When one sits
+permanently on one side, re-measure the median rather than reading it as a signal:
 
 ```bash
 since=$(date -u -d '7 days ago' +%F)
