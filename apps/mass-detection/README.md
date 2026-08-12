@@ -4,6 +4,17 @@
 > **Twenty tests here fail on the 1st and the 15th of every month, UTC.** A passing test logs the same thing into the
 > run history, because a whole suite going flaky at once is indistinguishable from a real regression.
 
+## Prototypical examples
+
+The ones to open in a demo. Links go to the test's page in the app. **The burst is the story**, so the
+grouping view matters more here than any single test.
+
+| Test                        | Why this one                                                                          | Production |
+| --------------------------- | ------------------------------------------------------------------------------------- | ---------- |
+| `archives an order`         | The 20% member — busiest on ordinary days, so it has history either side of a spike.  | _TBD_      |
+| `creates an order`          | The 1% member. Nearly flat until an event day, when it fails with the other nineteen. | _TBD_      |
+| `healthcheck always passes` | Green on an event day, which is how you tell a mass detection from a dead suite.      | _TBD_      |
+
 ## What this demonstrates
 
 Detection **volume** and **grouping**, rather than single detections.

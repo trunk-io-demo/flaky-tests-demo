@@ -1,7 +1,7 @@
 # `timeout-inflation`
 
 > [!NOTE]
-> <https://docs.trunk.io/flaky-tests/detection/timeout-inflation-monitor>
+> **Docs:** [Timeout inflation monitor](https://docs.trunk.io/flaky-tests/detection/timeout-inflation-monitor)
 
 A test that **did not get slower** — it only got slower _when it fails_, because it is blocking on a
 timeout.
@@ -15,6 +15,14 @@ failures all take almost exactly the ceiling while its passes are unaffected:
 ```
 
 A timeout inflation monitor firing indicates that the timeout is likely too high and valuable CI time is being wasted.
+
+## Prototypical examples
+
+The ones to open in a demo. The test column links to the source that generated the history.
+
+| Test                                                          | Why this one                                                           | Production                                                                                                                                                                      |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`blocks on a timeout only when it fails`](canonical.test.ts) | The story: ~151ms passing, ~5109ms failing. Duration split by outcome. | [monitors](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_970db3d9-b0b3-580b-8b7b-477f834c7de2?tab=monitors) |
 
 ## The story
 

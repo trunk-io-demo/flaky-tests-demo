@@ -4,8 +4,9 @@ import { describe, expect, it } from "vitest";
 // Pairs that form across uploads rather than within one: scheduled runs report
 // against the same head commit hour after hour, so a test that fails one hour and
 // passes the next has done both on one commit. retry-ladder.spec.ts is the
-// single-upload version. Rates are low on purpose — at 1% the test looks healthy
-// by any rate measure and the pair is the only thing that says otherwise.
+// single-upload version. A ladder of 1%, 10%, 25%: at 1% the test looks healthy by
+// any rate measure and the pair is the only thing that says otherwise, while 25%
+// pairs often enough to have one to point at.
 
 let attempts = 0;
 
@@ -26,6 +27,13 @@ describe("pass-on-retry", () => {
       randomPercentage("pair-across-uploads-10"),
       "fails 10% of runs; the pass and the failure share a commit — the demo working",
     ).toBeGreaterThanOrEqual(10);
+  });
+
+  it("fails 25 percent, pairing across uploads", () => {
+    expect(
+      randomPercentage("pair-across-uploads-25"),
+      "fails 25% of runs; the pass and the failure share a commit — the demo working",
+    ).toBeGreaterThanOrEqual(25);
   });
 
   // Deliberately indistinguishable from the healthcheck in the report, which is

@@ -17,6 +17,17 @@ than one per story — a per-branch comparison is two invocations, not two code 
 This is also where configuration lives. `monitors/` and `apps/` read no repository variables; `synth/`
 does, because its job is producing volume and distributions a fork will want to change.
 
+## Prototypical examples
+
+The ones to open in a demo. The what-to-link column links to the source that generated the history.
+
+| What to link                                           | Why this one                                                                             | Production                                                                                                                                                     |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Uploads skipped by infra-failure protection            | 500 tests failing at 90% in one upload, hourly. The shape the threshold exists to catch. | [uploads, filtered](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/jK1zktpw/uploads?uploadStatus=SKIPPED_INFRA_FAILURE_THRESHOLD)               |
+| [`Suite00.Class00` :: `test_00`](generate/src/plan.rs) | The low rung: index 0 in its suite gets the bottom of the spread.                        | [test](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/jK1zktpw/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_7f0d3150-e805-5bf6-9183-f1d62c243f0d) |
+| [`Suite00.Class01` :: `test_07`](generate/src/plan.rs) | The high rung: index 7 of 8 gets the top of the spread, so it fails far more often.      | [test](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/jK1zktpw/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_1ec7bfa1-5fb3-5738-aa34-5fcc58381f5d) |
+| [A churn member](harness/src/churn.rs)                 | A generated name that reported for a day and then stopped. Resolution by absence.        | [test](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/jK1zktpw/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_4fbc6e1d-06d6-5ffe-81dc-52378442a16b) |
+
 ## Two properties are load-bearing
 
 **Identity is owned, not generated.** A test's identity comes from repository, `file`, `classname`, suite,

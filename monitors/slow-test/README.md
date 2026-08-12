@@ -1,19 +1,34 @@
 # `slow-test`
 
 > [!NOTE]
-> <https://docs.trunk.io/flaky-tests/detection/slow-test-monitor>
+> **Docs:** [Slow test monitor](https://docs.trunk.io/flaky-tests/detection/slow-test-monitor)
 
 Duration regressions: a test that still passes but takes long enough to be flagged. Slowness can build up over time. Slowness monitors capture latency regressions and inter-test harness slowness.
+
+## Prototypical examples
+
+The ones to open in a demo. The test column links to the source that generated the history.
+
+| Test                                                                                   | Why this one                                                                 | Production                                                                                                                                                                      |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`waits its turn on the shared fixture, holding it about 2800 ms`](contention.test.ts) | 2.8s of work taking up to 8.6s, for reasons the test does not control.       | [monitors](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_e734cd1b-6667-5ffa-bd5d-78b58b517e14?tab=monitors) |
+| [`duration grows a little each day`](canonical.test.ts)                                | The ramp, and the one place you can watch a duration regression resolve.     | [test](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_0a5150f7-1c5d-5c8d-9db3-084a8ee56c14)                  |
+| [`duration is usually fast but sometimes is not`](canonical.test.ts)                   | Bimodal: the mean barely moves while a tenth of runs are eight times slower. | _TBD_                                                                                                                                                                           |
 
 ## The story
 
 "Slow" is three problems, so there are three tests.
 
-| Test                                            | Shape                                             |
-| ----------------------------------------------- | ------------------------------------------------- |
-| `duration is stable`                            | The control. Flat.                                |
-| `duration grows a little each day`              | Ramps 120ms/day over a 14-day cycle, then resets. |
-| `duration is usually fast but sometimes is not` | Bimodal: 10% of runs take eight times as long.    |
+| Test                                            | Shape                                                        |
+| ----------------------------------------------- | ------------------------------------------------------------ |
+| `duration is stable`                            | The control. Flat at 150ms.                                  |
+| `duration grows a little each day`              | Ramps 620ms/day from 150ms over a 14-day cycle, then resets. |
+| `duration is usually fast but sometimes is not` | Bimodal: 700ms, and 10% of runs take eight times as long.    |
+
+The durations are aimed at duration monitors set to **5s, 7.5s, and 10s**. The ramp peaks at 8210ms, so
+it crosses 5s on day 8 and 7.5s on day 12 before resetting; the spike lands at 5600ms, above 5s only.
+Nothing here reaches 10s, which leaves that one as headroom. Change a constant and the story stops
+tripping what it was built to trip.
 
 The ramp is the shape a threshold on today's duration misses — no single day's increase is remarkable.
 The bimodal one is the shape an average misses: the mean barely moves while a tenth of runs are eight
@@ -26,8 +41,9 @@ computable from today alone.
 
 ## What you should see
 
-The bimodal distribution is visible within a day. The ramp is unmistakable by day three, and resolves at
-the cycle rollover — which is behavior nobody usually gets to watch.
+The bimodal distribution is visible within a day. The ramp is unmistakable by day three, crosses 5s on
+day 8 and 7.5s on day 12, and resolves at the cycle rollover — which is behavior nobody usually gets to
+watch.
 
 ## Contention, in a second file
 
@@ -56,8 +72,11 @@ Each test carries a 60-second timeout, because vitest's 5-second default would k
 If contention ever stops resolving the test fails outright, because a wait that never ends is a deadlock
 rather than slowness.
 
-**This is the most expensive story in the repo**: around 7 seconds of wall clock every run, paid hourly.
-Lower `HOLD_STEP_MS` to make it cheaper — the shape survives at any scale, it is just less dramatic.
+**This is the most expensive story in the repo**: around 7 seconds of wall clock every run for the
+contention file, plus about 5.5 seconds on average for `canonical.test.ts` now that its durations reach
+the 5s and 7.5s thresholds — roughly 12 seconds an hour in total. Lower `HOLD_STEP_MS` and
+`GROWTH_MS_PER_DAY` to make it cheaper; both shapes survive at any scale, they are just less dramatic and
+stop crossing the thresholds they are aimed at.
 
 ## Other monitors
 

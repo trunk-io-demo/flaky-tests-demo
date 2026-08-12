@@ -4,6 +4,15 @@
 > **Depends on seventeen third parties.** These go red when a service is degraded, under maintenance, or
 > its status page will not answer. Every failure message links the page it read.
 
+## Prototypical examples
+
+The ones to open in a demo. The test column links to the source that generated the history. Nobody chose
+these rates, so what you can show depends on what was actually broken — check before you demo.
+
+| Test                                                      | Why this one                                                                       | Production                                                                                                                                                                    |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`OpenAI is operational`](__tests__/status-pages.test.ts) | One of the fifteen Statuspage readers, on a service that actually posts incidents. | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/43f4L2BT/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_5cd88393-b658-5b1d-94f5-443a81f96212?tab=history) |
+
 ## What this demonstrates
 
 **Failures that cluster in time and correlate across tests.**

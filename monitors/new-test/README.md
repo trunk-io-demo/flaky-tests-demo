@@ -1,9 +1,18 @@
 # `new-test`
 
 > [!NOTE]
-> <https://docs.trunk.io/flaky-tests/detection/new-test-monitor>
+> **Docs:** [New test monitor](https://docs.trunk.io/flaky-tests/detection/new-test-monitor)
 
 When a test is newly added, or newly appears on a particular branch pattern. For example, the presence of the label could indicate if it is newly present on `main`.
+
+## Prototypical examples
+
+The ones to open in a demo. The test column links to the source that generated the history. No single
+member is linkable — `first appeared on <date>` stops being emitted 21 days after it appears.
+
+| Test                                            | Why this one                                                                  | Production                                                                                                                                 |
+| ----------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Every member](canonical.test.ts), oldest first | Every stage of the lifecycle on one screen: new today, mid-window, aging out. | [test list](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests?searchText=new-test&sortBy=lastRun&sortOrder=asc) |
 
 ## The story
 

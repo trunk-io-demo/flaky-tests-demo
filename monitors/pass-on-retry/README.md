@@ -1,11 +1,20 @@
 # `pass-on-retry`
 
 > [!NOTE]
-> <https://docs.trunk.io/flaky-tests/detection/pass-on-retry-monitor>
+> **Docs:** [Pass on retry monitor](https://docs.trunk.io/flaky-tests/detection/pass-on-retry-monitor)
 
 A test that **failed and then passed on the same commit** — the least deniable flakiness signal there
 is. Failing on one commit and passing on the next has an ordinary explanation; doing both on the same
 code has none.
+
+## Prototypical examples
+
+The ones to open in a demo. The test column links to the source that generated the history.
+
+| Test                                                            | Why this one                                                                              | Production                                                                                                                                                                    |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`passes on the second attempt`](retry-ladder.spec.ts)          | Playwright retries. One failure and a pass in one upload, on one commit.                  | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_d8b92121-0b58-5d70-8099-6aced63e3715?tab=history) |
+| [`fails 10 percent, pairing across uploads`](canonical.test.ts) | A percentage-based failure rate, pairing across two separate runs rather than within one. | [test](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_a336b5fb-e66d-55d3-a116-6773c711297e)                |
 
 ## Two ways a pair forms, one story each
 
@@ -36,19 +45,21 @@ flags anything that gets retried.
 | ------------------------------------------ | ------------------ |
 | `fails 1 percent, pairing across uploads`  | Fails 1% of runs.  |
 | `fails 10 percent, pairing across uploads` | Fails 10% of runs. |
+| `fails 25 percent, pairing across uploads` | Fails 25% of runs. |
 
 Scheduled runs report against the same head commit hour after hour, because the default branch does not
 move hourly. So a test that fails one hour and passes the next has failed and passed on the same commit
 — a pair assembled from two separate uploads.
 
-The rates are deliberately low. At 1% the test looks healthy by most failure-rate measures, and the pair
-is the only thing that says otherwise. That is the case this monitor exists for.
+A ladder rather than one rate, because how often a pair forms is the thing that varies. At 1% the test
+looks healthy by most failure-rate measures and the pair is the only thing that says otherwise, which is
+the case this monitor exists for; at 25% there is reliably one to point at.
 
 ## What you should see
 
 Within the hour, three pairs from the ladder in a single upload. The cross-upload pairs take longer,
-since they need the test to land on both sides of the same commit — the 10% one within a day, the 1% one
-over several.
+since they need the test to land on both sides of the same commit — the 25% one within hours, the 10% one
+within a day, the 1% one over several.
 
 The PR factory also contributes commits of its own, so pairs appear against pull-request commits as well
 as against the default branch.

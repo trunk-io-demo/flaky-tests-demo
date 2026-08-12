@@ -1,12 +1,21 @@
 # `failure-count`
 
 > [!NOTE]
-> <https://docs.trunk.io/flaky-tests/detection/failure-count-monitor>
+> **Docs:** [Failure count monitor](https://docs.trunk.io/flaky-tests/detection/failure-count-monitor)
 
 How many failures happened in a window, as an absolute number rather than a proportion. A rate cannot
 tell **one** test failing half the time from **twelve** tests each failing half the time. Both are 50%,
 but the second means twelve tests get classified flaky and quarantined — twelve tests' worth of coverage
 removed rather than one.
+
+## Prototypical examples
+
+The ones to open in a demo. The test column links to the source that generated the history.
+
+| Test                                                 | Why this one                                                                                              | Production                                                                                                                                                                      |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`fails every other day`](canonical.test.ts)         | Fully deterministic, on a cadence you can check against a timestamp. A count with a square wave under it. | [monitors](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_62ede8c1-2f6e-5f2f-9b1f-233c5a493f18?tab=monitors) |
+| [`sometimes fails PB 10 percent`](canonical.test.ts) | The bottom rung, and branch-scoped: it can only contribute on a protected-branch run.                     | [monitors](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_af897384-2418-5387-8aca-523b88c11eca?tab=monitors) |
 
 ## The story
 

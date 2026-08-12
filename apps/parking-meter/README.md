@@ -3,6 +3,15 @@
 Failure patterns that are periodic and predictable, and that **no percentage-based rate can imitate**. Two
 signs on one stretch of kerb: one saying when you may not park at all, one saying what it costs when you may.
 
+## Prototypical examples
+
+The ones to open in a demo. The test column links to the source that generated the history.
+
+| Test                                                                                     | Why this one                                                                     | Production                                                                                                                                                                    |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`the street is not closed for the event right now`](__tests__/no-parking-meter.test.ts) | Two whole days red, 24 runs straight, twice a month. The block no rate imitates. | [test](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/43f4L2BT/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_a21c53c2-8558-5555-81d5-9afe9a9cdbd1)                |
+| [`driver 03 can afford the 4 coin meter`](__tests__/paid-parking-meter.test.ts)          | The middle of the coin ladder — 56% measured, and a calendar underneath it.      | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/43f4L2BT/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_e5764e74-9e1f-5e8b-9379-b0800373d2c9?tab=history) |
+
 ## Why it is worth having
 
 Averaged over a month these look like ordinary flakiness — 10%, 40%, 60% — numbers that tell you nothing.

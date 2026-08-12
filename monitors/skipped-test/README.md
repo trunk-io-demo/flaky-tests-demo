@@ -1,9 +1,18 @@
 # `skipped-test`
 
 > [!NOTE]
-> <https://docs.trunk.io/flaky-tests/detection/skipped-test-monitor>
+> **Docs:** [Skipped test monitor](https://docs.trunk.io/flaky-tests/detection/skipped-test-monitor)
 
 Tests that have stopped running without anybody deleting them. Either intentionally skipped or bypassed by the test reporter. Flags with a label for human intervention.
+
+## Prototypical examples
+
+The ones to open in a demo. The test column links to the source that generated the history.
+
+| Test                                                            | Why this one                                                                        | Production                                                                                                                                                                    |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`sometimes skipped by a runtime condition`](canonical.test.ts) | Partial history from a runtime skip. Runs most of the time, so it looks maintained. | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_4b4239bd-7e50-5abb-93f3-4ff0c6c8e398?tab=history) |
+| [`reconciles the audit log`](cascade.spec.ts)                   | Partial history from the cascade instead: skipped because a step above it failed.   | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_c422a18d-858b-538f-8d54-690d1b832b03?tab=history) |
 
 ## The story
 
