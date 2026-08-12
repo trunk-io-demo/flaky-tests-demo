@@ -9,8 +9,6 @@ code has none.
 
 ## Prototypical examples
 
-The ones to open in a demo. The test column links to the source that generated the history.
-
 | Test                                                            | Why this one                                                                              | Production                                                                                                                                                                    |
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`passes on the second attempt`](retry-ladder.spec.ts)          | Playwright retries. One failure and a pass in one upload, on one commit.                  | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_d8b92121-0b58-5d70-8099-6aced63e3715?tab=history) |

@@ -7,8 +7,6 @@ Tests that have stopped running without anybody deleting them. Either intentiona
 
 ## Prototypical examples
 
-The ones to open in a demo. The test column links to the source that generated the history.
-
 | Test                                                            | Why this one                                                                        | Production                                                                                                                                                                    |
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`sometimes skipped by a runtime condition`](canonical.test.ts) | Partial history from a runtime skip. Runs most of the time, so it looks maintained. | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_4b4239bd-7e50-5abb-93f3-4ff0c6c8e398?tab=history) |

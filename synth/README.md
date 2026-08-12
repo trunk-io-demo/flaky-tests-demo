@@ -19,8 +19,6 @@ does, because its job is producing volume and distributions a fork will want to 
 
 ## Prototypical examples
 
-The ones to open in a demo. The what-to-link column links to the source that generated the history.
-
 | What to link                                           | Why this one                                                                             | Production                                                                                                                                                     |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Uploads skipped by infra-failure protection            | 500 tests failing at 90% in one upload, hourly. The shape the threshold exists to catch. | [uploads, filtered](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/jK1zktpw/uploads?uploadStatus=SKIPPED_INFRA_FAILURE_THRESHOLD)               |

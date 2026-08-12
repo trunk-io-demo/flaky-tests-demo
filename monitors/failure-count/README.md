@@ -10,8 +10,6 @@ removed rather than one.
 
 ## Prototypical examples
 
-The ones to open in a demo. The test column links to the source that generated the history.
-
 | Test                                                 | Why this one                                                                                              | Production                                                                                                                                                                      |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`fails every other day`](canonical.test.ts)         | Fully deterministic, on a cadence you can check against a timestamp. A count with a square wave under it. | [monitors](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_62ede8c1-2f6e-5f2f-9b1f-233c5a493f18?tab=monitors) |

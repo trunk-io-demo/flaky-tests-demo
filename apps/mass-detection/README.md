@@ -6,9 +6,6 @@
 
 ## Prototypical examples
 
-The ones to open in a demo. Links go to the test's page in the app. **The burst is the story**, so the
-grouping view matters more here than any single test.
-
 | Test                        | Why this one                                                                          | Production |
 | --------------------------- | ------------------------------------------------------------------------------------- | ---------- |
 | `archives an order`         | The 20% member — busiest on ordinary days, so it has history either side of a spike.  | _TBD_      |

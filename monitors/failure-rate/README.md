@@ -8,8 +8,6 @@ likely to be too noisy or too quiet depending on where the threshold lands.
 
 ## Prototypical examples
 
-The ones to open in a demo. The test column links to the source that generated the history.
-
 | Test                                                                    | Why this one                                                                                        | Production                                                                                                                                                                      |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`fails 30 percent`](canonical.test.ts)                                 | A rung near a typical threshold, so detections flip-flop rather than settle. Open the monitors tab. | [monitors](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_44faebe3-6abd-599d-a375-63112db44163?tab=monitors) |

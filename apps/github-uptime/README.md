@@ -6,8 +6,6 @@
 
 ## Prototypical examples
 
-The ones to open in a demo. The test column links to the source that generated the history.
-
 | Test                                                                                      | Why this one                                                                     | Production                                                                                                                                                                    |
 | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`github opened no incident in the last 24 hours`](__tests__/status-page.test.ts)         | Stays red after the status page recovers, so the two status tests resolve apart. | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/43f4L2BT/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_9f2696b2-3a84-5d84-8620-5046c73c52fb?tab=history) |

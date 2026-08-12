@@ -7,8 +7,6 @@ Duration regressions: a test that still passes but takes long enough to be flagg
 
 ## Prototypical examples
 
-The ones to open in a demo. The test column links to the source that generated the history.
-
 | Test                                                                                   | Why this one                                                                 | Production                                                                                                                                                                      |
 | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`waits its turn on the shared fixture, holding it about 2800 ms`](contention.test.ts) | 2.8s of work taking up to 8.6s, for reasons the test does not control.       | [monitors](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_e734cd1b-6667-5ffa-bd5d-78b58b517e14?tab=monitors) |
