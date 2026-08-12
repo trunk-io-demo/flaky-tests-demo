@@ -4,6 +4,13 @@
 > **Depends on a third party.** These fail when GitHub has a problem, or when enough strangers file
 > issues. Confirm at <https://www.githubstatus.com> before treating a failure as ours.
 
+## Prototypical examples
+
+| Test                                                                                      | Why this one                                                                     | Production                                                                                                                                                                    |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`github opened no incident in the last 24 hours`](__tests__/status-page.test.ts)         | Stays red after the status page recovers, so the two status tests resolve apart. | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/43f4L2BT/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_9f2696b2-3a84-5d84-8620-5046c73c52fb?tab=history) |
+| [`github/gh-stack opened fewer than 10 issues this week`](__tests__/issue-volume.test.ts) | The slow square wave: days of red, days of green, nothing per-run about it.      | [history](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/43f4L2BT/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_fb25924c-8bf6-5c43-a214-33c8bed8cbd3?tab=history) |
+
 ## What this demonstrates
 
 A real external dependency causing real intermittency. Every other story here is something we made

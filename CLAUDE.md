@@ -137,3 +137,11 @@ what a human should check and when.
 Treat everything committed as published. No internal repo paths, service names, database names, or URLs
 — in code, comments, docs, or commit messages. No secrets, tokens, org slugs, or collection IDs in
 tracked files.
+
+**One carve-out, for the demo links.** A `README.md` may carry `app.trunk.io` links to this org's own
+collections, tests, and uploads — that is what the `## Prototypical examples` tables are. Those URLs
+contain the org slug and a collection ID by construction, and here that is the point: the org is public
+by design and the IDs grant nothing on their own.
+
+The carve-out is that narrow. `README.md` only, this org only, demo purposes only — never in source, a
+workflow, a `CLAUDE.md`, or a commit message, and never a link to any other org.

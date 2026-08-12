@@ -1,10 +1,17 @@
 # `failure-rate`
 
 > [!NOTE]
-> <https://docs.trunk.io/flaky-tests/detection/failure-rate-monitor>
+> **Docs:** [Failure rate monitor](https://docs.trunk.io/flaky-tests/detection/failure-rate-monitor)
 
 What percentage of a test's recent runs failed. The monitor most teams turn on first, and the one most
 likely to be too noisy or too quiet depending on where the threshold lands.
+
+## Prototypical examples
+
+| Test                                                                    | Why this one                                                                                        | Production                                                                                                                                                                      |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`fails 30 percent`](canonical.test.ts)                                 | A rung near a typical threshold, so detections flip-flop rather than settle. Open the monitors tab. | [monitors](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_44faebe3-6abd-599d-a375-63112db44163?tab=monitors) |
+| [`fails 80 percent on prs and 40 percent elsewhere`](canonical.test.ts) | The same test twice as noisy on pull requests as on the protected branch.                           | [test](https://app.trunk.io/flaky-tests-demo/flaky-tests/collections/oQbZIsKc/tests/31fd0870-eb39-48c0-b2a6-a3e3643e5f07_9a7f7540-322c-585b-bb81-17f2840489ba)                  |
 
 ## The story
 
