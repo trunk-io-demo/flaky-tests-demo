@@ -49,6 +49,13 @@ code: it is handed the test step's outcome and exits zero when every failure is 
 one is not. So red means _"something failed that is not quarantined yet"_ — which for a repo whose whole
 purpose is producing quarantine candidates is a normal state, not an alarm.
 
+## Where a run comes from
+
+Three branch classes, and the monitors care which: `PB` from the hourly scheduled run on the default branch,
+`PR` from the pull request the factory opens each hour, and `MQ` from the Trunk merge queue — every
+machine-generated pull request is enqueued for merge on a ten-minute cadence, and the queue tests each one on
+a branch of its own. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the mechanics.
+
 ## Running it
 
 ```bash

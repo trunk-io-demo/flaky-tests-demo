@@ -46,12 +46,13 @@ doubles up across a 31-day boundary.
 
 [`utils`](../utils/) derives it from CI's environment: `MQ` for `trunk-merge/…` and
 `gh-readonly-queue/…`, `PB` for `main`/`master`/`develop`/`release`, `PR` for everything else. A local
-run is therefore a `PR` run; `GITHUB_REF_NAME=main pnpm test` exercises the others.
+run is therefore a `PR` run, and `GITHUB_REF_NAME=main pnpm test` exercises `PB`. `MQ` comes from the merge
+queue's testing branches, which only CI produces.
 
 ## What you should see
 
-Within an hour, one to six failures from the scheduled run and a different set on the factory's pull
-request. Within a day, a count visibly different per branch class, and a threshold at one firing while one
+Within an hour, one to six failures from the scheduled run, a different set on the factory's pull request,
+and a third from the merge queue's testing branch. Within a day, a count visibly different per branch class, and a threshold at one firing while one
 above six does not. The count steps up for a full day each Monday.
 
 ## Other monitors
