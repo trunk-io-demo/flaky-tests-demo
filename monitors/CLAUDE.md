@@ -81,7 +81,9 @@ a monitor — no tests, so `pnpm --filter --if-present` skips it.
 - **`getBranchClass()` is how you ask where a run came from.** Three classes, no fallthrough: `MQ` for
   `trunk-merge/…` and `gh-readonly-queue/…`, `PB` for `main`/`master`/`develop`/`release`, `PR` for
   everything else. Order matters — a merge-queue branch is `MQ` even with a PR number set. Deliberately
-  narrower than the uploader's four-class inference; on the branches CI actually runs, they agree.
+  narrower than the uploader's four-class inference; on the branches CI actually runs, they agree. All
+  three occur: `MQ` arrives from the merge queue's draft testing pull requests, which every
+  machine-generated pull request is enqueued into on a ten-minute cadence.
 - **`date.ts` is dayjs in UTC.** A local timezone makes a periodic story depend on daylight saving.
 
 The playwright packages use the built-in JUnit reporter with `includeRetries: true`, which reports every

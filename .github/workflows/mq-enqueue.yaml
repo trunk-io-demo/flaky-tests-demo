@@ -1,0 +1,63 @@
+name: Enqueue for merge
+
+# Every ten minutes rather than once when a pull request opens: a pull request that
+# fails its required checks in the queue is evicted, and this is what resubmits it.
+# Evictions are expected — several stories fail a fraction of MQ runs on purpose.
+#
+# pr-factory.yaml still force-merges last hour's pull request at
+# :15 before opening this hour's, so the default branch advances on a fixed clock
+# whether or not the queue got there first.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+# Serialised: two runs would comment twice on every open pull request.
+concurrency:
+  group: mq-enqueue
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  enqueue:
+    name: comment /trunk merge
+    runs-on: ubuntu-latest
+    steps:
+      # Loudly, as pr-factory.yaml does: this only runs on a schedule or by hand, so a
+      # missing token is a misconfigured repository, not a contributor hitting a wall.
+      - name: Check for the factory token
+        env:
+          HAS_TOKEN: ${{ secrets.PR_FACTORY_TOKEN != '' }}
+        run: |
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "::error title=Cannot enqueue::PR_FACTORY_TOKEN is unset. The default workflow token would comment as github-actions[bot], which the queue does not accept as a submitter. See CONTRIBUTING.md."
+            exit 1
+          fi
+          echo "factory token present"
+
+      # The label picks out the factory's pull requests and skipping drafts keeps this
+      # off the queue's own testing ones; dependabot has neither. A pull request still
+      # in the queue is commented on again — cheaper than reading queue state.
+      - name: Enqueue every open machine-generated pull request
+        env:
+          GH_TOKEN: ${{ secrets.PR_FACTORY_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: pr-factory
+        run: |
+          set -euo pipefail
+          open=$(gh pr list --label "$LABEL" --state open --limit 50 \
+            --json number,isDraft --jq '.[] | select(.isDraft == false) | .number')
+
+          if [ -z "$open" ]; then
+            echo "no open $LABEL pull requests to enqueue"
+            exit 0
+          fi
+
+          for number in $open; do
+            echo "enqueueing #$number"
+            if ! gh pr comment "$number" --body "/trunk merge"; then
+              echo "::warning title=Could not enqueue::Commenting on #$number failed; the next run retries it."
+            fi
+          done

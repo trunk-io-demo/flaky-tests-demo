@@ -135,8 +135,8 @@ which the action does not do.
 
 ### What the token needs
 
-Derived from what the workflow actually does: push a branch, open a pull request with a label, list open
-pull requests, and squash-merge or close one while deleting its branch.
+Derived from what the two workflows using it actually do: push a branch, open a pull request with a label,
+list open pull requests, comment on one, and squash-merge or close one while deleting its branch.
 
 | Token type            | Grant                                                                                                              |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -167,11 +167,36 @@ commit with hundreds of runs instead of many commits each holding a pair.
 The token therefore needs write access to the default branch. If a merge cannot go through, the factory
 closes that pull request and warns, rather than retrying a stuck one every hour.
 
+## Enqueueing for merge
+
+[`mq-enqueue.yaml`](.github/workflows/mq-enqueue.yaml) comments `/trunk merge` on every open, non-draft
+pull request labelled `pr-factory`, every ten minutes. A pull request that fails in the queue is evicted,
+and the next run resubmits it. That is what the cadence is for.
+
+The factory still force-merges last hour's pull request before opening this hour's, so the head advances
+on the hour whether or not the queue got there first.
+
+Only the factory's pull requests carry the label, and drafts are skipped, which is what keeps this off
+dependabot and off the queue's own testing pull requests. Those are drafts on `trunk-merge/…` branches,
+and `pr.yaml` running on them is where `MQ`-class results come from.
+
+The comment is posted with `PR_FACTORY_TOKEN`, which needs no grant beyond the two it already has. The
+default workflow token would comment as `github-actions[bot]`, which the queue would have to allow as a
+bot submitter first.
+
+### Which checks the queue requires
+
+They live in the queue's settings in the Trunk app rather than here, and are meant to be stricter than the
+ruleset governing a direct merge — so a pull request GitHub would let you merge can still be evicted. That
+is the point: it exercises the stories that fail a fraction of `MQ` runs, like
+[`failure-count`](monitors/failure-count/)'s `sometimes fails MQ` ladder, which no other lane reaches.
+
 ## Verifying a fork
 
 | After     | Check                                                                                   |
 | --------- | --------------------------------------------------------------------------------------- |
 | First run | Jobs green, **no "upload will not land" notices**, results in all three collections.    |
+| ~1 hour   | A `trunk-merge/…` draft pull request has existed and uploaded `MQ`-class results.       |
 | ~2 hours  | PR-attributed runs exist, and the default branch has a merge commit. If not, the token. |
 | ~2 hours  | Pass-on-retry pairs from the retry ladder, which pair inside a single upload.           |
 | ~1 day    | Failure rates separate; counts and schedules become readable.                           |
