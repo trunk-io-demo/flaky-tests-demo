@@ -46,8 +46,8 @@ doubles up across a 31-day boundary.
 
 [`utils`](../utils/) derives it from CI's environment: `MQ` for `trunk-merge/…` and
 `gh-readonly-queue/…`, `PB` for `main`/`master`/`develop`/`release`, `PR` for everything else. A local
-run is therefore a `PR` run, and `GITHUB_REF_NAME=main pnpm test` exercises `PB`. `MQ` comes from the merge
-queue's testing branches, which only CI produces.
+run is therefore a `PR` run; `GITHUB_REF_NAME=main pnpm test` exercises the others. In CI, `MQ` comes from
+the merge queue's testing branches.
 
 ## What you should see
 

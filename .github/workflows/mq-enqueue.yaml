@@ -1,12 +1,10 @@
 name: Enqueue for merge
 
-# Every ten minutes rather than once when a pull request opens, because enqueueing
-# is not a one-shot. A pull request whose failures are not quarantined yet cannot
-# enter the queue, and one the queue evicted for a failing required check has to be
-# resubmitted — both are expected here, and this cadence is the only thing that
-# retries them.
+# Every ten minutes rather than once when a pull request opens: a pull request that
+# fails its required checks in the queue is evicted, and this is what resubmits it.
+# Evictions are expected — several stories fail a fraction of MQ runs on purpose.
 #
-# It merges nothing. pr-factory.yaml still force-merges last hour's pull request at
+# pr-factory.yaml still force-merges last hour's pull request at
 # :15 before opening this hour's, so the default branch advances on a fixed clock
 # whether or not the queue got there first.
 on:
@@ -27,9 +25,8 @@ jobs:
     name: comment /trunk merge
     runs-on: ubuntu-latest
     steps:
-      # Loudly, for the same reason pr-factory.yaml does it: this workflow only runs
-      # on a schedule or by hand, so a missing token is this repository being
-      # misconfigured rather than a contributor hitting a wall.
+      # Loudly, as pr-factory.yaml does: this only runs on a schedule or by hand, so a
+      # missing token is a misconfigured repository, not a contributor hitting a wall.
       - name: Check for the factory token
         env:
           HAS_TOKEN: ${{ secrets.PR_FACTORY_TOKEN != '' }}
@@ -40,14 +37,9 @@ jobs:
           fi
           echo "factory token present"
 
-      # Selected by the factory's own label, and drafts are skipped. That is what
-      # keeps this off dependabot's pull requests (no label) and off the queue's own
-      # testing pull requests (drafts) — commenting on the latter would ask the queue
-      # to enqueue its own merge candidate.
-      #
-      # A pull request already in the queue gets commented on again rather than
-      # skipped. Reading queue state from here would cost a Trunk API call per run,
-      # and resubmitting the ones that fell out is the entire point of the cadence.
+      # The label picks out the factory's pull requests and skipping drafts keeps this
+      # off the queue's own testing ones; dependabot has neither. A pull request still
+      # in the queue is commented on again — cheaper than reading queue state.
       - name: Enqueue every open machine-generated pull request
         env:
           GH_TOKEN: ${{ secrets.PR_FACTORY_TOKEN }}

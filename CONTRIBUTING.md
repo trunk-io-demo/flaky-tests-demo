@@ -24,14 +24,12 @@ pnpm install
 Trunk drives lint and format, with both git hooks enabled — you should not need to run either by
 hand. Rust is checked by cargo; `.trunk/trunk.yaml` says why.
 
-A local run classifies as a `PR` run. `PB` is one variable away:
+A local run classifies as a `PR` run. To exercise the others:
 
 ```bash
 GITHUB_REF_NAME=main pnpm test              # PB
+GITHUB_REF_NAME=trunk-merge/x pnpm test     # MQ
 ```
-
-`MQ` has no local equivalent and needs none: the merge queue's testing branches produce those runs for
-real, every hour.
 
 ### Generating synthetic reports
 
@@ -171,42 +169,27 @@ closes that pull request and warns, rather than retrying a stuck one every hour.
 
 ## Enqueueing for merge
 
-Every open, non-draft pull request carrying the `pr-factory` label gets a `/trunk merge` comment every ten
-minutes, from [`mq-enqueue.yaml`](.github/workflows/mq-enqueue.yaml). It reuses `PR_FACTORY_TOKEN` and needs
-no grant beyond the two the factory already required — a comment is **Pull requests: write**.
+[`mq-enqueue.yaml`](.github/workflows/mq-enqueue.yaml) comments `/trunk merge` on every open, non-draft
+pull request labelled `pr-factory`, every ten minutes. A pull request that fails in the queue is evicted,
+and the next run resubmits it. That is what the cadence is for.
 
-**The cadence is the retry, not a schedule.** Enqueueing fails routinely here and is meant to: a pull
-request whose failures are not quarantined yet cannot enter the queue, and one whose required checks fail is
-evicted from it. Nothing else resubmits them, so commenting once when a pull request opens would leave every
-one of those sitting until the factory force-merged it.
+The factory still force-merges last hour's pull request before opening this hour's, so the head advances
+on the hour whether or not the queue got there first.
 
-**The comment comes from a real account, not `github-actions[bot]`.** A queue takes commands from a linked
-user with access to the repository; a bot has to be named in the queue's allowed bot submitters first.
-`PR_FACTORY_TOKEN` already belongs to such an account, which is the whole reason it posts the comment.
+Only the factory's pull requests carry the label, and drafts are skipped, which is what keeps this off
+dependabot and off the queue's own testing pull requests. Those are drafts on `trunk-merge/…` branches,
+and `pr.yaml` running on them is where `MQ`-class results come from.
 
-**Dependabot and the queue's own pull requests are excluded by construction, not by name.** Only the
-factory's pull requests carry the label, and the queue's testing pull requests are drafts — which is also
-what they are for: a draft pull request per testing branch is what fires `pr.yaml`, and that run is where
-`MQ`-class results come from. Nothing in `pr.yaml` knows the queue exists.
-
-**The queue does not replace the factory's merge.** `pr-factory.yaml` still force-merges last hour's pull
-request before opening this hour's, so the head advances on the hour whatever the queue did. The queue
-landing a pull request first is the good case; the force-merge is the floor under it.
+The comment is posted with `PR_FACTORY_TOKEN`, which needs no grant beyond the two it already has. The
+default workflow token would comment as `github-actions[bot]`, which the queue would have to allow as a
+bot submitter first.
 
 ### Which checks the queue requires
 
-The queue's required checks live in its settings in the Trunk app, not in this repository — so they can be,
-and are meant to be, stricter than the ruleset that governs a direct merge.
-
-Know what that costs before adding one. **The four upload jobs are red on essentially every run**, because
-the uploader owns each job's exit code and returns non-zero while any failure is unquarantined — which for
-this repository is the steady state, not an incident. `monitors` is red by construction on a testing branch:
-[`failure-count`](monitors/failure-count/) holds `always fails MQ`, an always-fails test rather than a flaky
-one, so it is never a quarantine candidate. Requiring any of the four therefore evicts every pull request,
-every time, and the factory's force-merge becomes the only thing that lands one. That is an available
-choice — evictions and resubmissions are worth demonstrating — but it is a choice, and the retry cadence
-multiplies its cost: each eviction is re-enqueued ten minutes later, and each resubmission is another full
-testing branch through `pr.yaml`, macOS leg included.
+They live in the queue's settings in the Trunk app rather than here, and are meant to be stricter than the
+ruleset governing a direct merge — so a pull request GitHub would let you merge can still be evicted. That
+is the point: it exercises the stories that fail a fraction of `MQ` runs, like
+[`failure-count`](monitors/failure-count/)'s `sometimes fails MQ` ladder, which no other lane reaches.
 
 ## Verifying a fork
 

@@ -52,9 +52,8 @@ purpose is producing quarantine candidates is a normal state, not an alarm.
 ## Where a run comes from
 
 Three branch classes, and the monitors care which: `PB` from the hourly scheduled run on the default branch,
-`PR` from the pull request the factory opens each hour, and `MQ` from the Trunk merge queue — every
-machine-generated pull request is enqueued for merge on a ten-minute cadence, and the queue tests each one on
-a branch of its own. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the mechanics.
+`PR` from the pull request the factory opens each hour, and `MQ` from the Trunk merge queue, which every
+machine-generated pull request is enqueued into. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the mechanics.
 
 ## Running it
 

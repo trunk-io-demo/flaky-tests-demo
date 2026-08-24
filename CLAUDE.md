@@ -114,9 +114,7 @@ exists to exercise auto-quarantine.
 **Branch class is derived, not set.** The precedence and the illegal pairs are in
 [`synth/branch-rates`](synth/branch-rates/README.md). One trap worth knowing anywhere: protected matching
 is **exact, not glob**, so `release/*` looking like a protected pattern does not make `release/1.4.2`
-protected — the usual reason a run intended as `PB` arrives as `NONE`. Overriding `GITHUB_REF_NAME` locally to
-exercise a `PB` story is fine; overriding it to manufacture an `MQ` run is not, because the merge queue's
-testing branches produce those for real ([`CONTRIBUTING.md`](CONTRIBUTING.md)).
+protected — the usual reason a run intended as `PB` arrives as `NONE`.
 
 ## What you cannot verify locally
 
