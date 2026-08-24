@@ -13,6 +13,22 @@ permissions:
   contents: read
 
 jobs:
+  # Shadow mode: the filter recommends which of this workflow's jobs the diff
+  # actually needs, but nothing acts on the recommendation.
+  #
+  # No `job-names`, so one call fans out over every job in this workflow. Queue
+  # batches reach this workflow as pull requests on `trunk-merge/...` branches,
+  # which the service short-circuits to run-everything, so `MQ` needs no case of
+  # its own here.
+  dynamic-ci-filter:
+    name: dynamic CI filter (shadow)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: trunk-io/dynamic-ci-filter@main
+        with:
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+
   monitors:
     name: monitors
     runs-on: ubuntu-latest
