@@ -13,6 +13,12 @@ on:
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch: {}
+  # TEMPORARY, revert before merging: exercises this workflow from its own branch.
+  # A push trigger enqueues on every commit, and on the default branch it would
+  # enqueue on every merge — neither is wanted once the cron is live.
+  push:
+    branches:
+      - mq-auto-enqueue
 
 # Serialised: two runs would comment twice on every open pull request.
 concurrency:
