@@ -1,0 +1,82 @@
+name: Run the integrations suites
+description: >
+  Runs every package under integrations/ that has a test script and uploads its
+  results. Runner-agnostic: it takes no variant — these suites demonstrate
+  report shapes rather than platform behavior, so the same action is callable
+  from the scheduled workflow and from pull requests.
+
+inputs:
+  org-slug:
+    description: Trunk org URL slug.
+    required: true
+  token:
+    description: Trunk org API token. Empty on fork pull requests, which skips the upload.
+    required: false
+    default: ""
+  api-address:
+    description: Trunk API address. Lets a fork point at a different environment.
+    required: false
+    default: ""
+  test-collection-id:
+    description: Collection ID for integrations/. Empty skips the upload.
+    required: false
+    default: ""
+  cli-version:
+    description: >
+      Uploader CLI version, or "latest". Workflows pass
+      vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION so a pre-release build can be
+      exercised across every folder at once.
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: 22
+
+    - name: Set up pnpm
+      uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+    # Swift Testing is bundled with the toolchain, so this is the whole Swift
+    # setup. Pinned rather than "latest": the toolchain decides the report
+    # format, and a silent major bump would change it under us.
+    - name: Set up Swift
+      uses: swift-actions/setup-swift@7ca6abe6b3b0e8b5421b88be48feee39cbf52c6a # v2.4.0
+      with:
+        swift-version: 6.1.0
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    # `--if-present` is what keeps this generic: playwright/ is upload wiring
+    # with no suite of its own and is skipped, and a future framework suite is
+    # picked up by adding a test script, with no edit here.
+    - name: Run integration suites
+      id: suites
+      shell: bash
+      continue-on-error: true
+      run: pnpm --filter "./integrations/**" --no-bail --if-present run test
+
+    # SwiftPM inserts the testing library's name before the extension, so the
+    # file is swift-swift-testing.xml rather than swift.xml. Glob, don't name.
+    - name: Upload results
+      uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
+      if: always()
+      env:
+        TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
+      with:
+        junit-paths: integrations/*/test-results/*.xml
+        org-slug: ${{ inputs.org-slug }}
+        token: ${{ inputs.token }}
+        test-collection-id: ${{ inputs.test-collection-id }}
+        cli-version: ${{ inputs.cli-version }}
+        allow-missing-junit-files: false
+        use-cache: true
+        # The uploader owns this job's exit code. Without this input it exits zero even
+        # when it has just reported unquarantined failures, so a red job would be
+        # impossible and "not quarantined yet" would look identical to "all clear".
+        previous-step-outcome: ${{ steps.suites.outcome }}

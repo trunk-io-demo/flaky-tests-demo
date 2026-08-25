@@ -105,6 +105,8 @@ importers:
 
   integrations/playwright: {}
 
+  integrations/swift: {}
+
   monitors/failure-count:
     dependencies:
       '@flaky-tests-demo/monitors-utils':

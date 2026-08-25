@@ -1,0 +1,13 @@
+{
+  "name": "@flaky-tests-demo/integrations-swift",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Swift Testing upload wiring: a minimal suite plus the post-processing its JUnit output needs.",
+  "type": "module",
+  "bin": {
+    "junit-add-swift-file-attribute": "./junit-add-file-attribute.mjs"
+  },
+  "scripts": {
+    "test": "mkdir -p test-results && swift test --xunit-output test-results/swift.xml; status=$?; node ./junit-add-file-attribute.mjs test-results/swift-swift-testing.xml; exit $status"
+  }
+}

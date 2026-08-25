@@ -62,6 +62,20 @@ jobs:
           test-collection-id: ${{ vars.APPS_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
 
+  # Report shapes rather than platform behavior, so one runner is enough.
+  integrations:
+    name: integrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/integrations
+        with:
+          org-slug: ${{ vars.TRUNK_ORG_SLUG }}
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+          api-address: ${{ vars.TRUNK_API_ADDRESS }}
+          test-collection-id: ${{ vars.INTEGRATIONS_TEST_COLLECTION }}
+          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
+
   synth:
     name: synth
     runs-on: ubuntu-latest
