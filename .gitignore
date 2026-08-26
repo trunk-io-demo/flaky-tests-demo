@@ -145,6 +145,9 @@ vite.config.ts.timestamp-*
 # Rust
 /target/
 
+# Swift
+.build/
+
 # Test result output, uploaded by CI and regenerated on every run
 test-results/
 playwright-report/

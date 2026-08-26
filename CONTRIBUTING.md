@@ -87,15 +87,16 @@ is a `synth/` concern.
 
 ### Required for uploads
 
-| Key                        | Kind   | Notes                                                              |
-| -------------------------- | ------ | ------------------------------------------------------------------ |
-| `TRUNK_ORG_SLUG`           | var    |                                                                    |
-| `TRUNK_API_TOKEN`          | secret | Absent on fork pull requests; uploads skip cleanly.                |
-| `TRUNK_API_ADDRESS`        | var    | Points a fork at a different environment.                          |
-| `SYNTH_TEST_COLLECTION`    | var    | One collection per folder. Unset means that folder's upload skips. |
-| `MONITORS_TEST_COLLECTION` | var    |                                                                    |
-| `APPS_TEST_COLLECTION`     | var    |                                                                    |
-| `PR_FACTORY_TOKEN`         | secret | **Not** the default workflow token — see below.                    |
+| Key                            | Kind   | Notes                                                              |
+| ------------------------------ | ------ | ------------------------------------------------------------------ |
+| `TRUNK_ORG_SLUG`               | var    |                                                                    |
+| `TRUNK_API_TOKEN`              | secret | Absent on fork pull requests; uploads skip cleanly.                |
+| `TRUNK_API_ADDRESS`            | var    | Points a fork at a different environment.                          |
+| `SYNTH_TEST_COLLECTION`        | var    | One collection per folder. Unset means that folder's upload skips. |
+| `MONITORS_TEST_COLLECTION`     | var    |                                                                    |
+| `APPS_TEST_COLLECTION`         | var    |                                                                    |
+| `INTEGRATIONS_TEST_COLLECTION` | var    |                                                                    |
+| `PR_FACTORY_TOKEN`             | secret | **Not** the default workflow token — see below.                    |
 
 Most of these fail **quietly**: a missing collection ID leaves a notice saying the upload will not land
 rather than failing the job. Check the first run's logs for those notices rather than trusting a green tick.
