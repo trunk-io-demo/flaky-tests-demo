@@ -116,6 +116,12 @@ exists to exercise auto-quarantine.
 is **exact, not glob**, so `release/*` looking like a protected pattern does not make `release/1.4.2`
 protected — the usual reason a run intended as `PB` arrives as `NONE`.
 
+## The dynamic CI filter gates nothing
+
+[`pr.yaml`](.github/workflows/pr.yaml) runs it and no job reads its outputs. Wiring an `if:` to them would
+skip the jobs that produce this repository's data — the runs are what is being demonstrated, so there is no
+runner time here worth saving. It stays in shadow mode.
+
 ## What you cannot verify locally
 
 Verify what you can before claiming anything:

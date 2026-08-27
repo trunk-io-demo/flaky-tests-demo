@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/pinact/refs/heads/main/json-schema/pinact.json
+# pinact - https://github.com/suzuki-shunsuke/pinact
+#
+# Every action here is pinned to a commit, which is what pinact is enabled for.
+# The exception below is deliberate.
+version: 3
+rules:
+  # Intentionally tracks @main: a first-party action still in beta, wired here in
+  # shadow mode so it gates nothing. Pinning it would freeze the recommendations
+  # this repository exists to exercise, and the same reference is what trunk's own
+  # repositories run.
+  - ignore: true
+    conditions:
+      - expr: ActionRepoFullName == "trunk-io/dynamic-ci"
