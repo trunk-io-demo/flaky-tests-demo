@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: trunk-io/dynamic-ci-filter@main
+      - uses: trunk-io/dynamic-ci@main
         with:
           token: ${{ secrets.TRUNK_API_TOKEN }}
 

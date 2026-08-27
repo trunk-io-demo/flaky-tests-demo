@@ -11,4 +11,4 @@ rules:
   # repositories run.
   - ignore: true
     conditions:
-      - expr: ActionRepoFullName == "trunk-io/dynamic-ci-filter"
+      - expr: ActionRepoFullName == "trunk-io/dynamic-ci"
