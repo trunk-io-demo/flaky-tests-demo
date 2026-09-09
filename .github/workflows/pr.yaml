@@ -26,6 +26,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: trunk-io/dynamic-ci@main
+        env:
+          TRUNK_PUBLIC_API_ADDRESS: ${{ vars.TRUNK_API_ADDRESS }}
         with:
           token: ${{ secrets.TRUNK_API_TOKEN }}
 
