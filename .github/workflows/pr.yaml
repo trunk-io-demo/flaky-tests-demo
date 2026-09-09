@@ -25,7 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # The action exposes no api-address input, so this env var is the only way to
+      # send the request to the same deployment the uploads use — a fork's token is
+      # not valid against production. Unset or empty falls back to production, which
+      # is what makes this inert here.
       - uses: trunk-io/dynamic-ci@main
+        env:
+          TRUNK_PUBLIC_API_ADDRESS: ${{ vars.TRUNK_API_ADDRESS }}
         with:
           token: ${{ secrets.TRUNK_API_TOKEN }}
 
