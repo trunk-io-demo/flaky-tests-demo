@@ -69,15 +69,36 @@ jobs:
           test-collection-id: ${{ vars.APPS_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
 
-  # Not matrixed, unlike apps/: these suites assert on report shape, which the
-  # runner does not change.
+  # Steady state is the Linux modes only: the xcresult ones are macOS, and a mac
+  # runner on every push is the cost this repository is trying not to pay — they
+  # run daily instead, from daily.yaml. What a pull request can otherwise break
+  # here is the suites and the post-processor, both platform-independent.
+  #
+  # TEMPORARY — REVERT BEFORE MERGE: the two xcresult legs below are here to
+  # prove the macOS wiring on the pull request that introduces it, because none
+  # of it can be exercised locally. Delete the two marked matrix entries and the
+  # matrix `runs-on`, and this job goes back to two Linux legs on ubuntu-latest.
   integrations:
-    name: integrations
-    runs-on: ubuntu-latest
+    name: integrations (${{ matrix.mode }})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: xunit
+            runs-on: ubuntu-latest
+          - mode: xunit-declarations
+            runs-on: ubuntu-latest
+          # TEMPORARY — REVERT BEFORE MERGE: both entries below.
+          - mode: xcresult
+            runs-on: macos-latest
+          - mode: xcresult-declarations
+            runs-on: macos-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/integrations
         with:
+          mode: ${{ matrix.mode }}
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
           token: ${{ secrets.TRUNK_API_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}

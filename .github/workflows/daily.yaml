@@ -1,0 +1,55 @@
+name: Daily
+
+# The macOS half of integrations/. Everything else in this repository runs
+# hourly, deliberately, so that the stories stay comparable — this is the one
+# exception, and cost is the whole reason for it: a mac runner bills at roughly
+# ten times a Linux one, and two macOS legs on the hourly cadence would be
+# around 1,440 mac jobs a month against these two suites alone.
+#
+# Daily rather than weekly because these are still flaky-test stories: a leg
+# running four times a month never accumulates enough runs for a flake rate or
+# a quarantine to resolve, so a cheaper cadence would buy nothing worth having.
+#
+# :45 matches the hourly workflow, keeping both clear of the PR factory at :15,
+# which moves the head these uploads report against. A distinct minute would
+# also do; what it must not be is a minute the hourly cron already fires on
+# from this same file, which would double-report every story here.
+on:
+  schedule:
+    - cron: 45 5 * * *
+  workflow_dispatch: {}
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Both modes read the same .xcresult; what differs is where the uploader takes
+  # each test's file from. Plain, that is the failure that surfaced it, so a
+  # passing test gets no file at all. With the experimental variable set, it is
+  # where sourcekit-lsp says the test is declared, which is the only way a
+  # passing test is ever attributed.
+  #
+  # These two are separate rows from the Linux ones twice over: the mode is the
+  # variant, and an .xcresult and a `swift test` xunit give the same test
+  # different ids by design anyway.
+  integrations:
+    name: integrations (${{ matrix.mode }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [xcresult, xcresult-declarations]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/integrations
+        with:
+          mode: ${{ matrix.mode }}
+          org-slug: ${{ vars.TRUNK_ORG_SLUG }}
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+          api-address: ${{ vars.TRUNK_API_ADDRESS }}
+          test-collection-id: ${{ vars.INTEGRATIONS_TEST_COLLECTION }}
+          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}

@@ -15,7 +15,7 @@ whether detection latency, classification, and quarantine behavior still look ri
 | [`monitors/`](monitors/)         | One package per monitor. **Start here.**                                                                    |
 | [`apps/`](apps/)                 | Real tests against surfaces that genuinely misbehave: a calendar, a monthly event, seventeen status pages.  |
 | [`synth/`](synth/)               | Synthetic JUnit. Nothing executes; a Rust generator fabricates history that would take weeks to accumulate. |
-| [`integrations/`](integrations/) | Tooling a story needs but that is not itself a story — currently a JUnit post-processor for playwright.     |
+| [`integrations/`](integrations/) | Per-framework upload wiring, plus a Swift Testing suite run four ways to compare file attribution.          |
 
 Each top-level folder uploads to its own test collection. Layout is by **purpose, not language** —
 `monitors/` and `apps/` are TypeScript, `synth/` is Rust.
