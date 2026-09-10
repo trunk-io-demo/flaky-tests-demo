@@ -78,13 +78,6 @@ jobs:
   # prove the macOS wiring on the pull request that introduces it, because none
   # of it can be exercised locally. Delete the two marked matrix entries and the
   # matrix `runs-on`, and this job goes back to two Linux legs on ubuntu-latest.
-  #
-  # What this actually proves while ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION is
-  # unset: that Xcode resolves a scheme for a package with no product, that
-  # xcodebuild writes the bundle where the upload step looks, and that
-  # --xcresult-path uploads it. It does **not** prove the experimental variable
-  # does anything — 0.15.4 ignores it, so xcresult-declarations will agree with
-  # xcresult exactly, and agreement here is not evidence either way.
   integrations:
     name: integrations (${{ matrix.mode }})
     runs-on: ${{ matrix.runs-on }}
@@ -110,12 +103,7 @@ jobs:
           token: ${{ secrets.TRUNK_API_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.INTEGRATIONS_TEST_COLLECTION }}
-          # TEMPORARY — REVERT BEFORE MERGE: pinned past the repository variable
-          # so the declarations legs exercise flags no release carries yet.
-          # 0.15.5-beta.1 is the first build with --swift-test-xunit-paths and
-          # the xcresult locations flag; restore the ANALYTICS_CLI_PRE_RELEASE_
-          # TEST_VERSION fallback the other jobs in this file still use.
-          cli-version: 0.15.5-beta.1
+          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
 
   synth:
     name: synth

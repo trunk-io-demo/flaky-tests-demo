@@ -89,10 +89,7 @@ jobs:
           token: ${{ secrets.TRUNK_API_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.INTEGRATIONS_TEST_COLLECTION }}
-          # TEMPORARY — REVERT BEFORE MERGE: see pr.yaml. Only the integrations
-          # jobs are pinned; every other job in this file still tracks the
-          # repository variable.
-          cli-version: 0.15.5-beta.1
+          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
 
   synth:
     name: synth

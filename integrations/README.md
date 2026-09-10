@@ -98,7 +98,7 @@ own right — a missing report still fails the job.
 The requirement is a CLI bug, not a rule to design around: the flag's own help text shows it used
 standalone. [`analytics-cli#1198`](https://github.com/trunk-io/analytics-cli/pull/1198) makes it
 satisfy that check on its own, and **the `junit-paths` input goes away entirely** once that ships in
-the uploader version these legs pin.
+the uploader version `ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION` names.
 
 ## What you cannot verify here
 
@@ -106,19 +106,26 @@ the uploader version these legs pin.
 writes what it claims. They prove nothing about attribution reaching the product. Three things a
 human has to confirm on the first green run of each mode, worst first:
 
-- **`-scheme SwiftTestingUpload`** assumes Xcode generates a scheme named for the package. This one
-  declares a test target and no product, which is the case least likely to get a scheme. If the
-  `.xcresult` modes fail on the first daily run, check `xcodebuild -list` before anything else.
+- **`-scheme SwiftTestingUpload`** depends on Xcode generating a scheme named for the package's
+  library product. It got no scheme at all when the package declared only a test target, which is
+  what [`Package.swift`](swift/Package.swift)'s product is there to fix. If the `.xcresult` modes
+  fail, check `xcodebuild -list` before anything else.
 - **Whether the `xcresult` modes differ from each other at all.** They should: plain leaves passing
   tests with no `file`, declarations gives all five one. Identical `file` coverage across the two
   variants means the env var is not reaching the CLI.
 - **That all four variants appear**, and that `xunit-declarations` reports a `file` for every test
   without the post-processor having written one.
 
-Worth knowing if the beta pin is ever dropped without a release to replace it: on an uploader that
-predates these flags, `xcresult-declarations` has its variable ignored and **silently** uploads
-exactly what plain `xcresult` does. That failure is invisible, which is why the pin is a pin and not
-a fallback.
+The reason each of those is a human check rather than a job status: the uploader hands back
+`using quarantining exit code` and exits **zero** when it errors on its own inputs, so a leg given a
+report that was never written uploads nothing and still goes green. That is not hypothetical — it is
+how a scheme name matching no scheme passed for a whole run. The "Check the suites produced a
+report" step exists for exactly that, but it can only prove a file is present, not that its contents
+reached the product.
+
+Worth knowing if the uploader is ever moved back to a version predating these flags:
+`xcresult-declarations` has its variable ignored and **silently** uploads exactly what plain
+`xcresult` does, which is why `ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION` wants a build that has them.
 
 ## Adding a suite
 

@@ -52,7 +52,4 @@ jobs:
           token: ${{ secrets.TRUNK_API_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.INTEGRATIONS_TEST_COLLECTION }}
-          # TEMPORARY — REVERT BEFORE MERGE: see pr.yaml. On "latest" the
-          # xcresult-declarations leg has its variable ignored and silently
-          # duplicates plain xcresult, which is worse than failing.
-          cli-version: 0.15.5-beta.1
+          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
