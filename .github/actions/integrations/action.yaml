@@ -165,6 +165,10 @@ runs:
     # test-reports even when the swift flag is supplied, so without it the leg
     # dies with "the following required arguments were not provided".
     #
+    # DELETE THIS INPUT once analytics-cli#1198 ships in the pinned uploader:
+    # it makes --swift-test-xunit-paths satisfy that check on its own, which is
+    # the only reason this line exists.
+    #
     # It cannot point at the real report either. The two lists are appended
     # rather than reconciled, so naming the report in both bundles every test
     # twice — measured at 6 cases for a 3-case suite — once with the file the

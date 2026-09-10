@@ -93,8 +93,12 @@ once:
 
 So the fake path is the only value that both satisfies the parser and uploads each test once. It
 costs nothing, because a `--swift-test-xunit-paths` file that does not exist is a hard error in its
-own right — a missing report still fails the job. The underlying requirement looks like a CLI bug:
-the flag's own documentation shows it used standalone.
+own right — a missing report still fails the job.
+
+The requirement is a CLI bug, not a rule to design around: the flag's own help text shows it used
+standalone. [`analytics-cli#1198`](https://github.com/trunk-io/analytics-cli/pull/1198) makes it
+satisfy that check on its own, and **the `junit-paths` input goes away entirely** once that ships in
+the uploader version these legs pin.
 
 ## What you cannot verify here
 
