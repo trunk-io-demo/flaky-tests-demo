@@ -80,12 +80,21 @@ apart, taken with the alternative — a collection per mode — on the table.
 carrying both, and the four legs are pinned to it directly while this is being proven out; the pin
 reverts to `ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION` once a real release has them.
 
-**`xunit-declarations` passes a `junit-paths` glob chosen to match nothing**, which is a workaround
-rather than a decoration. The CLI requires one of `junit-paths`, `bazel-bep-path`, or `test-reports`
-even when `--swift-test-xunit-paths` is supplied, so the leg dies at argument parsing without it —
-verified against `0.15.5-beta.1`. Pointing it at the real report instead bundles every test twice,
-once with a `file` and once without. Nothing is weakened by this: a swift path that does not exist
-is still a hard error, so a missing report still fails the job.
+**`xunit-declarations` points `junit-paths` at a directory that does not exist**, which looks like a
+mistake and is not one. Two measurements against `0.15.5-beta.1`, both of which have to hold at
+once:
+
+- Drop the flag and the leg dies at argument parsing — the CLI requires one of `junit-paths`,
+  `bazel-bep-path`, or `test-reports` even when `--swift-test-xunit-paths` is supplied.
+- Point it at the real report and the 3-case suite uploads **6 cases**. The two lists are appended
+  rather than reconciled, so every test arrives twice: once carrying the file the language server
+  resolved, once carrying none. On CI those are two distinct `gen_info_id`s, because `file` is one
+  of the inputs.
+
+So the fake path is the only value that both satisfies the parser and uploads each test once. It
+costs nothing, because a `--swift-test-xunit-paths` file that does not exist is a hard error in its
+own right — a missing report still fails the job. The underlying requirement looks like a CLI bug:
+the flag's own documentation shows it used standalone.
 
 ## What you cannot verify here
 

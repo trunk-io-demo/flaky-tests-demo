@@ -119,13 +119,17 @@ runs:
     # Via env because the action has no --swift-test-xunit-paths input, and
     # named in full because that flag takes files where junit-paths takes globs.
     #
-    # junit-paths is a glob chosen to match nothing, and is not optional: the
-    # CLI still requires one of junit-paths, bazel-bep-path, or test-reports
-    # even when the swift flag is supplied, so without it the leg dies with
-    # "the following required arguments were not provided". Pointing it at the
-    # real report instead would bundle every test twice, once with a file
-    # attribute and once without. The missing-report guard survives regardless,
-    # because a swift path that does not exist is a hard error of its own.
+    # junit-paths names a directory that deliberately does not exist, and is not
+    # optional: the CLI requires one of junit-paths, bazel-bep-path, or
+    # test-reports even when the swift flag is supplied, so without it the leg
+    # dies with "the following required arguments were not provided".
+    #
+    # It cannot point at the real report either. The two lists are appended
+    # rather than reconciled, so naming the report in both bundles every test
+    # twice — measured at 6 cases for a 3-case suite — once with the file the
+    # language server resolved and once without. Nothing is lost by the fake
+    # path: a swift path that does not exist is a hard error of its own, so a
+    # missing report still fails the job.
     - name: Upload results (xunit, declared files)
       if: always() && inputs.mode == 'xunit-declarations'
       uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
@@ -133,7 +137,7 @@ runs:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
         TRUNK_SWIFT_TEST_XUNIT_PATHS: integrations/swift/test-results-declarations/swift-swift-testing.xml
       with:
-        junit-paths: integrations/swift/test-results-declarations/placeholder-never-matches-*.xml
+        junit-paths: integrations/swift/uploaded-via-swift-test-xunit-paths-instead/*.xml
         org-slug: ${{ inputs.org-slug }}
         token: ${{ inputs.token }}
         test-collection-id: ${{ inputs.test-collection-id }}
