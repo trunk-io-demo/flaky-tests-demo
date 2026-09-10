@@ -13,6 +13,9 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 // It also stamps a timestamp, which Swift Testing omits entirely and the
 // uploader warns about. The report's mtime is when the run finished, so the
 // suite's own duration is subtracted to approximate when it started.
+//
+// --timestamps-only stamps but writes no file: --swift-test-xunit-paths fills
+// only gaps, so a file attribute here would leave it nothing to resolve.
 
 const TESTCASE = /<testcase\b[^>]*>/g;
 const CLASSNAME = /\bclassname="([^"]*)"/;
@@ -65,14 +68,20 @@ const declarationIndex = (dir, root) => {
   return index;
 };
 
-const paths = process.argv.slice(2);
+const args = process.argv.slice(2);
+const timestampsOnly = args.includes("--timestamps-only");
+const paths = args.filter((argument) => argument !== "--timestamps-only");
 if (paths.length === 0) {
-  console.error("usage: junit-add-file-attribute <report.xml>...");
+  console.error(
+    "usage: junit-add-file-attribute [--timestamps-only] <report.xml>...",
+  );
   process.exit(2);
 }
 
 const root = repoRoot(process.cwd());
-const index = declarationIndex(resolve("Tests"), root);
+const index = timestampsOnly
+  ? new Map()
+  : declarationIndex(resolve("Tests"), root);
 const unresolved = new Set();
 
 for (const path of paths) {
@@ -86,7 +95,7 @@ for (const path of paths) {
 
   const finishedAt = statSync(path).mtime.getTime();
 
-  const withFiles = xml.replace(TESTCASE, (tag) => {
+  const addFile = (tag) => {
     if (/\bfile="/.test(tag)) return tag;
     const classname = CLASSNAME.exec(tag)?.[1];
     if (!classname) return tag;
@@ -96,7 +105,9 @@ for (const path of paths) {
       return tag;
     }
     return tag.replace(CLASSNAME, (matched) => `${matched} file="${file}"`);
-  });
+  };
+
+  const withFiles = timestampsOnly ? xml : xml.replace(TESTCASE, addFile);
 
   const patched = withFiles.replace(TESTSUITE, (tag) => {
     if (/\btimestamp="/.test(tag)) return tag;

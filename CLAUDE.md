@@ -122,6 +122,18 @@ protected — the usual reason a run intended as `PB` arrives as `NONE`.
 skip the jobs that produce this repository's data — the runs are what is being demonstrated, so there is no
 runner time here worth saving. It stays in shadow mode.
 
+## Runner time, and the one exception
+
+The paragraph above is the rule: Linux runner time here is not worth saving, because the runs _are_ the
+product. **macOS is where that stops being true** — a mac runner bills at roughly ten times a Linux one,
+so the two `.xcresult` legs in [`daily.yaml`](.github/workflows/daily.yaml) run daily rather than hourly
+and are kept off pull requests entirely. Daily and not weekly because these are still flaky-test stories:
+a leg running four times a month never accumulates the runs a rate or a quarantine needs to resolve.
+
+That is the only per-folder schedule in the repository, and adding a second one needs a reason of the same
+kind. A new cadence also needs its own **minute**: two crons in one file that fire on the same minute
+produce two runs of that workflow, which double-reports every story in it.
+
 ## What you cannot verify locally
 
 Verify what you can before claiming anything:

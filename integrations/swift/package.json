@@ -8,6 +8,8 @@
     "junit-add-swift-file-attribute": "./junit-add-file-attribute.mjs"
   },
   "scripts": {
-    "test": "mkdir -p test-results && swift test --xunit-output test-results/swift.xml; status=$?; node ./junit-add-file-attribute.mjs test-results/swift-swift-testing.xml; exit $status"
+    "test": "mkdir -p test-results && swift test --xunit-output test-results/swift.xml; status=$?; node ./junit-add-file-attribute.mjs test-results/swift-swift-testing.xml; exit $status",
+    "test:declarations": "mkdir -p test-results-declarations && swift test --xunit-output test-results-declarations/swift.xml; status=$?; node ./junit-add-file-attribute.mjs --timestamps-only test-results-declarations/swift-swift-testing.xml; exit $status",
+    "test:xcresult": "rm -rf test-results-xcresult && mkdir -p test-results-xcresult && xcodebuild test -scheme SwiftTestingUpload -destination 'platform=macOS' -resultBundlePath test-results-xcresult/SwiftTestingUpload.xcresult"
   }
 }

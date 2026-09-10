@@ -1,8 +1,12 @@
 name: Hourly
 
-# One cadence for every story. There are deliberately no per-folder schedules: a
-# single cadence is what keeps the stories comparable, and synth/ volume is tuned
-# by its scale variables rather than by running more often.
+# One cadence for every story that runs on Linux, which is all of them but two.
+# A single cadence is what keeps the stories comparable, and synth/ volume is
+# tuned by its scale variables rather than by running more often.
+#
+# The exception is the two macOS integrations legs in daily.yaml, and it is a
+# cost exception rather than a design one: mac minutes bill at roughly ten times
+# Linux ones. Nothing else gets a schedule of its own.
 #
 # The PR factory has its own workflow and its own clock, because it writes to the
 # repository and has to move the head before these uploads report against it.
@@ -62,19 +66,33 @@ jobs:
           test-collection-id: ${{ vars.APPS_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
 
-  # Report shapes rather than platform behavior, so one runner is enough.
+  # The two modes that need no Xcode, so no macOS runner. Their macOS
+  # counterparts are in daily.yaml, on their own cadence because mac minutes
+  # cost roughly ten times Linux ones.
+  #
+  # The mode is also the variant, which is what keeps the four apart: they run
+  # the same tests and differ only in which file the uploader attributes each
+  # one to, and that is not otherwise part of test identity.
   integrations:
-    name: integrations
+    name: integrations (${{ matrix.mode }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [xunit, xunit-declarations]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/integrations
         with:
+          mode: ${{ matrix.mode }}
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
           token: ${{ secrets.TRUNK_API_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.INTEGRATIONS_TEST_COLLECTION }}
-          cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
+          # TEMPORARY — REVERT BEFORE MERGE: see pr.yaml. Only the integrations
+          # jobs are pinned; every other job in this file still tracks the
+          # repository variable.
+          cli-version: 0.15.5-beta.1
 
   synth:
     name: synth

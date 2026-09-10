@@ -4,8 +4,12 @@ Swift Testing upload wiring. A minimal suite whose only job is to demonstrate th
 output reaches the product correctly, plus the post-processing it needs to get there.
 
 Swift Testing ships with the toolchain as of Swift 6, so `import Testing` needs no package
-dependency and no developer snapshot. The package has no dependencies at all, and CI runs it on
-`ubuntu-latest` — nothing here is macOS-only.
+dependency and no developer snapshot. The package has no dependencies at all.
+
+CI runs this one suite four times, two of those on macOS under Xcode — the four modes are in
+[`../README.md`](../README.md), and they exist because `swift test` and `xcodebuild` produce
+different reports and the uploader has more than one way to attribute a test to a file. Nothing in
+the _suite_ is macOS-only; the `.xcresult` modes are, because only `xcodebuild` writes a bundle.
 
 ## What the suite covers
 
@@ -82,13 +86,25 @@ It is exposed as a bin, so another package can call it by name:
 The `status` dance matters: these tests fail on purpose, and the post-step must run without
 swallowing the runner's exit code.
 
+**`--timestamps-only` stamps the timestamp and writes no `file`.** That is what the
+`xunit-declarations` mode runs, and the reason is that `--swift-test-xunit-paths` fills only gaps: a
+`file` written here is a `file` the CLI leaves alone, so doing both would mean testing this
+post-processor twice and the CLI's resolution never. The timestamp still has to be stamped, because
+Swift Testing omits it in every mode and the uploader warns about it either way.
+
 ## Running it
 
 ```bash
-pnpm --filter @flaky-tests-demo/integrations-swift test
+pnpm --filter @flaky-tests-demo/integrations-swift test                    # xunit
+pnpm --filter @flaky-tests-demo/integrations-swift test:declarations       # xunit, no file written
+pnpm --filter @flaky-tests-demo/integrations-swift test:xcresult           # macOS only
 ```
 
-Or without a local toolchain:
+The three write to `test-results/`, `test-results-declarations/`, and `test-results-xcresult/`
+respectively — separate directories, so the upload globs cannot pick up the wrong run's report.
+
+Or without a local toolchain, which covers the two xunit modes but not the `.xcresult` ones — those
+need Xcode, so there is no container for them:
 
 ```bash
 docker run --rm -v "$PWD":/work -w /work swift:6.1 \

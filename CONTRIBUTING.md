@@ -95,7 +95,7 @@ is a `synth/` concern.
 | `SYNTH_TEST_COLLECTION`        | var    | One collection per folder. Unset means that folder's upload skips. |
 | `MONITORS_TEST_COLLECTION`     | var    |                                                                    |
 | `APPS_TEST_COLLECTION`         | var    |                                                                    |
-| `INTEGRATIONS_TEST_COLLECTION` | var    |                                                                    |
+| `INTEGRATIONS_TEST_COLLECTION` | var    | All four `integrations/` modes upload here, under four variants.   |
 | `PR_FACTORY_TOKEN`             | secret | **Not** the default workflow token — see below.                    |
 
 Most of these fail **quietly**: a missing collection ID leaves a notice saying the upload will not land
