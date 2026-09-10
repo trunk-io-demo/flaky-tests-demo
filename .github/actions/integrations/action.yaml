@@ -81,15 +81,25 @@ runs:
       run: |
         set -euo pipefail
         case "$MODE" in
-          xunit) script=test ;;
-          xunit-declarations) script=test:declarations ;;
-          xcresult | xcresult-declarations) script=test:xcresult ;;
+          xunit)
+            script=test
+            report='integrations/*/test-results/*.xml'
+            ;;
+          xunit-declarations)
+            script=test:declarations
+            report='integrations/*/test-results-declarations/*.xml'
+            ;;
+          xcresult | xcresult-declarations)
+            script=test:xcresult
+            report='integrations/swift/test-results-xcresult/SwiftTestingUpload.xcresult'
+            ;;
           *)
             echo "::error::unknown mode $MODE"
             exit 2
             ;;
         esac
         echo "name=$script" >>"$GITHUB_OUTPUT"
+        echo "report=$report" >>"$GITHUB_OUTPUT"
 
     # `--if-present` is what keeps this generic: playwright/ is upload wiring
     # with no suite of its own and is skipped, and a future framework suite is
@@ -99,6 +109,32 @@ runs:
       shell: bash
       continue-on-error: true
       run: pnpm --filter "./integrations/**" --no-bail --if-present run ${{ steps.script.outputs.name }}
+
+    # `allow-missing-junit-files: false` is not the guard it looks like. When the
+    # runner writes no report at all the uploader reports its own error and then
+    # exits *zero* — "using quarantining exit code" — so the leg uploads nothing
+    # and still goes green. That is how a scheme name that matched no scheme
+    # passed for a whole run. This step is the one that makes it loud.
+    - name: Check the suites produced a report
+      shell: bash
+      env:
+        MODE: ${{ inputs.mode }}
+        REPORT: ${{ steps.script.outputs.report }}
+      run: |
+        set -uo pipefail
+        shopt -s nullglob
+        # Expand, then test existence: nullglob drops a pattern that matches
+        # nothing, but leaves a wildcard-free path alone — and the xcresult
+        # mode's report is a literal directory name.
+        found=()
+        for candidate in $REPORT; do
+          [ -e "$candidate" ] && found+=("$candidate")
+        done
+        if [ ${#found[@]} -eq 0 ]; then
+          echo "::error::mode $MODE produced no report matching $REPORT"
+          exit 1
+        fi
+        printf 'found %s\n' "${found[@]}"
 
     # SwiftPM inserts the testing library's name before the extension, so the
     # file is swift-swift-testing.xml rather than swift.xml. Glob, don't name.
