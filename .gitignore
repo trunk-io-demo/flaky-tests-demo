@@ -150,6 +150,8 @@ vite.config.ts.timestamp-*
 
 # Test result output, uploaded by CI and regenerated on every run
 test-results/
+test-results-declarations/
+test-results-xcresult/
 playwright-report/
 blob-report/
 .playwright/
