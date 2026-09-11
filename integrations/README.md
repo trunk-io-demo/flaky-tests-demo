@@ -70,29 +70,21 @@ apart is that `variant` is part of test identity — repository, `file`, `classn
 `name`, `variant` — while attribution is not. Without it the four legs would be four runs of one
 test rather than four attribution paths to compare, which is the whole point of running them.
 
-Landing this **reset the Swift tests' history**: they previously uploaded with no variant, and
-tagging them starts new tests as far as the product is concerned. The old variant-less rows keep
-their history and stop receiving runs. This was a deliberate trade for being able to tell the four
-apart, taken with the alternative — a collection per mode — on the table.
+There is a set of **variant-less Swift rows** in the collection that no longer receives runs. These
+suites uploaded without a variant before the four modes existed, and adding one starts new tests as
+far as the product is concerned. Being able to tell the four modes apart was worth the reset; a
+collection per mode was the alternative and would have cost four new collections.
 
-**Both `declarations` modes need an uploader newer than `0.15.4`**, the last release without
-`--swift-test-xunit-paths` or the xcresult locations flag. `0.15.5-beta.2` is the first build that
-runs them as documented, so `ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION` has to name it or something
-later — see [what cannot be verified here](#what-you-cannot-verify-here) for what happens if it does
-not.
+**Both `declarations` modes need uploader `0.15.5-beta.2` or later**, so
+`ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION` has to name one. On anything older `xunit-declarations`
+fails outright and `xcresult-declarations` has its variable ignored and uploads exactly what plain
+`xcresult` does — wrong in a way nothing reports.
 
-**`xunit-declarations` passes no `junit-paths` at all.** That is the point of it: the swift flag is
-the only report source, so every test's file comes from where a language server says it is declared
-rather than from the post-processor. Naming the report under both flags would upload it twice — the
-two lists are appended rather than reconciled, measured at 6 cases for the 3-case suite, once
-carrying the resolved file and once carrying none, which are two distinct `gen_info_id`s because
-`file` is an input to it.
-
-Until `0.15.5-beta.2` the flag could not be passed alone: the CLI required one of `junit-paths`,
-`bazel-bep-path`, or `test-reports` regardless, so this leg carried a `junit-paths` glob aimed at a
-directory that did not exist, purely to satisfy the parser.
-[`analytics-cli#1198`](https://github.com/trunk-io/analytics-cli/pull/1198) fixed that, and the glob
-is gone.
+**`xunit-declarations` passes no `junit-paths`.** The swift flag is its only report source, which is
+what makes the CLI resolve each test's file from its declaration instead of leaving the attribution
+to the post-processor. Naming the report under both flags uploads it twice: the two lists are
+appended rather than reconciled, so each test arrives once carrying the resolved file and once
+carrying none, and `file` feeds `gen_info_id`, so those are two tests rather than one test twice.
 
 ## What you cannot verify here
 

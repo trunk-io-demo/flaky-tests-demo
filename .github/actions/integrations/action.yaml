@@ -32,7 +32,7 @@ inputs:
       Uploader CLI version, or "latest". Workflows pass
       vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION so a pre-release build can be
       exercised across every folder at once. The declarations modes need
-      0.15.5-beta.2 or later; on anything older xunit-declarations fails and
+      0.15.5-beta.2 or later: below that xunit-declarations fails outright and
       xcresult-declarations silently duplicates plain xcresult.
     required: false
     default: latest
