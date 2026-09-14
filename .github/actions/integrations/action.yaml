@@ -31,8 +31,9 @@ inputs:
     description: >
       Uploader CLI version, or "latest". Workflows pass
       vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION so a pre-release build can be
-      exercised across every folder at once. The declarations modes need a CLI
-      newer than 0.15.4, the last release without their flags.
+      exercised across every folder at once. The declarations modes need
+      0.15.5-beta.2 or later: below that xunit-declarations fails outright and
+      xcresult-declarations silently duplicates plain xcresult.
     required: false
     default: latest
 
@@ -140,7 +141,7 @@ runs:
     # file is swift-swift-testing.xml rather than swift.xml. Glob, don't name.
     - name: Upload results (xunit)
       if: always() && inputs.mode == 'xunit'
-      uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
+      uses: trunk-io/analytics-uploader@817e1a2ec58d888825699ee15ea172809bb3f226 # v2.1.3
       env:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
       with:
@@ -159,30 +160,16 @@ runs:
 
     # Via env because the action has no --swift-test-xunit-paths input, and
     # named in full because that flag takes files where junit-paths takes globs.
-    #
-    # junit-paths names a directory that deliberately does not exist, and is not
-    # optional: the CLI requires one of junit-paths, bazel-bep-path, or
-    # test-reports even when the swift flag is supplied, so without it the leg
-    # dies with "the following required arguments were not provided".
-    #
-    # DELETE THIS INPUT once analytics-cli#1198 ships in the pinned uploader:
-    # it makes --swift-test-xunit-paths satisfy that check on its own, which is
-    # the only reason this line exists.
-    #
-    # It cannot point at the real report either. The two lists are appended
-    # rather than reconciled, so naming the report in both bundles every test
-    # twice — measured at 6 cases for a 3-case suite — once with the file the
-    # language server resolved and once without. Nothing is lost by the fake
-    # path: a swift path that does not exist is a hard error of its own, so a
-    # missing report still fails the job.
+    # No junit-paths: this is the only report source, which is what makes the
+    # CLI resolve each test's file from its declaration rather than leaving the
+    # attribution to the post-processor.
     - name: Upload results (xunit, declared files)
       if: always() && inputs.mode == 'xunit-declarations'
-      uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
+      uses: trunk-io/analytics-uploader@817e1a2ec58d888825699ee15ea172809bb3f226 # v2.1.3
       env:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
         TRUNK_SWIFT_TEST_XUNIT_PATHS: integrations/swift/test-results-declarations/swift-swift-testing.xml
       with:
-        junit-paths: integrations/swift/uploaded-via-swift-test-xunit-paths-instead/*.xml
         org-slug: ${{ inputs.org-slug }}
         token: ${{ inputs.token }}
         test-collection-id: ${{ inputs.test-collection-id }}
@@ -195,7 +182,7 @@ runs:
     # xcresult-path takes one bundle, not a glob, so these two name the package.
     - name: Upload results (xcresult)
       if: always() && inputs.mode == 'xcresult'
-      uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
+      uses: trunk-io/analytics-uploader@817e1a2ec58d888825699ee15ea172809bb3f226 # v2.1.3
       env:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
       with:
@@ -214,7 +201,7 @@ runs:
     # string here would not read as "off" — it would fail to parse as a bool.
     - name: Upload results (xcresult, declared files)
       if: always() && inputs.mode == 'xcresult-declarations'
-      uses: trunk-io/analytics-uploader@385f1ccdf345b4532dc4b6c665dd432b702b8e28 # v2.1.2
+      uses: trunk-io/analytics-uploader@817e1a2ec58d888825699ee15ea172809bb3f226 # v2.1.3
       env:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
         TRUNK_USE_EXPERIMENTAL_XCRESULT_TEST_LOCATIONS: "true"
