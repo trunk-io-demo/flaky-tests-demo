@@ -36,7 +36,8 @@ rspec reports. So the script runs rspec from the **repository root**: `file` bec
 which would be the same for every rspec suite ever added. The spec directory is passed with
 `--default-path`, which also puts it on the load path for `--require spec_helper`.
 
-The mode is the variant, like the Swift modes, so these rows read `rspec`.
+Unlike the Swift modes, the mode is **not** the variant. The four Swift modes need one to tell the
+same tests apart; nothing else runs these, so the rows carry no variant.
 
 ## Versions
 
@@ -68,7 +69,7 @@ signal, just with nothing able to quarantine.
 
 What a human has to confirm on the first runs:
 
-- **Seven `rspec`-variant rows** appear in the integrations collection, with `file` set on every one.
+- **Seven variant-less rows** appear in the integrations collection, with `file` set on every one.
 - **The pending example reads as a pass**, and the skipped one as a skip, not as a failure.
 - **Once a ladder rung is quarantined**, the log shows `Test is quarantined, overriding exception` for
   it, and the job goes green when no failure is left unquarantined.

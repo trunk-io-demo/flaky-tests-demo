@@ -10,9 +10,9 @@ inputs:
     description: >
       One of xunit, xunit-declarations, xcresult, xcresult-declarations, or
       rspec. The xcresult modes need Xcode and so only run on a macOS runner.
-      Doubles as the upload's variant, which is what keeps the four Swift modes
-      apart: they run the same tests, and attribution is not otherwise part of
-      test identity.
+      The four Swift modes double as the upload's variant, which is what keeps
+      them apart: they run the same tests, and attribution is not otherwise part
+      of test identity. rspec has no counterpart to tell apart, so no variant.
     required: true
   org-slug:
     description: Trunk org URL slug.
@@ -147,7 +147,6 @@ runs:
         TRUNK_API_TOKEN: ${{ inputs.token }}
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
         TRUNK_TEST_COLLECTION_ID: ${{ inputs.test-collection-id }}
-        TRUNK_VARIANT: ${{ inputs.mode }}
         RSPEC_TRUNK_FLAKY_TESTS_VERSION: ${{ inputs.rspec-version }}
       run: |
         set -o pipefail
