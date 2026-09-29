@@ -1,16 +1,18 @@
 name: Run the integrations suites
 description: >
   Runs every package under integrations/ that has a test script for the given
-  mode, and uploads its results. The four modes are four ways the uploader can
-  attribute a test to a file; see integrations/README.md.
+  mode, and uploads its results. The four Swift modes are four ways the uploader
+  can attribute a test to a file; rspec uploads through the RSpec plugin instead
+  of the uploader. See integrations/README.md.
 
 inputs:
   mode:
     description: >
-      One of xunit, xunit-declarations, xcresult, or xcresult-declarations. The
-      xcresult modes need Xcode and so only run on a macOS runner. Doubles as
-      the upload's variant, which is what keeps the four apart: they run the
-      same tests, and attribution is not otherwise part of test identity.
+      One of xunit, xunit-declarations, xcresult, xcresult-declarations, or
+      rspec. The xcresult modes need Xcode and so only run on a macOS runner.
+      The four Swift modes double as the upload's variant, which is what keeps
+      them apart: they run the same tests, and attribution is not otherwise part
+      of test identity. rspec has no counterpart to tell apart, so no variant.
     required: true
   org-slug:
     description: Trunk org URL slug.
@@ -34,6 +36,13 @@ inputs:
       exercised across every folder at once. The declarations modes need
       0.15.5-beta.2 or later: below that xunit-declarations fails outright and
       xcresult-declarations silently duplicates plain xcresult.
+    required: false
+    default: latest
+  rspec-version:
+    description: >
+      rspec_trunk_flaky_tests gem version, or "latest" for the newest stable
+      release. Workflows pass vars.RSPEC_PRE_RELEASE_TEST_VERSION, the gem's
+      counterpart to cli-version. Only the rspec mode reads it.
     required: false
     default: latest
 
@@ -67,6 +76,21 @@ runs:
       with:
         xcode-version: ^26.0
 
+    # Ruby comes from the trunk.yaml runtime rather than setup-ruby, so CI and a
+    # local `trunk tools install` get the same interpreter. The action adds
+    # .trunk/tools to PATH relative to the workspace, and pnpm runs each script
+    # from its package directory, so the absolute path is added as well.
+    - name: Set up Ruby
+      if: inputs.mode == 'rspec'
+      uses: trunk-io/trunk-action/install@04ba50e7658c81db7356da96657e6e77f220bfa3 # v1.3.1
+      with:
+        tools: ruby
+
+    - name: Put Ruby on PATH
+      if: inputs.mode == 'rspec'
+      shell: bash
+      run: echo "$GITHUB_WORKSPACE/.trunk/tools" >>"$GITHUB_PATH"
+
     - name: Install dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
@@ -94,6 +118,10 @@ runs:
             script=test:xcresult
             report='integrations/swift/test-results-xcresult/SwiftTestingUpload.xcresult'
             ;;
+          rspec)
+            script=test:rspec
+            report=''
+            ;;
           *)
             echo "::error::unknown mode $MODE"
             exit 2
@@ -105,24 +133,60 @@ runs:
     # `--if-present` is what keeps this generic: playwright/ is upload wiring
     # with no suite of its own and is skipped, and a future framework suite is
     # picked up by adding the script for a mode, with no edit here.
+    #
+    # The TRUNK_* variables are for the RSpec plugin, which uploads from inside
+    # the test process and reads nothing else; the Swift suites ignore them. It
+    # activates on the two credentials being *set*, not non-empty, so an empty
+    # token from a fork has to be unset or the plugin tries to upload with it.
     - name: Run integration suites
       id: suites
       shell: bash
       continue-on-error: true
-      run: pnpm --filter "./integrations/**" --no-bail --if-present run ${{ steps.script.outputs.name }}
+      env:
+        TRUNK_ORG_URL_SLUG: ${{ inputs.org-slug }}
+        TRUNK_API_TOKEN: ${{ inputs.token }}
+        TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}
+        TRUNK_TEST_COLLECTION_ID: ${{ inputs.test-collection-id }}
+        RSPEC_TRUNK_FLAKY_TESTS_VERSION: ${{ inputs.rspec-version }}
+      run: |
+        set -o pipefail
+        for name in TRUNK_ORG_URL_SLUG TRUNK_API_TOKEN TRUNK_PUBLIC_API_ADDRESS TRUNK_TEST_COLLECTION_ID; do
+          [ -n "${!name}" ] || unset "$name"
+        done
+        [ -n "${TRUNK_API_TOKEN:-}" ] && [ -n "${TRUNK_TEST_COLLECTION_ID:-}" ] || unset TRUNK_API_TOKEN
+        pnpm --filter "./integrations/**" --no-bail --if-present run ${{ steps.script.outputs.name }} 2>&1 |
+          tee "$RUNNER_TEMP/integrations-suites.log"
 
     # `allow-missing-junit-files: false` is not the guard it looks like. When the
     # runner writes no report at all the uploader reports its own error and then
     # exits *zero* — "using quarantining exit code" — so the leg uploads nothing
     # and still goes green. That is how a scheme name that matched no scheme
     # passed for a whole run. This step is the one that makes it loud.
+    #
+    # The RSpec plugin writes no report file: it uploads from inside rspec and
+    # says so on stdout, and failing to publish does not change rspec's exit
+    # code. So for that mode the check is the plugin's own success line, and
+    # only when there were credentials for it to upload with.
     - name: Check the suites produced a report
       shell: bash
       env:
         MODE: ${{ inputs.mode }}
         REPORT: ${{ steps.script.outputs.report }}
+        HAS_UPLOAD: ${{ inputs.token != '' && inputs.test-collection-id != '' }}
       run: |
         set -uo pipefail
+        if [ "$MODE" = rspec ]; then
+          if [ "$HAS_UPLOAD" != true ]; then
+            echo "::notice::no token or collection ID, so the RSpec plugin was inactive and uploaded nothing"
+            exit 0
+          fi
+          if ! grep -q 'Flaky tests report upload complete' "$RUNNER_TEMP/integrations-suites.log"; then
+            echo "::error::mode rspec ran, but the RSpec plugin did not report a completed upload"
+            exit 1
+          fi
+          echo 'the RSpec plugin reported a completed upload'
+          exit 0
+        fi
         shopt -s nullglob
         # Expand, then test existence: nullglob drops a pattern that matches
         # nothing, but leaves a wildcard-free path alone — and the xcresult
@@ -215,3 +279,13 @@ runs:
         allow-missing-junit-files: false
         use-cache: true
         previous-step-outcome: ${{ steps.suites.outcome }}
+
+    # The rspec counterpart of previous-step-outcome. The plugin quarantines in
+    # process, so rspec's own exit code already means "not quarantined yet"; the
+    # suites step only runs under continue-on-error so the check above can run.
+    - name: Hand back the rspec outcome
+      if: always() && inputs.mode == 'rspec' && steps.suites.outcome == 'failure'
+      shell: bash
+      run: |
+        echo "::error::rspec reported a failure that is not quarantined"
+        exit 1

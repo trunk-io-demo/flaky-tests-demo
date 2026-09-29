@@ -76,6 +76,7 @@ include/exclude.
 
 **Manifests are per package; lockfiles are not.** One `package.json` per story and one `Cargo.toml` per
 `synth/` subdirectory, but exactly one `pnpm-lock.yaml` and one `Cargo.lock`, both at the root.
+`integrations/rspec/` commits no `Gemfile.lock` at all: its plugin version comes from a variable at install time.
 
 **The workspace globs are load-bearing.** A directory matched by neither `pnpm-workspace.yaml` nor
 `members = ["synth/*"]` is invisible: no install, no CI, and it fails quietly. Check both, plus

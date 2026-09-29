@@ -3,10 +3,11 @@
 Per-framework upload wiring: what each test framework needs in order for its output to reach the
 product correctly.
 
-| Package                      | What it is                                                                                                        |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| [`playwright/`](playwright/) | Post-processing for playwright's JUnit output. Used by the two playwright stories in [`monitors/`](../monitors/). |
-| [`swift/`](swift/)           | A minimal Swift Testing suite, plus the post-processing its output needs. The first suite of its own here.        |
+| Package                      | What it is                                                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [`playwright/`](playwright/) | Post-processing for playwright's JUnit output. Used by the two playwright stories in [`monitors/`](../monitors/).  |
+| [`swift/`](swift/)           | A minimal Swift Testing suite, plus the post-processing its output needs. The first suite of its own here.         |
+| [`rspec/`](rspec/)           | A minimal RSpec suite that uploads and quarantines through the `rspec_trunk_flaky_tests` plugin, not the uploader. |
 
 ## `playwright/`
 
@@ -86,6 +87,15 @@ to the post-processor. Naming the report under both flags uploads it twice: the 
 appended rather than reconciled, so each test arrives once carrying the resolved file and once
 carrying none, and `file` feeds `gen_info_id`, so those are two tests rather than one test twice.
 
+## `rspec/`
+
+`rspec` is a mode of its own and has nothing to do with attribution. The
+[`rspec_trunk_flaky_tests`](https://rubygems.org/gems/rspec_trunk_flaky_tests) plugin uploads from
+inside the rspec process and quarantines there too, so this mode has no upload step. The composite
+action passes the credentials to the test step as `TRUNK_*` variables, and rspec's exit code becomes
+the job's. It runs on Linux, hourly and on each pull request, and installs the plugin version named
+by `RSPEC_PRE_RELEASE_TEST_VERSION`. [`rspec/README.md`](rspec/README.md) has the details.
+
 ## What you cannot verify here
 
 `trunk check --all` and a local `pnpm --filter ... test` prove the suites run and the post-processor
@@ -127,6 +137,7 @@ workflow edit is needed:
 | `xunit-declarations`    | `test:declarations` |
 | `xcresult`              | `test:xcresult`     |
 | `xcresult-declarations` | `test:xcresult`     |
+| `rspec`                 | `test:rspec`        |
 
 A suite implements whichever modes make sense for it and is skipped by `--if-present` in the rest —
 `playwright/` has none of them and is skipped everywhere. The one place a new suite does need a CI

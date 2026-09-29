@@ -158,3 +158,6 @@ blob-report/
 
 # synth/ generated JUnit XML and upload manifests
 /synth-out/
+
+# Ruby: integrations/rspec resolves its plugin version at install time, so no lockfile is committed
+Gemfile.lock

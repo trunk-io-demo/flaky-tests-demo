@@ -13,6 +13,7 @@ runtimes:
   enabled:
     - node@22.16.0
     - python@3.14.4
+    - ruby@4.0.5
 lint:
   disabled:
     # Cargo owns clippy linting invocation
@@ -29,6 +30,7 @@ lint:
     - osv-scanner@2.4.0
     - pinact@4.1.1
     - prettier@3.9.6
+    - rubocop@1.87.0
     - taplo@0.10.0
     - trufflehog@3.96.0
     - yamllint@1.38.0
@@ -37,3 +39,15 @@ actions:
     - trunk-announce
     - trunk-check-pre-push
     - trunk-fmt-pre-commit
+# Trunk's ruby runtime compiles from source with ruby-build. The stand-in next to this
+# file has the same interface and fetches a prebuilt jdx/ruby binary instead. Download
+# URLs cannot name a repo path, so it is fetched from this repository's default branch.
+downloads:
+  - name: ruby-build
+    downloads:
+      - url: https://raw.githubusercontent.com/trunk-io-demo/flaky-tests-demo/main/.trunk/ruby-build.tar.gz
+        strip_components: 1
+# Puts ruby, gem, and bundle in .trunk/tools, for integrations/rspec.
+tools:
+  runtimes:
+    - ruby
