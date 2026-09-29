@@ -52,8 +52,10 @@ choose, so it is gitignored and bundler resolves on every install.
 
 Ruby comes from the `ruby` runtime in [`.trunk/trunk.yaml`](../../.trunk/trunk.yaml), not from
 `setup-ruby`. Trunk's runtime normally compiles Ruby from source with `ruby-build`. The `downloads`
-override swaps in analytics-cli's stand-in, which has the same interface and fetches a prebuilt
-[jdx/ruby](https://github.com/jdx/ruby) binary instead. The gem ships native builds for Ruby up to 4.0,
+override swaps in [`.trunk/ruby-build.tar.gz`](../../.trunk/ruby-build.tar.gz), a copy of analytics-cli's
+stand-in, which has the same interface and fetches a prebuilt [jdx/ruby](https://github.com/jdx/ruby)
+binary instead. Trunk download URLs cannot name a path in the repository, so it is fetched from this
+repository's default branch — an edit to the tarball takes effect only once it is merged. The gem ships native builds for Ruby up to 4.0,
 so there is no Rust toolchain to install either.
 
 ## What CI checks, and what it cannot

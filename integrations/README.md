@@ -87,7 +87,7 @@ to the post-processor. Naming the report under both flags uploads it twice: the 
 appended rather than reconciled, so each test arrives once carrying the resolved file and once
 carrying none, and `file` feeds `gen_info_id`, so those are two tests rather than one test twice.
 
-## `rspec/`, the fifth mode
+## `rspec/`
 
 `rspec` is a mode of its own and has nothing to do with attribution. The
 [`rspec_trunk_flaky_tests`](https://rubygems.org/gems/rspec_trunk_flaky_tests) plugin uploads from

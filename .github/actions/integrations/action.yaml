@@ -1,9 +1,9 @@
 name: Run the integrations suites
 description: >
   Runs every package under integrations/ that has a test script for the given
-  mode, and uploads its results. Four modes are four ways the uploader can
-  attribute a test to a file; the fifth, rspec, uploads through the RSpec plugin
-  instead of the uploader. See integrations/README.md.
+  mode, and uploads its results. The four Swift modes are four ways the uploader
+  can attribute a test to a file; rspec uploads through the RSpec plugin instead
+  of the uploader. See integrations/README.md.
 
 inputs:
   mode:

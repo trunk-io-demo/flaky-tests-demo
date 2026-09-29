@@ -39,12 +39,13 @@ actions:
     - trunk-announce
     - trunk-check-pre-push
     - trunk-fmt-pre-commit
-# Trunk's ruby runtime compiles from source with ruby-build. This stand-in has the
-# same interface and fetches a prebuilt jdx/ruby binary instead, as analytics-cli does.
+# Trunk's ruby runtime compiles from source with ruby-build. The stand-in next to this
+# file has the same interface and fetches a prebuilt jdx/ruby binary instead. Download
+# URLs cannot name a repo path, so it is fetched from this repository's default branch.
 downloads:
   - name: ruby-build
     downloads:
-      - url: https://raw.githubusercontent.com/trunk-io/analytics-cli/9ed5b451fe0ee450a48786d2c8e0453726c04d2b/.trunk/ruby-build.tar.gz
+      - url: https://raw.githubusercontent.com/trunk-io-demo/flaky-tests-demo/main/.trunk/ruby-build.tar.gz
         strip_components: 1
 # Puts ruby, gem, and bundle in .trunk/tools, for integrations/rspec.
 tools:
