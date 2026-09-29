@@ -89,6 +89,8 @@ jobs:
             runs-on: ubuntu-latest
           - mode: xunit-declarations
             runs-on: ubuntu-latest
+          - mode: rspec
+            runs-on: ubuntu-latest
           # TEMPORARY — REVERT BEFORE MERGE: both entries below.
           - mode: xcresult
             runs-on: macos-latest
@@ -104,6 +106,7 @@ jobs:
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.INTEGRATIONS_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
+          rspec-version: ${{ vars.RSPEC_PRE_RELEASE_TEST_VERSION || 'latest' }}
 
   synth:
     name: synth

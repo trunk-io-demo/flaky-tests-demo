@@ -105,6 +105,8 @@ importers:
 
   integrations/playwright: {}
 
+  integrations/rspec: {}
+
   integrations/swift: {}
 
   monitors/failure-count:

@@ -1,0 +1,9 @@
+{
+  "name": "@flaky-tests-demo/integrations-rspec",
+  "version": "0.0.0",
+  "private": true,
+  "description": "RSpec upload wiring: a minimal suite that reports through the rspec_trunk_flaky_tests plugin.",
+  "scripts": {
+    "test:rspec": "export BUNDLE_GEMFILE=\"$PWD/Gemfile\" && bundle install --quiet && cd ../.. && bundle exec rspec --default-path integrations/rspec/spec --require spec_helper"
+  }
+}

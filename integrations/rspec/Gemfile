@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+# CI sets this from RSPEC_PRE_RELEASE_TEST_VERSION. Unset, empty, or "latest" is the newest stable release.
+plugin_version = ENV.fetch('RSPEC_TRUNK_FLAKY_TESTS_VERSION', '')
+gem 'rspec_trunk_flaky_tests', *[plugin_version].reject { |v| v.empty? || v == 'latest' }
+
+gem 'rspec', '~> 3.13'

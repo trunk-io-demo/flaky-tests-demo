@@ -10,12 +10,12 @@ monitor it exists for should be obvious.
 It is also a canary — the same runs that make the demo compelling tell the team owning these monitors
 whether detection latency, classification, and quarantine behavior still look right.
 
-| Directory                        | What it is                                                                                                  |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| [`monitors/`](monitors/)         | One package per monitor. **Start here.**                                                                    |
-| [`apps/`](apps/)                 | Real tests against surfaces that genuinely misbehave: a calendar, a monthly event, seventeen status pages.  |
-| [`synth/`](synth/)               | Synthetic JUnit. Nothing executes; a Rust generator fabricates history that would take weeks to accumulate. |
-| [`integrations/`](integrations/) | Per-framework upload wiring, plus a Swift Testing suite run four ways to compare file attribution.          |
+| Directory                        | What it is                                                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| [`monitors/`](monitors/)         | One package per monitor. **Start here.**                                                                                        |
+| [`apps/`](apps/)                 | Real tests against surfaces that genuinely misbehave: a calendar, a monthly event, seventeen status pages.                      |
+| [`synth/`](synth/)               | Synthetic JUnit. Nothing executes; a Rust generator fabricates history that would take weeks to accumulate.                     |
+| [`integrations/`](integrations/) | Per-framework upload wiring: a Swift Testing suite run four ways to compare file attribution, and an RSpec suite on the plugin. |
 
 Each top-level folder uploads to its own test collection. Layout is by **purpose, not language** —
 `monitors/` and `apps/` are TypeScript, `synth/` is Rust.
