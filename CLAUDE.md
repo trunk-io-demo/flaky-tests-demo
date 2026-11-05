@@ -132,7 +132,9 @@ and are kept off pull requests entirely. Daily and not weekly because these are 
 a leg running four times a month never accumulates the runs a rate or a quarantine needs to resolve.
 
 That is the only per-folder schedule in the repository, and adding a second one needs a reason of the same
-kind. A new cadence also needs its own **minute**: two crons in one file that fire on the same minute
+kind. `hourly.yaml` and `pr-factory.yaml` have no `schedule:` at all: GitHub's cron dropped most of their
+hourly firings, so trunk2's `demo-repo-scheduler` (`ts/apps/platform/demo-repo-scheduler`) dispatches them
+at :45 and :15. Do not add a `schedule:` back, or every story double-reports. A new cadence also needs its own **minute**: two crons in one file that fire on the same minute
 produce two runs of that workflow, which double-reports every story in it.
 
 ## What you cannot verify locally

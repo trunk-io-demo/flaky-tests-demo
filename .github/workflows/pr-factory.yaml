@@ -4,13 +4,11 @@ name: PR factory
 # that writes to the repository, it needs a different token, and it has to run on
 # its own clock.
 #
-# :15, ahead of the hourly run at :45. The order matters — the factory merges last
-# hour's pull request first, so the head has already advanced by the time the
-# scheduled uploads report against it. Reversed, every hour's results would land
-# on the previous hour's commit.
+# trunk2's demo-repo-scheduler dispatches this at :15, ahead of the hourly run at
+# :45. The factory merges last hour's pull request first, so the head has moved by
+# the time the uploads report against it; reversed, every hour's results would
+# land on the previous hour's commit.
 on:
-  schedule:
-    - cron: 15 * * * *
   workflow_dispatch: {}
 
 # Serialised: two factories at once would open two pull requests an hour and race

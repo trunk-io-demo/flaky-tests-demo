@@ -102,7 +102,7 @@ Most of these fail **quietly**: a missing collection ID leaves a notice saying t
 rather than failing the job. Check the first run's logs for those notices rather than trusting a green tick.
 
 `PR_FACTORY_TOKEN` is the exception — the factory **fails loudly** if it is unset. That workflow only runs
-on a schedule or by hand, never on a fork's pull request, so a missing token is this repository being
+when it is dispatched, never on a fork's pull request, so a missing token is this repository being
 misconfigured rather than a contributor hitting a wall, and the PR-attributed half of the demo would
 otherwise produce nothing forever without saying so.
 
@@ -125,8 +125,8 @@ the checkout the same way it does for `monitors/`.
 
 ## The PR factory token
 
-The factory is its own workflow, [`pr-factory.yaml`](.github/workflows/pr-factory.yaml), on its own clock:
-it runs at :15 and the stories at :45, so the head has already moved by the time the hourly uploads report
+The factory is its own workflow, [`pr-factory.yaml`](.github/workflows/pr-factory.yaml), dispatched at :15
+and the stories at :45, so the head has already moved by the time the hourly uploads report
 against it. Two jobs — merge last hour's, then open this hour's — so the new pull request is based on the
 merged head. Opening uses
 [`peter-evans/create-pull-request`](https://github.com/peter-evans/create-pull-request); merging is `gh`,

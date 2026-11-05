@@ -8,12 +8,9 @@ name: Hourly
 # cost exception rather than a design one: mac minutes bill at roughly ten times
 # Linux ones. Nothing else gets a schedule of its own.
 #
-# The PR factory has its own workflow and its own clock, because it writes to the
-# repository and has to move the head before these uploads report against it.
-# It runs at :15, this at :45.
+# trunk2's demo-repo-scheduler dispatches this at :45, after the PR factory at :15:
+# GitHub's own cron dropped most hourly firings. A schedule: here would double-report.
 on:
-  schedule:
-    - cron: 45 * * * *
   workflow_dispatch: {}
 
 # Two runs of this workflow at once would double-report every story, which reads
