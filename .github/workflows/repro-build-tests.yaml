@@ -1,0 +1,76 @@
+name: Repro build tests (called)
+
+on:
+  workflow_call:
+    inputs:
+      dynamic-ci-enabled:
+        type: boolean
+        default: true
+
+jobs:
+  DynamicCi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      Diff: ${{ steps.ci-filter.outputs.Diff }}
+      Lint: ${{ steps.ci-filter.outputs.Lint }}
+      Docs: ${{ steps.ci-filter.outputs.Docs }}
+      Plan: ${{ steps.ci-filter.outputs.Plan }}
+      Suite: ${{ steps.ci-filter.outputs.Suite }}
+    steps:
+      - name: Show the workflow GitHub reports to the action
+        run: |
+          echo "GITHUB_WORKFLOW_REF=$GITHUB_WORKFLOW_REF"
+          echo "GITHUB_JOB=$GITHUB_JOB"
+      - id: ci-filter
+        if: inputs.dynamic-ci-enabled
+        uses: trunk-io/dynamic-ci@main
+        env:
+          TRUNK_PUBLIC_API_ADDRESS: ${{ vars.TRUNK_API_ADDRESS }}
+        with:
+          token: ${{ secrets.TRUNK_API_TOKEN }}
+      - name: Show every output the filter set
+        env:
+          OUTPUTS: ${{ toJSON(steps.ci-filter.outputs) }}
+        run: echo "$OUTPUTS"
+
+  Diff:
+    needs: DynamicCi
+    if: ${{ !cancelled() && needs.DynamicCi.outputs.Diff != 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: sleep 8
+
+  Lint:
+    needs: DynamicCi
+    if: ${{ !cancelled() && needs.DynamicCi.outputs.Lint != 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: sleep 12
+
+  Docs:
+    needs: DynamicCi
+    if: ${{ !cancelled() && needs.DynamicCi.outputs.Docs != 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: sleep 6
+
+  Plan:
+    runs-on: ubuntu-latest
+    outputs:
+      suites: ${{ steps.plan.outputs.suites }}
+    steps:
+      - id: plan
+        run: echo 'suites=[{"name":"Unit"},{"name":"Typecheck"},{"name":"Server"}]' >> "$GITHUB_OUTPUT"
+
+  Suite:
+    name: ${{ matrix.name }}
+    needs: [DynamicCi, Plan]
+    if: ${{ !cancelled() && needs.DynamicCi.outputs.Suite != 'false' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.Plan.outputs.suites) }}
+    steps:
+      - run: sleep 10

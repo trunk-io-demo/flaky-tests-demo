@@ -1,0 +1,27 @@
+name: Repro PR Build Tests
+
+# Dynamic CI's filter running inside a reusable workflow and fanning out to the
+# jobs there. Not part of the demo's data.
+on:
+  pull_request:
+    paths:
+      - .github/workflows/repro-*.yaml
+      - repro/**
+
+permissions:
+  contents: read
+
+jobs:
+  build-tests:
+    # A title with [skip-build] skips the caller, which gives it a task of its own.
+    if: ${{ !contains(github.event.pull_request.title, '[skip-build]') }}
+    uses: ./.github/workflows/repro-build-tests.yaml
+    with:
+      dynamic-ci-enabled: true
+    secrets: inherit
+
+  integration:
+    name: Integration
+    runs-on: ubuntu-latest
+    steps:
+      - run: sleep 5
