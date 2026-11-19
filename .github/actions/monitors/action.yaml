@@ -9,7 +9,7 @@ inputs:
     description: Trunk org URL slug.
     required: true
   token:
-    description: Trunk org API token. Empty on fork pull requests, which skips the upload.
+    description: Trunk v2 API key with the Upload test results permission. Empty on fork pull requests, which skips the upload.
     required: false
     default: ""
   api-address:
@@ -56,7 +56,7 @@ runs:
       run: pnpm --filter "./monitors/**" --no-bail --if-present run test:e2e
 
     - name: Upload results
-      uses: trunk-io/analytics-uploader@817e1a2ec58d888825699ee15ea172809bb3f226 # v2.1.3
+      uses: trunk-io/analytics-uploader@6bc623e3c4b7a80d7a35badde2a8e8be1e78605d # v3.0.0
       if: always()
       env:
         TRUNK_PUBLIC_API_ADDRESS: ${{ inputs.api-address }}

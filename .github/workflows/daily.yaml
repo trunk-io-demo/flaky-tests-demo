@@ -49,7 +49,7 @@ jobs:
         with:
           mode: ${{ matrix.mode }}
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
-          token: ${{ secrets.TRUNK_API_TOKEN }}
+          token: ${{ secrets.TRUNK_PROD_V2_TEST_UPLOAD_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.INTEGRATIONS_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
