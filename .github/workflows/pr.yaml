@@ -39,7 +39,7 @@ jobs:
       - uses: ./.github/actions/monitors
         with:
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
-          token: ${{ secrets.TRUNK_API_TOKEN }}
+          token: ${{ secrets.TRUNK_PROD_V2_TEST_UPLOAD_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.MONITORS_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
@@ -64,7 +64,7 @@ jobs:
         with:
           variant: ${{ matrix.variant }}
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
-          token: ${{ secrets.TRUNK_API_TOKEN }}
+          token: ${{ secrets.TRUNK_PROD_V2_TEST_UPLOAD_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.APPS_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
@@ -85,10 +85,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # setup-swift 2.4.0 has no toolchain for ubuntu-latest's 26.04.
           - mode: xunit
-            runs-on: ubuntu-latest
+            runs-on: ubuntu-24.04
           - mode: xunit-declarations
-            runs-on: ubuntu-latest
+            runs-on: ubuntu-24.04
           - mode: rspec
             runs-on: ubuntu-latest
           # TEMPORARY — REVERT BEFORE MERGE: both entries below.
@@ -102,7 +103,7 @@ jobs:
         with:
           mode: ${{ matrix.mode }}
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
-          token: ${{ secrets.TRUNK_API_TOKEN }}
+          token: ${{ secrets.TRUNK_PROD_V2_TEST_UPLOAD_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.INTEGRATIONS_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
@@ -122,7 +123,7 @@ jobs:
       - uses: ./.github/actions/synth
         with:
           org-slug: ${{ vars.TRUNK_ORG_SLUG }}
-          token: ${{ secrets.TRUNK_API_TOKEN }}
+          token: ${{ secrets.TRUNK_PROD_V2_TEST_UPLOAD_TOKEN }}
           api-address: ${{ vars.TRUNK_API_ADDRESS }}
           test-collection-id: ${{ vars.SYNTH_TEST_COLLECTION }}
           cli-version: ${{ vars.ANALYTICS_CLI_PRE_RELEASE_TEST_VERSION || 'latest' }}
@@ -171,11 +172,12 @@ jobs:
         run: |
           set -euo pipefail
           artifact=trunk-analytics-cli-x86_64-unknown-linux.tar.gz
+          # The uploader's "latest" is the newest 1.x (channel-1.json), not GitHub's latest release.
           if [ "$CLI_VERSION" = "latest" ]; then
-            url="https://github.com/trunk-io/analytics-cli/releases/latest/download/${artifact}"
-          else
-            url="https://github.com/trunk-io/analytics-cli/releases/download/${CLI_VERSION}/${artifact}"
+            CLI_VERSION="$(curl --fail --silent --show-error --location --retry 3 \
+              https://trunk.io/releases/analytics-cli/prod/channel-1.json | cut -d'"' -f4)"
           fi
+          url="https://github.com/trunk-io/analytics-cli/releases/download/${CLI_VERSION}/${artifact}"
 
           workdir="$(mktemp -d)"
           echo "resolving the uploader from $url"
