@@ -13,19 +13,27 @@ permissions:
   contents: read
 
 jobs:
-  # Shadow mode: the filter recommends which of this workflow's jobs the diff
-  # actually needs, but nothing acts on the recommendation.
-  #
-  # No `job-names`, so one call fans out over every job in this workflow. Queue
-  # batches reach this workflow as pull requests on `trunk-merge/...` branches,
-  # which the service short-circuits to run-everything, so `MQ` needs no case of
-  # its own here.
+  # `trunk-merge/...` queue batches get no outputs, so every job runs there.
   dynamic-ci-filter:
-    name: dynamic CI filter (shadow)
+    name: dynamic CI filter
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      monitors: ${{ steps.ci-filter.outputs.monitors }}
+      apps: ${{ steps.ci-filter.outputs.apps }}
+      integrations: ${{ steps.ci-filter.outputs.integrations }}
+      synth: ${{ steps.ci-filter.outputs.synth }}
+      checks: ${{ steps.ci-filter.outputs.checks }}
+      before-queue-deps: ${{ steps.ci-filter.outputs.before-queue-deps }}
+      before-queue-checks-automatic: ${{ steps.ci-filter.outputs.before-queue-checks-automatic }}
+      before-queue-checks-never: ${{ steps.ci-filter.outputs.before-queue-checks-never }}
     steps:
-      - uses: trunk-io/dynamic-ci@main
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - id: ci-filter
+        uses: trunk-io/dynamic-ci@main
         env:
           TRUNK_PUBLIC_API_ADDRESS: ${{ vars.TRUNK_API_ADDRESS }}
         with:
@@ -33,6 +41,8 @@ jobs:
 
   monitors:
     name: monitors
+    needs: [dynamic-ci-filter]
+    if: ${{ !cancelled() && needs.dynamic-ci-filter.outputs.monitors != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -49,6 +59,8 @@ jobs:
   # you a change broke macOS.
   apps:
     name: apps (${{ matrix.variant }})
+    needs: [dynamic-ci-filter]
+    if: ${{ !cancelled() && needs.dynamic-ci-filter.outputs.apps != 'false' }}
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -80,6 +92,8 @@ jobs:
   # matrix `runs-on`, and this job goes back to two Linux legs on ubuntu-latest.
   integrations:
     name: integrations (${{ matrix.mode }})
+    needs: [dynamic-ci-filter]
+    if: ${{ !cancelled() && needs.dynamic-ci-filter.outputs.integrations != 'false' }}
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -110,6 +124,8 @@ jobs:
 
   synth:
     name: synth
+    needs: [dynamic-ci-filter]
+    if: ${{ !cancelled() && needs.dynamic-ci-filter.outputs.synth != 'false' }}
     runs-on: ubuntu-latest
     env:
       SYNTH_FAILURE_RATE: ${{ vars.SYNTH_FAILURE_RATE }}
@@ -130,6 +146,8 @@ jobs:
   # Required job to make sure this repo adheres to its own rules and conventions.
   checks:
     name: lint, typecheck, and the generators' own tests
+    needs: [dynamic-ci-filter]
+    if: ${{ !cancelled() && needs.dynamic-ci-filter.outputs.checks != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -189,3 +207,38 @@ jobs:
         env:
           TRUNK_ANALYTICS_CLI: ${{ steps.cli.outputs.path }}
         run: cargo test
+
+  # No story here: these always pass, so the engine can learn to skip them.
+  before-queue-deps:
+    name: before-queue deps
+    needs: [dynamic-ci-filter]
+    if: ${{ !cancelled() && needs.dynamic-ci-filter.outputs.before-queue-deps != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: sleep 5
+      - run: echo "before-queue deps succeeded"
+
+  before-queue-checks-automatic:
+    name: before-queue checks (automatic)
+    needs: [dynamic-ci-filter, before-queue-deps]
+    if: >-
+      ${{ !cancelled() && needs.before-queue-deps.result != 'failure' &&
+      needs.dynamic-ci-filter.outputs.before-queue-checks-automatic != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: sleep 5
+      - run: echo "before-queue checks (automatic) succeeded"
+
+  before-queue-checks-never:
+    name: before-queue checks (never)
+    needs: [dynamic-ci-filter, before-queue-deps]
+    if: >-
+      ${{ !cancelled() && needs.before-queue-deps.result != 'failure' &&
+      needs.dynamic-ci-filter.outputs.before-queue-checks-never != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: sleep 5
+      - run: echo "before-queue checks (never) succeeded"

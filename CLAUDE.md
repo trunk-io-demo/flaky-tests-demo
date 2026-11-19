@@ -117,11 +117,17 @@ exists to exercise auto-quarantine.
 is **exact, not glob**, so `release/*` looking like a protected pattern does not make `release/1.4.2`
 protected — the usual reason a run intended as `PB` arrives as `NONE`.
 
-## The dynamic CI filter gates nothing
+## The dynamic CI filter gates every PR job
 
-[`pr.yaml`](.github/workflows/pr.yaml) runs it and no job reads its outputs. Wiring an `if:` to them would
-skip the jobs that produce this repository's data — the runs are what is being demonstrated, so there is no
-runner time here worth saving. It stays in shadow mode.
+Every job in [`pr.yaml`](.github/workflows/pr.yaml) reads the filter's output for its own key, so a skipped
+job uploads nothing for that pull request. Queue batches and the hourly run still run everything, and the
+hourly run is then the only steady source of uploads.
+
+- **A new job needs its key in the filter job's `outputs:`.** A key missing there is never set, which
+  reads as "run", so the job silently stops being gated.
+- **Compare with `!= 'false'`, never `== 'true'`.** When the filter fails open it sets no outputs.
+- **The `before-queue-*` jobs carry no story.** They always pass, so the engine learns to skip them, and
+  both checks `needs` the deps job.
 
 ## Runner time, and the one exception
 
