@@ -5,9 +5,9 @@
 # The exception below is deliberate.
 version: 3
 rules:
-  # Intentionally tracks @main: a first-party action still in beta, wired here in
-  # shadow mode so it gates nothing. Pinning it would freeze the recommendations
-  # this repository exists to exercise, and the same reference is what trunk's own
+  # Intentionally tracks @main: a first-party action still in beta that gates
+  # this repository's PR jobs. Pinning it would freeze the recommendations this
+  # repository exists to exercise, and the same reference is what trunk's own
   # repositories run.
   - ignore: true
     conditions:
